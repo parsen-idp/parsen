@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Parsen.Application/Parsen.Application.csproj" />
+    <Project Path="src/Parsen.Domain/Parsen.Domain.csproj" />
+    <Project Path="src/Parsen.Infrastructure/Parsen.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Parsen.Domain.Tests/Parsen.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

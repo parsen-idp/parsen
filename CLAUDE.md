@@ -97,5 +97,5 @@ cd web/backoffice && npm start        # backoffice local
 
 ## Status
 
-Fase atual: 0 — Ambiente, concluída (pendente só trocar o e-mail do root para o domínio). Fase 1 ainda não iniciada.
+Fase atual: 1 — Fundação (em andamento). Fase 0 concluída (pendente só trocar o e-mail do root para o domínio).
 Atualize esta linha ao avançar de fase.

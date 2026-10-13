@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Regra 1: Parsen.Domain não referencia nenhum pacote AWS -->
+
+</Project>

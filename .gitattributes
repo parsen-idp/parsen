@@ -1,0 +1,10 @@
+# Normaliza quebras de linha: LF no repositório, conversão automática no checkout
+* text=auto
+
+# Scripts executados em Linux (Lambda, GitHub Actions) sempre com LF
+*.sh text eol=lf
+
+# Binários
+*.png binary
+*.jpg binary
+*.pdf binary
