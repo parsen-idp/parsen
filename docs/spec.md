@@ -25,7 +25,6 @@ O desenvolvimento começa numa conta AWS pessoal no Free Plan, usando os crédit
 - [x] Conferir os modelos Claude em sa-east-1. A página "Model access" foi aposentada; os modelos serverless são habilitados no primeiro uso. Inference profiles Global ativos:
   - Haiku 4.5: `global.anthropic.claude-haiku-4-5-20251001-v1:0`
   - Sonnet 5: `global.anthropic.claude-sonnet-5`
-- [ ] Fazer uma chamada de teste ao Haiku 4.5 (`aws bedrock-runtime converse`) para confirmar a invocação e ver a cobrança no Billing
 - [x] Criar o repositório `parsen-idp/parsen` no GitHub
 
 **Acesso pela CLI:** sempre com `--profile parsen`; quando as credenciais expirarem, rodar `aws login --profile parsen` de novo. O perfil `default` da máquina de desenvolvimento aponta para outra conta e não deve ser usado no projeto.
@@ -587,7 +586,9 @@ Se o piloto mostrar dossiês grandes com frequência, reduzir o limite do pacote
 
 Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 
-1. **Fundação (semanas 1–2):** conta AWS, CDK, Cognito, API de dossiês, upload no S3, spike de Ingest em Native AOT, EventBridge + Step Functions com holerite ponta a ponta
+1. **Fundação (semanas 1–2):** conta AWS, CDK, Cognito, API de dossiês, upload no S3, spikes técnicos, EventBridge + Step Functions com holerite ponta a ponta. Spikes no início da fase:
+   - Ingest (PDFium) em Native AOT
+   - Bedrock em sa-east-1 via endpoint Global: primeira invocação do Haiku 4.5 (confirma a assinatura do Marketplace e a cobrança no Billing), structured output, PDF/imagem na Converse e prompt caching
 2. **Documentos (semanas 3–4):** split, classificação, extrato, comprovante de residência e matrícula; evidência por campo
 3. **Verificações (semana 5):** verificações, fatos e sinais; resultado consolidado de renda; `TenantPolicy` com valores padrão; renda expressa
 4. **Backoffice (semanas 6–7):** fila, revisão com destaque no PDF, correção, aprovação, auditoria, webhooks, administração do tenant
