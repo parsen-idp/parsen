@@ -89,6 +89,8 @@ cd web/backoffice && npm start        # backoffice local
 - Uma fase do roadmap por vez; tarefas pequenas, um assunto por commit.
 - Para verificações e cálculos: escreva os testes primeiro, depois a implementação.
 - Rode `dotnet build` e `dotnet test` antes de dar uma tarefa como concluída.
+- **Custo do Claude é real** (os créditos AWS não cobrem o Marketplace): testes automatizados e CI nunca chamam o Bedrock, usam fixtures JSON; só o `Parsen.Eval` e testes manuais chamam o modelo, e só com confirmação. Toda chamada define `maxTokens`; retries limitados a 3; prompt caching sempre; só Haiku até a fase 3.
+- Comandos AWS sempre com `--profile parsen` (o perfil `default` da máquina é de outra conta).
 - Antes de qualquer `cdk deploy`, mostre o `cdk diff` e peça confirmação.
 - Nunca apague recursos, tabelas ou buckets sem confirmação explícita.
 - Se algo na spec parecer errado ou faltar informação, pergunte; não invente regra de negócio.

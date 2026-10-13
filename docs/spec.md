@@ -12,7 +12,7 @@ O desenvolvimento começa numa conta AWS pessoal no Free Plan, usando os crédit
 
 - [x] Criar a conta AWS (o root usa o e-mail pessoal; trocar para um endereço do domínio, ver abaixo)
 - [x] Escolher o Free Plan, com US$ 200 em créditos; o upgrade fica para quando o CNPJ existir
-- [ ] Confirmar em Billing → Credits se os créditos cobrem os modelos Claude, cobrados via AWS Marketplace; se não cobrirem, cada invocação é gasto real
+- [x] Confirmar em Billing → Credits se os créditos cobrem os modelos Claude: **não cobrem** (cobrança via AWS Marketplace). Todo uso do Claude no desenvolvimento é gasto real no cartão; os créditos cobrem o restante (Lambda, S3, Textract, Step Functions etc.)
 
 **Primeiro dia**
 
@@ -210,7 +210,16 @@ Modelos disponíveis no Bedrock: [Claude in Amazon Bedrock](https://platform.cla
 - O Sonnet 5 devolve sinais tipados com evidência (ex.: `suspeita_adulteracao`, `inconsistencia_layout`); a regra C# `SINAL_IA` os registra como sinais do dossiê, com a justificativa visível ao analista
 - Correções do cliente são registradas (auditoria e métricas) desde o MVP; o uso como exemplos few-shot por tenant fica para depois do piloto (seção 15), com versão própria e medição no Eval
 
-**Dataset de avaliação:** documentos sintéticos no repositório (`tests/Parsen.Eval/fixtures`), rodados no CI; documentos anonimizados do piloto num bucket S3 privado da conta da empresa (coberto por DPA), baixados pelo `Parsen.Eval` por parâmetro e rodados manualmente ou em job com OIDC. Rodar a cada troca de modelo, prompt ou schema.
+**Dataset de avaliação:** documentos sintéticos no repositório (`tests/Parsen.Eval/fixtures`); documentos anonimizados do piloto num bucket S3 privado da conta da empresa (coberto por DPA), baixados pelo `Parsen.Eval` por parâmetro. O `Parsen.Eval` chama o modelo de verdade e por isso roda só manualmente (ou em job manual com OIDC), a cada troca de modelo, prompt ou schema, nunca a cada push.
+
+**Controle de custo do Claude no desenvolvimento** (os créditos AWS não cobrem o Claude, cobrado via Marketplace)
+
+- Testes automatizados (`dotnet test`, CI) nunca chamam o Bedrock: usam respostas gravadas (fixtures JSON) atrás da porta de IA em `Parsen.Application`
+- Só o `Parsen.Eval` e testes manuais chamam o modelo
+- Toda chamada define `maxTokens`; retries do Step Functions limitados (máximo 3, com backoff exponencial)
+- Prompt caching de system prompt e schema desde a primeira implementação
+- Fases 1 e 2 usam só Haiku; o Sonnet entra na fase 3, com os sinais
+- Budget `parsen-gasto-real` alerta sobre o que os créditos não cobrem
 
 **Decisão de região:** em produção os dados ficam armazenados em sa-east-1, mas o processamento sai do Brasil: o Claude roda via endpoint Global e o Textract não existe em sa-east-1, então o worker Ocr envia os bytes de cada página (PNG, até 10 MB) ao Textract em us-east-1 e grava o `textract.json` de volta em sa-east-1. Nenhum dos dois armazena o documento. Declarar ambos no DPA. No desenvolvimento não há dados reais. Na Fase 1, confirmar em sa-east-1 structured output, PDF/imagem na Converse e prompt caching com Haiku 4.5 e Sonnet 5 via endpoint Global.
 
@@ -562,7 +571,7 @@ Se o piloto mostrar dossiês grandes com frequência, reduzir o limite do pacote
 
 **Piloto:** 5.000 páginas grátis por 60 dias para a fintech parceira, em troca de feedback semanal, dados anonimizados para o dataset de avaliação e permissão de uso como case. Revisão de preços após 30 dias com a média real de páginas por dossiê e o custo real por página.
 
-**Desenvolvimento:** conta AWS nova no Free Plan, com até US$ 200 em créditos por até 6 meses. AWS Budgets com alertas em US$ 50, 100 e 150.
+**Desenvolvimento:** conta AWS nova no Free Plan, com até US$ 200 em créditos por até 6 meses; os créditos não cobrem o Claude (Marketplace), que é pago no cartão. Dois budgets: `parsen-mensal` (consumo bruto, alertas em US$ 50, 100 e 150) e `parsen-gasto-real` (custo líquido após créditos, ou seja, o que vai para o cartão; alertas em US$ 5, 15 e 30).
 
 **Métricas de produto (registradas desde o primeiro dossiê)**
 
