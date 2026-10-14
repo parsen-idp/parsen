@@ -172,7 +172,7 @@ Seis etapas na mesma linha do Affinda Extract; cada uma é uma Lambda idempotent
 | 5. Verificação | Validate | Todos os campos do dossiê | Verificações, fatos, sinais e resultado consolidado | Regras C# + Sonnet 5 |
 | 6. Integração | Notify | Resultado | Gravação no DynamoDB, webhook, status | Lambda + SQS |
 
-**Ingestão e Native AOT:** a renderização de PDF depende de biblioteca nativa (PDFium). Antes da implementação, um spike confirma se o worker Ingest roda em Native AOT; se não rodar, só ele é publicado sem AOT (runtime gerenciado ou imagem de container), como exceção documentada.
+**Ingestão e Native AOT:** a renderização de PDF usa PDFium (biblioteca `PDFtoImage`). O spike A (`spikes/PdfRenderAot`) confirmou que o worker Ingest roda em Native AOT no Amazon Linux 2023, em x64 e arm64, com ~165 ms por página a 150 DPI e pacote de ~21 MB; não há exceção ao AOT. O build de todas as Lambdas AOT roda em container Amazon Linux 2023 (mesma glibc do runtime), nunca direto no Windows. Arquitetura (x64 ou arm64/Graviton, ~20% mais barato) a decidir na configuração dos workers.
 
 **Saída da verificação** (regra técnica de fila, não política de crédito)
 
@@ -502,7 +502,7 @@ Backend em .NET 10 com Lambdas por etapa do pipeline, front em Angular e infraes
 | Camada | Tecnologia |
 | --- | --- |
 | API | ASP.NET Core Minimal API em Lambda (Amazon.Lambda.AspNetCoreServer), API Gateway REST |
-| Workers do pipeline | Lambdas .NET com Native AOT, uma por etapa (Ingest pode ser exceção, ver seção 5) |
+| Workers do pipeline | Lambdas .NET com Native AOT, uma por etapa, compiladas em container Amazon Linux 2023 |
 | Orquestração | EventBridge + Step Functions (Standard) |
 | IA | AWSSDK.BedrockRuntime (Converse) e AWSSDK.Textract |
 | Dados | AWSSDK.DynamoDBv2 (cliente de baixo nível nos workers AOT) |
@@ -601,7 +601,7 @@ Se o piloto mostrar dossiês grandes com frequência, reduzir o limite do pacote
 Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 
 1. **Fundação (semanas 1–2):** conta AWS, CDK, Cognito, API de dossiês, upload no S3, spikes técnicos, EventBridge + Step Functions com holerite ponta a ponta. Spikes no início da fase:
-   - Ingest (PDFium) em Native AOT
+   - [x] Ingest (PDFium) em Native AOT: funciona em x64 e arm64 (spike A)
    - Bedrock em sa-east-1 via endpoint Global: primeira invocação do Haiku 4.5 (confirma a assinatura do Marketplace e a cobrança no Billing), structured output, PDF/imagem na Converse e prompt caching
 2. **Documentos (semanas 3–4):** split, classificação, extrato, comprovante de residência e matrícula; evidência por campo
 3. **Verificações (semana 5):** verificações, fatos e sinais; resultado consolidado de renda; `TenantPolicy` com valores padrão; renda expressa
@@ -624,7 +624,7 @@ Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 | Banco de dados | Só DynamoDB no MVP; relatórios pesados depois via export para S3 + Athena |
 | Chaves do DynamoDB | Toda PK começa com `TENANT#{id}`; isolamento na aplicação + testes de acesso cruzado; `LeadingKeys` depois |
 | Gatilho do pipeline | `submit` publica `DossierSubmitted` no EventBridge; uma execução do Step Functions por dossiê |
-| Ingestão | Worker Ingest (PDF → PNG com PDFium), validado por spike de Native AOT; exceção sem AOT se necessário |
+| Ingestão | Worker Ingest (PDF → PNG com PDFium via `PDFtoImage`) em Native AOT, validado pelo spike A em x64 e arm64 |
 | Idioma da API | Estrutura e status em inglês; campos extraídos e códigos de regra em português |
 | Renda expressa | Síncrona, até 6 arquivos e 20 páginas inline (até ~6 MB), sem Step Functions, só holerite e extrato, sem campo de decisão; antifraude depois por webhook |
 | Sonnet 5 | Produz sinais tipados com evidência, registrados pela regra `SINAL_IA` |

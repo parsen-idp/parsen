@@ -21,7 +21,7 @@ A especificação completa está em `docs/spec.md`. Em caso de dúvida, a spec m
 
 - .NET 10 (LTS), C#, ASP.NET Core Minimal API em Lambda
 - API Gateway REST com usage plan por tenant e WAF; Cognito (Pre Token Generation injeta `tenantId`)
-- Workers do pipeline: Lambdas .NET com Native AOT, uma por etapa (Ingest pode ser exceção se o PDFium não rodar em AOT)
+- Workers do pipeline: Lambdas .NET com Native AOT, uma por etapa; build sempre em container Amazon Linux 2023 (glibc do runtime), nunca direto no Windows
 - AWS SDK: BedrockRuntime (Converse), Textract, DynamoDBv2 (cliente de baixo nível nos workers AOT), S3, EventBridge, StepFunctions
 - Powertools for AWS Lambda (.NET): logging e idempotência (`Idempotency-Key`)
 - Infra: AWS CDK em C# (`infra/Parsen.Cdk`)
