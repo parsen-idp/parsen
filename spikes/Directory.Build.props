@@ -1,0 +1,3 @@
+<Project>
+  <!-- Spikes são experimentos descartáveis: não herdam as regras do Directory.Build.props da raiz -->
+</Project>

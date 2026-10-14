@@ -1,0 +1,6 @@
+<Project>
+  <!-- Spikes declaram a versão dos pacotes no próprio .csproj -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
