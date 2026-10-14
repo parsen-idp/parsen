@@ -2,4 +2,8 @@
 
   <!-- Regra 1: Parsen.Domain não referencia nenhum pacote AWS -->
 
+  <ItemGroup>
+    <PackageReference Include="Ulid" />
+  </ItemGroup>
+
 </Project>

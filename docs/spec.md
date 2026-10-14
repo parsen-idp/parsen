@@ -257,12 +257,13 @@ Arquivo fora dos limites é recusado na criação da URL (tamanho e formato decl
 | DELETE | /v1/dossiers/{id} | Exclusão irreversível do dossiê, documentos e arquivos (LGPD), com auditoria |
 | POST | /v1/dossiers/{id}/documents | Gera URL pré-assinada do S3 para upload, com os cabeçalhos obrigatórios (KMS, tag de retenção) |
 | POST | /v1/dossiers/{id}/submit | Confere arquivos e saldo, fecha o dossiê e publica `DossierSubmitted` |
+| POST | /v1/dossiers/{id}/retry | Reprocessa um dossiê `failed` sem novo upload; debita só páginas ainda não cobradas |
 | POST | /v1/dossiers/{id}/approve | Aprovação com usuário responsável |
 | POST | /v1/dossiers/{id}/reject | Rejeição com motivo |
 | GET | /v1/dossiers/{id}/audit | Linha do tempo de auditoria |
 | GET | /v1/documents/{id} | Campos extraídos com evidência |
 | GET | /v1/documents/{id}/file | URL temporária do arquivo original |
-| PATCH | /v1/documents/{id}/fields | Correção de campos (registra autor e motivo) |
+| PATCH | /v1/documents/{id}/fields | Correção de campos (registra autor e motivo); reexecuta na hora as verificações C# do dossiê (sem modelo) e recalcula o status entre `needs_review` e `ready` |
 | POST | /v1/income-checks | Renda expressa (fintech) |
 | POST | /v1/data-subject-deletions | Exclusão por titular; CPF no corpo, nunca na URL (LGPD). Assíncrona: responde 202 com ID da solicitação e envia webhook ao concluir |
 
@@ -282,7 +283,20 @@ Arquivo fora dos limites é recusado na criação da URL (tamanho e formato decl
 | GET, PATCH | /v1/settings | Configurações do tenant (retenção) |
 | GET | /v1/metrics | Indicadores (STP, precisão por campo, tempo médio) |
 
+**Tipos de análise:** `income` (análise de renda: holerite, extrato, comprovante de residência), `property` (análise do imóvel: matrícula e proprietários) e `income_check` (renda expressa, criado só por `POST /v1/income-checks`). Uma locação completa usa dois dossiês: o do inquilino (`income`) e o do imóvel (`property`).
+
 **Estados do dossiê:** `draft` → `processing` → `needs_review` ou `ready` → `approved` ou `rejected`; `failed` em erro técnico. Aprovar e rejeitar são ações do cliente, nunca da Parsen.
+
+| De | Para | Gatilho |
+| --- | --- | --- |
+| `draft` | `processing` | `submit` |
+| `processing` | `ready` ou `needs_review` | Fim da verificação |
+| `processing` | `failed` | Erro técnico após os retries |
+| `failed` | `processing` | `retry` |
+| `needs_review` ↔ `ready` | — | Correção de campo reexecuta as verificações |
+| `ready` ou `needs_review` | `approved` ou `rejected` | Ação do analista do cliente |
+
+`approved` e `rejected` são finais. Qualquer outra transição é recusada com `409 Conflict`.
 
 **Créditos:** o `submit` estima as páginas do dossiê e, sem saldo, responde `402` com `code` `CREDITOS_INSUFICIENTES`. O débito definitivo ocorre ao fim da ingestão, com as páginas reais. Saldo baixo gera alerta por e-mail e webhook.
 
