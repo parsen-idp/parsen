@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/infra/">
+    <Project Path="infra/Parsen.Cdk/Parsen.Cdk.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Parsen.Application/Parsen.Application.csproj" />
     <Project Path="src/Parsen.Domain/Parsen.Domain.csproj" />

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- App CDK: executado pelo CLI (cdk synth/diff/deploy) para gerar os templates CloudFormation -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Amazon.CDK.Lib" />
+    <PackageReference Include="Constructs" />
+  </ItemGroup>
+
+</Project>
