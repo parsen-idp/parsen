@@ -475,7 +475,7 @@ A Parsen é operadora de dados pessoais (o cliente é o controlador); o MVP prec
 - `tenantId` vem sempre do token (claim), nunca do corpo da requisição
 - Toda PK no DynamoDB começa com `TENANT#{tenantId}`; o repositório exige o `TenantId` em toda operação; prefixo S3 por tenant
 - No MVP o isolamento é garantido pela aplicação; `dynamodb:LeadingKeys` com credenciais STS por tenant entra depois (seção 15), sem migração de dados
-- Chave KMS por tenant para S3 e campos sensíveis
+- Chave KMS por tenant para S3 e campos sensíveis, criada pela aplicação no cadastro do tenant (via API do KMS) e registrada em `TENANT#{id}/META`; o CDK cria só a chave da plataforma (`alias/parsen-{stage}-platform`), padrão do bucket e usada enquanto o tenant não tem chave própria
 - Testes automatizados de acesso cruzado entre tenants no CI
 
 **Segurança**
