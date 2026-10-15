@@ -44,6 +44,7 @@ infra/Parsen.Cdk/          # Stacks: Network, Data, Api, Pipeline, Web
 tests/
   Parsen.Domain.Tests/
   Parsen.Api.Tests/
+  Parsen.Infrastructure.Tests/  # Integração com DynamoDB Local (Testcontainers; exige Docker)
   Parsen.Eval/             # Avaliação de precisão por campo contra gabarito (fixtures/ só sintéticos)
 docs/
   spec.md                  # Especificação técnica do MVP

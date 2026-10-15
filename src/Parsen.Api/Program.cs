@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Parsen.Api;
 using Parsen.Api.Dossiers;
 using Parsen.Application.Dossiers;
-using Parsen.Infrastructure.Dossiers;
+using Parsen.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +25,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddSingleton<IDossierRepository, InMemoryDossierRepository>();
+
+// Persistence:Provider escolhe InMemory (padrão) ou DynamoDb
+builder.Services.AddParsenPersistence(builder.Configuration);
 builder.Services.AddScoped<CreateDossierHandler>();
 builder.Services.AddScoped<GetDossierHandler>();
 

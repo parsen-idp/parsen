@@ -36,6 +36,36 @@ public class DossierTests
         Assert.Null(NewDossier().ExternalRef);
     }
 
+    // ---------- Reconstrução a partir da persistência ----------
+
+    [Fact]
+    public void Restore_RebuildsAllStateWithoutTransitions()
+    {
+        var id = DossierId.New();
+        var updatedAt = Start.AddHours(2);
+
+        var dossier = Dossier.Restore(
+            id, Tenant, AnalysisType.Property, "ref-1", DossierStatus.Rejected,
+            Start, updatedAt, "usr_analista", "Documento ilegível", version: 7);
+
+        Assert.Equal(id, dossier.Id);
+        Assert.Equal(Tenant, dossier.TenantId);
+        Assert.Equal(AnalysisType.Property, dossier.AnalysisType);
+        Assert.Equal("ref-1", dossier.ExternalRef);
+        Assert.Equal(DossierStatus.Rejected, dossier.Status);
+        Assert.Equal(Start, dossier.CreatedAt);
+        Assert.Equal(updatedAt, dossier.UpdatedAt);
+        Assert.Equal("usr_analista", dossier.DecidedBy);
+        Assert.Equal("Documento ilegível", dossier.RejectionReason);
+        Assert.Equal(7, dossier.Version);
+    }
+
+    [Fact]
+    public void Create_StartsAtVersionOne()
+    {
+        Assert.Equal(1, NewDossier().Version);
+    }
+
     // ---------- Transições válidas ----------
 
     [Fact]

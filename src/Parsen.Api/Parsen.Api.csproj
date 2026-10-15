@@ -9,6 +9,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
   </ItemGroup>
 
+  <!-- Só em desenvolvimento: permite ao SDK usar as credenciais do "aws login" (AWS__Profile=parsen).
+       Na Lambda as credenciais vêm da role da função, então o pacote não vai para o build Release. -->
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <PackageReference Include="AWSSDK.Signin" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Parsen.Infrastructure\Parsen.Infrastructure.csproj" />
   </ItemGroup>

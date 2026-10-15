@@ -11,5 +11,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/Parsen.Api.Tests/Parsen.Api.Tests.csproj" />
     <Project Path="tests/Parsen.Domain.Tests/Parsen.Domain.Tests.csproj" />
+    <Project Path="tests/Parsen.Infrastructure.Tests/Parsen.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

@@ -39,6 +39,37 @@ public sealed class Dossier
 
     public string? RejectionReason { get; private set; }
 
+    /// <summary>Versão persistida, para controle otimista de concorrência. Começa em 1.</summary>
+    public long Version { get; private set; } = 1;
+
+    /// <summary>
+    /// Reconstrói um dossiê já persistido. Não passa pela máquina de estados: o estado gravado
+    /// já foi validado quando as transições aconteceram.
+    /// </summary>
+    public static Dossier Restore(
+        DossierId id,
+        TenantId tenantId,
+        AnalysisType analysisType,
+        string? externalRef,
+        DossierStatus status,
+        DateTimeOffset createdAt,
+        DateTimeOffset updatedAt,
+        string? decidedBy,
+        string? rejectionReason,
+        long version)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(version, 1);
+
+        return new Dossier(id, tenantId, analysisType, externalRef, createdAt)
+        {
+            Status = status,
+            UpdatedAt = updatedAt,
+            DecidedBy = decidedBy,
+            RejectionReason = rejectionReason,
+            Version = version,
+        };
+    }
+
     public static Dossier Create(TenantId tenantId, AnalysisType analysisType, string? externalRef, TimeProvider clock)
     {
         ArgumentNullException.ThrowIfNull(clock);

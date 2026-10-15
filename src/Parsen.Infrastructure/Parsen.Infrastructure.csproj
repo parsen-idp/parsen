@@ -1,6 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.DynamoDBv2" />
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Parsen.Application\Parsen.Application.csproj" />
   </ItemGroup>
 

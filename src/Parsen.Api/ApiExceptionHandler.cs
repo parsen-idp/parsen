@@ -18,6 +18,7 @@ internal sealed class ApiExceptionHandler(IProblemDetailsService problemDetails)
             BadHttpRequestException bad => (bad.StatusCode, "REQUISICAO_INVALIDA", "Requisição inválida."),
             RequestRejectedException rejected => (StatusCodes.Status400BadRequest, rejected.Code, rejected.Message),
             InvalidDossierTransitionException => (StatusCodes.Status409Conflict, "TRANSICAO_INVALIDA", exception.Message),
+            PersistenceConflictException => (StatusCodes.Status409Conflict, "CONFLITO", "O recurso foi alterado por outra requisição."),
             _ => null,
         };
 
