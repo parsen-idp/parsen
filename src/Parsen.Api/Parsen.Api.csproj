@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- Necessário para o dotnet user-jwts guardar a chave de assinatura dos tokens de desenvolvimento -->
+    <UserSecretsId>parsen-api-dev</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Parsen.Infrastructure\Parsen.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

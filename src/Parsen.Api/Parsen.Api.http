@@ -1,0 +1,34 @@
+# Testes manuais da API local (dotnet run --project src/Parsen.Api)
+#
+# 1. Gere um token de desenvolvimento e cole abaixo (não commitar tokens):
+#    dotnet user-jwts create --project src/Parsen.Api --claim tenant_id=ten_teste --output token
+
+@base = http://localhost:5057
+@token = COLE_O_TOKEN_AQUI
+
+### Criar dossiê
+# @name create
+POST {{base}}/v1/dossiers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "analysis_type": "income",
+  "external_ref": "proposta-42"
+}
+
+### Buscar o dossiê criado acima
+GET {{base}}/v1/dossiers/{{create.response.body.id}}
+Authorization: Bearer {{token}}
+
+### Tipo não permitido (400)
+POST {{base}}/v1/dossiers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "analysis_type": "income_check"
+}
+
+### Sem token (401)
+GET {{base}}/v1/dossiers/dos_01JABCDEFGHJKMNPQRSTVWXYZ0

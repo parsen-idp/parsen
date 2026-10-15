@@ -5,12 +5,16 @@
   <ItemGroup Label="Domínio">
     <PackageVersion Include="Ulid" Version="1.4.1" />
   </ItemGroup>
+  <ItemGroup Label="API">
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
+  </ItemGroup>
   <ItemGroup Label="Infraestrutura (CDK)">
     <PackageVersion Include="Amazon.CDK.Lib" Version="2.273.0" />
     <PackageVersion Include="Constructs" Version="10.8.1" />
   </ItemGroup>
   <ItemGroup Label="Testes">
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.13" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
