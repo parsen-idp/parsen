@@ -9,6 +9,20 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "cognito": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5057",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "Auth__CognitoIssuer": "https://cognito-idp.sa-east-1.amazonaws.com/sa-east-1_ouTkXdlv1",
+        "Persistence__Provider": "DynamoDb",
+        "Persistence__TableName": "parsen-dev",
+        "AWS__Profile": "parsen",
+        "AWS__Region": "sa-east-1"
+      }
     }
   }
 }
