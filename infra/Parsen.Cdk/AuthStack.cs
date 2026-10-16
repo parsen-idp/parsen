@@ -1,5 +1,9 @@
 using Amazon.CDK;
 using Amazon.CDK.AWS.Cognito;
+using Amazon.CDK.AWS.DynamoDB;
+using Amazon.CDK.AWS.IAM;
+using Amazon.CDK.AWS.Lambda;
+using Amazon.CDK.AWS.Logs;
 using Constructs;
 
 namespace Parsen.Cdk;
@@ -14,7 +18,10 @@ internal sealed class AuthStack : Stack
     /// <summary>Identificador do resource server: os scopes ficam como "parsen/dossiers.read".</summary>
     public const string ResourceServerId = "parsen";
 
-    public AuthStack(Construct scope, string id, IStackProps props, StageSettings settings)
+    /// <summary>Prefixo dos itens de plataforma que o gatilho pode ler (spec, seção 9).</summary>
+    private static readonly string[] PlatformClientKeys = ["APICLIENT#*"];
+
+    public AuthStack(Construct scope, string id, IStackProps props, StageSettings settings, ITableV2 table)
         : base(scope, id, props)
     {
         UserPool = new UserPool(this, "UserPool", new UserPoolProps
@@ -79,6 +86,10 @@ internal sealed class AuthStack : Stack
             ],
         });
 
+        // Gatilho V3: adiciona tenant_id aos tokens de usuários e de integrações (client credentials)
+        var preTokenGeneration = CreatePreTokenGenerationFunction(settings, table);
+        UserPool.AddTrigger(UserPoolOperation.PRE_TOKEN_GENERATION_CONFIG, preTokenGeneration, LambdaVersion.V3_0);
+
         // Endereço do endpoint de tokens: https://{prefixo}.auth.{região}.amazoncognito.com/oauth2/token
         var domain = UserPool.AddDomain("Domain", new UserPoolDomainOptions
         {
@@ -93,4 +104,53 @@ internal sealed class AuthStack : Stack
     public UserPool UserPool { get; }
 
     public UserPoolResourceServer ResourceServer { get; }
+
+    private Function CreatePreTokenGenerationFunction(StageSettings settings, ITableV2 table)
+    {
+        var functionName = $"parsen-{settings.Name}-pre-token-generation";
+
+        // Sem retenção definida, os logs ficariam para sempre (e custariam). Logs sem dados pessoais (regra 3)
+        var logGroup = new LogGroup(this, "PreTokenGenerationLogs", new LogGroupProps
+        {
+            LogGroupName = $"/aws/lambda/{functionName}",
+            Retention = RetentionDays.ONE_MONTH,
+            RemovalPolicy = RemovalPolicy.DESTROY,
+        });
+
+        var function = new Function(this, "PreTokenGeneration", new FunctionProps
+        {
+            FunctionName = functionName,
+            Description = "Adiciona tenant_id aos tokens do Cognito (gatilho Pre Token Generation V3)",
+
+            // Native AOT: o runtime provided.al2023 executa o arquivo "bootstrap"
+            Runtime = Runtime.PROVIDED_AL2023,
+            Architecture = Architecture.X86_64,
+            Handler = "bootstrap",
+            Code = LambdaAotCode.FromProject("src/Parsen.Auth.PreTokenGeneration"),
+
+            MemorySize = 256,
+
+            // O Cognito espera no máximo 5 segundos pela resposta do gatilho
+            Timeout = Duration.Seconds(5),
+
+            Environment = new Dictionary<string, string> { ["TABLE_NAME"] = table.TableName },
+            LogGroup = logGroup,
+        });
+
+        // Permissão mínima: ler só itens de plataforma APICLIENT#*, nunca dados de tenant (TENANT#...)
+        function.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["dynamodb:GetItem"],
+            Resources = [table.TableArn],
+            Conditions = new Dictionary<string, object>
+            {
+                ["ForAllValues:StringLike"] = new Dictionary<string, object>
+                {
+                    ["dynamodb:LeadingKeys"] = PlatformClientKeys,
+                },
+            },
+        }));
+
+        return function;
+    }
 }

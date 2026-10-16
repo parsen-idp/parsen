@@ -15,17 +15,18 @@ var env = new Amazon.CDK.Environment
 
 var settings = new StageSettings(stage);
 
-_ = new DataStack(app, $"Parsen-{settings.Name}-Data", new StackProps
+var data = new DataStack(app, $"Parsen-{settings.Name}-Data", new StackProps
 {
     Env = env,
     Description = $"Parsen ({settings.Name}): dados — DynamoDB, S3 e KMS",
 }, settings);
 
+// A stack Auth usa a tabela da Data (gatilho do Cognito lê APICLIENT#): o CDK cria o export/import
 _ = new AuthStack(app, $"Parsen-{settings.Name}-Auth", new StackProps
 {
     Env = env,
     Description = $"Parsen ({settings.Name}): autenticação — Cognito",
-}, settings);
+}, settings, data.Table);
 
 // Tags aplicadas a todos os recursos: facilitam custo por projeto/estágio no Billing
 Tags.Of(app).Add("Project", "parsen");
