@@ -21,6 +21,12 @@ _ = new DataStack(app, $"Parsen-{settings.Name}-Data", new StackProps
     Description = $"Parsen ({settings.Name}): dados — DynamoDB, S3 e KMS",
 }, settings);
 
+_ = new AuthStack(app, $"Parsen-{settings.Name}-Auth", new StackProps
+{
+    Env = env,
+    Description = $"Parsen ({settings.Name}): autenticação — Cognito",
+}, settings);
+
 // Tags aplicadas a todos os recursos: facilitam custo por projeto/estágio no Billing
 Tags.Of(app).Add("Project", "parsen");
 Tags.Of(app).Add("Stage", settings.Name);
