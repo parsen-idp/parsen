@@ -65,7 +65,7 @@ cd web/backoffice && npm start        # backoffice local
 ## Regras inegociáveis
 
 1. **`Parsen.Domain` não referencia nenhum pacote AWS.** Regras e cálculos são testáveis sem rede.
-2. **Multi-tenant:** o `tenantId` vem sempre do token (claim), nunca do corpo ou da query. Toda PK no DynamoDB começa com `TENANT#{tenantId}` e o repositório exige o `TenantId` em toda operação; todo objeto no S3 fica sob o prefixo do tenant.
+2. **Multi-tenant:** o `tenantId` vem sempre do token (claim), nunca do corpo ou da query. Toda PK de dado de tenant no DynamoDB começa com `TENANT#{tenantId}` e o repositório exige o `TenantId` em toda operação; todo objeto no S3 fica sob o prefixo do tenant. Única exceção: itens de plataforma usados antes de se conhecer o tenant (ex.: `APICLIENT#{clientId}` → tenant, lido só pelo gatilho do Cognito, com IAM restrito a esse prefixo).
 3. **Sem dados pessoais em logs nem em URLs:** mascarar CPF, CNPJ, nomes, valores de renda e endereços. Logar IDs, não conteúdo. CPF e afins vão no corpo, nunca em rota ou query.
 4. **Sem segredos no código ou em variáveis de ambiente em texto puro:** usar Secrets Manager.
 5. **Sem documentos reais no repositório.** Fixtures usam apenas documentos sintéticos; o dataset anonimizado do piloto fica em bucket S3 privado, fora do repositório.

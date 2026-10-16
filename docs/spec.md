@@ -407,6 +407,9 @@ DynamoDB em tabela única. **Toda PK começa com `TENANT#<id>`**, para isolar ca
 | Créditos | TENANT#{tenantId} | CREDIT#{pacoteId} | páginas compradas, consumidas, validade |
 | Idempotência | TENANT#{tenantId}#IDEMP#{chave} | META | hash da requisição, resposta, TTL de 24 h |
 | Índice de titular | TENANT#{tenantId}#CPF#{hmac(cpf)} | DOC#{docId} | dossierId |
+| Credencial de API (plataforma) | APICLIENT#{clientId} | META | tenantId, criado em |
+
+**Itens de plataforma:** a única exceção ao prefixo `TENANT#` são itens consultados antes de se saber o tenant. O `APICLIENT#{clientId}` liga um app client do Cognito ao tenant e é lido só pelo gatilho Pre Token Generation, cuja role IAM só alcança chaves com esse prefixo (`dynamodb:LeadingKeys`).
 
 **Índices:** GSI1 por `TENANT#{tenantId}#STATUS#{status}` + `createdAt` para a fila do backoffice; GSI2 por `TENANT#{tenantId}#REF#{externalRef}` para o cliente consultar pelo próprio ID.
 
@@ -616,6 +619,8 @@ Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 | Documentos da fase 1 | Holerite, extrato, comprovante de residência e matrícula do imóvel |
 | Papel da Parsen | Verifica fatos e devolve dados, verificações e sinais; não aprova nem reprova. Política é do cliente, configurável a partir da fase 2 |
 | Região | Produção em sa-east-1 (armazenamento); Claude via endpoint Global e Textract em us-east-1 (não existe em sa-east-1), ambos declarados no DPA; desenvolvimento também em sa-east-1 (só sintéticos); regiões e IDs de modelo parametrizados |
+| Tenant no token | Gatilho Pre Token Generation (V3) adiciona `tenant_id`: de `custom:tenant_id` para usuários e do item `APICLIENT#{clientId}` para integrações; sem tenant, o token não é emitido |
+| Arquitetura das Lambdas | x64 no desenvolvimento (build rápido no Windows); migrar para arm64 (Graviton) quando o CI tiver runner ARM nativo |
 | Contas AWS | MVP no Free Plan com usuário IAM + MFA + `aws login` (sem chaves fixas); com o CNPJ, upgrade, Organizations + Identity Center e contas-membro `parsen-dev` e `parsen-prod` |
 | Códigos de verificação | Forma neutra (`CPF_VALIDO`, `CPF_CONSISTENTE`...) com resultado `passed`/`failed`/`not_applicable` |
 | Renda com holerite | Média do líquido dos holerites; extrato junto entra só em `comparacao_renda` |
