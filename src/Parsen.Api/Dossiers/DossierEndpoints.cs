@@ -13,8 +13,8 @@ internal static class DossierEndpoints
             .RequireAuthorization()
             .AddEndpointFilter<TenantFilter>();
 
-        group.MapPost("", CreateAsync);
-        group.MapGet("{id}", GetAsync);
+        group.MapPost("", CreateAsync).RequireAuthorization(Scopes.DossiersWrite);
+        group.MapGet("{id}", GetAsync).RequireAuthorization(Scopes.DossiersRead);
 
         return app;
     }

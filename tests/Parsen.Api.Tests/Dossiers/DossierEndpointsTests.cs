@@ -115,6 +115,42 @@ public sealed class DossierEndpointsTests(ParsenApiFactory factory) : IClassFixt
         Assert.Equal("TENANT_AUSENTE", (await ReadJsonAsync(response)).GetProperty("code").GetString());
     }
 
+    // ---------- Scopes ----------
+
+    [Fact]
+    public async Task Create_WithOnlyReadScope_Returns403()
+    {
+        var client = factory.CreateClientFor(TenantA, scopes: "parsen/dossiers.read");
+
+        var response = await client.PostAsJsonAsync("/v1/dossiers", new { analysis_type = "income" });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("ACESSO_NEGADO", (await ReadJsonAsync(response)).GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task Get_WithOnlyWriteScope_Returns403()
+    {
+        var writer = factory.CreateClientFor(TenantA, scopes: "parsen/dossiers.write");
+        var created = await ReadJsonAsync(await writer.PostAsJsonAsync("/v1/dossiers", new { analysis_type = "income" }));
+
+        var response = await writer.GetAsync($"/v1/dossiers/{created.GetProperty("id").GetString()}");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_WithOnlyReadScope_Returns200()
+    {
+        var created = await ReadJsonAsync(
+            await factory.CreateClientFor(TenantA).PostAsJsonAsync("/v1/dossiers", new { analysis_type = "income" }));
+
+        var reader = factory.CreateClientFor(TenantA, scopes: "parsen/dossiers.read");
+        var response = await reader.GetAsync($"/v1/dossiers/{created.GetProperty("id").GetString()}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     private static async Task<JsonElement> ReadJsonAsync(HttpResponseMessage response) =>
         JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
 }

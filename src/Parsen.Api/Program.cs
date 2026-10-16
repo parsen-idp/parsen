@@ -2,11 +2,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Parsen.Api;
+using Parsen.Api.Auth;
 using Parsen.Api.Dossiers;
 using Parsen.Application.Dossiers;
 using Parsen.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Na Lambda, recebe os eventos do API Gateway REST; fora dela (dotnet run), não faz nada e o Kestrel atende
+builder.Services.AddAWSLambdaHosting(LambdaEventSource.RestApi);
 
 // JSON da API: chaves e enums em snake_case (analysis_type, needs_review)
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -20,9 +24,10 @@ builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = 
     context.ProblemDetails.Extensions.TryAdd(ApiProblems.CodeKey, ApiProblems.DefaultCode(context.ProblemDetails.Status)));
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
-// Autenticação por JWT: em dev, tokens do dotnet user-jwts; na AWS, Cognito (passo 5c)
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
-builder.Services.AddAuthorization();
+// Autenticação por JWT. Com Auth:CognitoIssuer, valida tokens do Cognito; sem ele, tokens do dotnet user-jwts (dev)
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => CognitoJwt.Configure(options, builder.Configuration["Auth:CognitoIssuer"]));
+Scopes.AddPolicies(builder.Services.AddAuthorizationBuilder());
 
 builder.Services.AddSingleton(TimeProvider.System);
 

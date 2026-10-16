@@ -620,6 +620,8 @@ Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 | Papel da Parsen | Verifica fatos e devolve dados, verificações e sinais; não aprova nem reprova. Política é do cliente, configurável a partir da fase 2 |
 | Região | Produção em sa-east-1 (armazenamento); Claude via endpoint Global e Textract em us-east-1 (não existe em sa-east-1), ambos declarados no DPA; desenvolvimento também em sa-east-1 (só sintéticos); regiões e IDs de modelo parametrizados |
 | Tenant no token | Gatilho Pre Token Generation (V3) adiciona `tenant_id`: de `custom:tenant_id` para usuários e do item `APICLIENT#{clientId}` para integrações; sem tenant, o token não é emitido |
+| API na Lambda | Runtime gerenciado `dotnet10` (sem AOT) com `AddAWSLambdaHosting`; API Gateway REST em modo proxy com autorizador Cognito (scopes `parsen/dossiers.*`); a API revalida o token e confere o scope por operação |
+| WAF e limite por tenant | Dev: sem WAF e com limite de taxa global no estágio do API Gateway. Antes do piloto: WAF na conta de produção e usage plan por tenant (API key criada junto com a credencial do tenant) |
 | Arquitetura das Lambdas | x64 no desenvolvimento (build rápido no Windows); migrar para arm64 (Graviton) quando o CI tiver runner ARM nativo |
 | Contas AWS | MVP no Free Plan com usuário IAM + MFA + `aws login` (sem chaves fixas); com o CNPJ, upgrade, Organizations + Identity Center e contas-membro `parsen-dev` e `parsen-prod` |
 | Códigos de verificação | Forma neutra (`CPF_VALIDO`, `CPF_CONSISTENTE`...) com resultado `passed`/`failed`/`not_applicable` |

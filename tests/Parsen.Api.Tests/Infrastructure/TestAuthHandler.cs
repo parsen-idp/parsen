@@ -9,6 +9,7 @@ namespace Parsen.Api.Tests.Infrastructure;
 /// <summary>
 /// Simula o token nos testes: o cabeçalho X-Test-Tenant vira o claim tenant_id.
 /// Sem o cabeçalho, a requisição não é autenticada. Com o valor "&lt;none&gt;", autentica sem tenant.
+/// X-Test-Scopes define o claim scope (separado por espaço, como no Cognito); ausente, recebe todos os scopes.
 /// </summary>
 internal sealed class TestAuthHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,
@@ -19,6 +20,8 @@ internal sealed class TestAuthHandler(
     public const string SchemeName = "Test";
     public const string TenantHeader = "X-Test-Tenant";
     public const string NoTenant = "<none>";
+    public const string ScopesHeader = "X-Test-Scopes";
+    public const string AllScopes = "parsen/dossiers.read parsen/dossiers.write";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -27,7 +30,8 @@ internal sealed class TestAuthHandler(
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        var claims = new List<Claim> { new("sub", "usr_teste") };
+        var scopes = Request.Headers.TryGetValue(ScopesHeader, out var requested) ? requested.ToString() : AllScopes;
+        var claims = new List<Claim> { new("sub", "usr_teste"), new("scope", scopes) };
         if (tenant != NoTenant)
         {
             claims.Add(new Claim("tenant_id", tenant.ToString()));

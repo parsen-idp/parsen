@@ -30,11 +30,12 @@ public sealed class ParsenApiFactory : WebApplicationFactory<Program>
         });
     }
 
-    /// <summary>Cliente HTTP autenticado como o tenant informado.</summary>
-    public HttpClient CreateClientFor(string tenantId)
+    /// <summary>Cliente HTTP autenticado como o tenant informado, com os scopes pedidos (padrão: todos).</summary>
+    public HttpClient CreateClientFor(string tenantId, string scopes = TestAuthHandler.AllScopes)
     {
         var client = CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.TenantHeader, tenantId);
+        client.DefaultRequestHeaders.Add(TestAuthHandler.ScopesHeader, scopes);
         return client;
     }
 }
