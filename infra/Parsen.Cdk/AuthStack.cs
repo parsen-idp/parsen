@@ -97,11 +97,15 @@ internal sealed class AuthStack : Stack
         });
 
         _ = new CfnOutput(this, "UserPoolId", new CfnOutputProps { Value = UserPool.UserPoolId });
-        _ = new CfnOutput(this, "Issuer", new CfnOutputProps { Value = $"https://cognito-idp.{Region}.amazonaws.com/{UserPool.UserPoolId}" });
+        Issuer = $"https://cognito-idp.{Region}.amazonaws.com/{UserPool.UserPoolId}";
+        _ = new CfnOutput(this, "Issuer", new CfnOutputProps { Value = Issuer });
         _ = new CfnOutput(this, "TokenEndpoint", new CfnOutputProps { Value = $"{domain.BaseUrl()}/oauth2/token" });
     }
 
     public UserPool UserPool { get; }
+
+    /// <summary>Emissor dos tokens; a API valida a assinatura pelo JWKS em {Issuer}/.well-known/jwks.json.</summary>
+    public string Issuer { get; }
 
     public UserPoolResourceServer ResourceServer { get; }
 
@@ -126,7 +130,7 @@ internal sealed class AuthStack : Stack
             Runtime = Runtime.PROVIDED_AL2023,
             Architecture = Architecture.X86_64,
             Handler = "bootstrap",
-            Code = LambdaAotCode.FromProject("src/Parsen.Auth.PreTokenGeneration"),
+            Code = LambdaCode.NativeAot("src/Parsen.Auth.PreTokenGeneration"),
 
             MemorySize = 256,
 

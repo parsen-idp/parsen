@@ -4,17 +4,33 @@ using Amazon.CDK.AWS.Lambda;
 namespace Parsen.Cdk;
 
 /// <summary>
-/// Empacota um projeto .NET como Lambda Native AOT: o CDK roda o build num container
-/// Amazon Linux 2023 (Build/LambdaAot) e usa o executável "bootstrap" como código da função.
+/// Empacota projetos .NET como código de Lambda. O CDK roda o build num container Amazon Linux 2023
+/// (Build/LambdaAot), copiando só os arquivos necessários para fora das pastas do Windows.
 /// </summary>
-internal static class LambdaAotCode
+internal static class LambdaCode
 {
     /// <summary>Arquivos da raiz que todo build precisa (versões centrais de pacotes, SDK, fontes NuGet).</summary>
     private static readonly string[] RootFiles = ["Directory.Build.props", "Directory.Packages.props", "global.json", "nuget.config"];
 
+    /// <summary>
+    /// Native AOT para o runtime provided.al2023: o pacote é só o executável "bootstrap".
+    /// </summary>
     /// <param name="projectDir">Pasta do projeto da Lambda, relativa à raiz do repositório (ex.: src/Parsen.Auth.PreTokenGeneration).</param>
     /// <param name="dependencyDirs">Pastas dos projetos referenciados por ela, no mesmo formato.</param>
-    public static Code FromProject(string projectDir, params string[] dependencyDirs)
+    public static Code NativeAot(string projectDir, params string[] dependencyDirs) =>
+        Build(projectDir, dependencyDirs,
+            publish: $"dotnet publish /tmp/src/{projectDir} -c Release -r linux-x64 -o /tmp/publish",
+            copyOutput: "cp /tmp/publish/bootstrap /asset-output/");
+
+    /// <summary>
+    /// Runtime gerenciado (dotnet10): o pacote são as DLLs do publish, executadas pelo .NET da própria Lambda.
+    /// </summary>
+    public static Code Managed(string projectDir, params string[] dependencyDirs) =>
+        Build(projectDir, dependencyDirs,
+            publish: $"dotnet publish /tmp/src/{projectDir} -c Release -r linux-x64 --self-contained false -o /tmp/publish",
+            copyOutput: "cp -r /tmp/publish/. /asset-output/");
+
+    private static AssetCode Build(string projectDir, string[] dependencyDirs, string publish, string copyOutput)
     {
         string[] dirs = [projectDir, .. dependencyDirs];
         var repoRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", ".."));
@@ -28,12 +44,12 @@ internal static class LambdaAotCode
             $"cp {string.Join(' ', RootFiles.Select(f => $"/asset-input/{f}"))} /tmp/src/",
             copyDirs,
             "find /tmp/src -type d \\( -name bin -o -name obj \\) -prune -exec rm -rf {} +",
-            $"dotnet publish /tmp/src/{projectDir} -c Release -r linux-x64 -o /tmp/publish",
-            "cp /tmp/publish/bootstrap /asset-output/");
+            publish,
+            copyOutput);
 
         return Code.FromAsset(repoRoot, new Amazon.CDK.AWS.S3.Assets.AssetOptions
         {
-            // Só esses arquivos entram no hash do asset: o build só roda de novo quando eles mudam
+            // Só esses arquivos (e as opções de build) entram no hash do asset: o build só roda de novo quando mudam
             IgnoreMode = IgnoreMode.GIT,
             Exclude =
             [

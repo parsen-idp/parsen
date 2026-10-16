@@ -22,11 +22,17 @@ var data = new DataStack(app, $"Parsen-{settings.Name}-Data", new StackProps
 }, settings);
 
 // A stack Auth usa a tabela da Data (gatilho do Cognito lê APICLIENT#): o CDK cria o export/import
-_ = new AuthStack(app, $"Parsen-{settings.Name}-Auth", new StackProps
+var auth = new AuthStack(app, $"Parsen-{settings.Name}-Auth", new StackProps
 {
     Env = env,
     Description = $"Parsen ({settings.Name}): autenticação — Cognito",
 }, settings, data.Table);
+
+_ = new ApiStack(app, $"Parsen-{settings.Name}-Api", new StackProps
+{
+    Env = env,
+    Description = $"Parsen ({settings.Name}): API pública — API Gateway e Lambda",
+}, settings, data.Table, auth.UserPool, auth.Issuer);
 
 // Tags aplicadas a todos os recursos: facilitam custo por projeto/estágio no Billing
 Tags.Of(app).Add("Project", "parsen");
