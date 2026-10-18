@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Etapa 1 do pipeline: PDF/imagem → PNG por página (PDFium, validado no spike A) -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>bootstrap</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StripSymbols>true</StripSymbols>
+    <!-- CA1416: o PDFtoImage declara as plataformas suportadas; Linux (Lambda) e Windows (testes) estão entre elas -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PDFtoImage" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Parsen.Workers.Common.csproj" />
+    <ProjectReference Include="..\..\Parsen.Infrastructure\Parsen.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

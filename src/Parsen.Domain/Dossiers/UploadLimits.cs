@@ -13,6 +13,9 @@ public static class UploadLimits
 {
     public const long MaxFileSizeBytes = 20L * 1024 * 1024;
 
+    /// <summary>Páginas por dossiê. Conferido por documento no Ingest e no total do dossiê na etapa Result.</summary>
+    public const int MaxPagesPerDossier = 50;
+
     public static bool TryParseContentType(string? mimeType, out DocumentContentType contentType)
     {
         DocumentContentType? parsed = mimeType?.Trim().ToUpperInvariant() switch

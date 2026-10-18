@@ -51,6 +51,23 @@ public sealed class DynamoDbDocumentRepositoryTests(DynamoDbFixture fixture) : I
     }
 
     [Fact]
+    public async Task Get_ReturnsTheDocumentOnlyForItsTenantAndDossier()
+    {
+        var tenant = NewTenant();
+        var dossierId = DossierId.New();
+        var document = Document.Create(tenant, dossierId, DocumentContentType.Pdf, 777, _clock);
+        await _repository.AddAsync(document, CancellationToken.None);
+
+        var loaded = await _repository.GetAsync(tenant, dossierId, document.Id, CancellationToken.None);
+
+        Assert.Equal(document.Id, loaded?.Id);
+        Assert.Equal(777, loaded?.DeclaredSizeBytes);
+        Assert.Null(await _repository.GetAsync(NewTenant(), dossierId, document.Id, CancellationToken.None));
+        Assert.Null(await _repository.GetAsync(tenant, DossierId.New(), document.Id, CancellationToken.None));
+        Assert.Null(await _repository.GetAsync(tenant, dossierId, DocumentId.New(), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task StoredItem_LivesInTheDossierPartition()
     {
         var tenant = TenantId.From("ten_doc_layout");

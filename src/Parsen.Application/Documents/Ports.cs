@@ -9,6 +9,9 @@ public interface IDocumentRepository
     Task AddAsync(Document document, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<Document>> ListByDossierAsync(TenantId tenantId, DossierId dossierId, CancellationToken cancellationToken);
+
+    /// <summary>Retorna null se o documento não existe nesse dossiê e tenant.</summary>
+    Task<Document?> GetAsync(TenantId tenantId, DossierId dossierId, DocumentId documentId, CancellationToken cancellationToken);
 }
 
 /// <summary>

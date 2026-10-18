@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Última etapa do pipeline: grava o status final do dossiê (failed agora; needs_review na 6e) -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>bootstrap</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StripSymbols>true</StripSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Parsen.Workers.Common.csproj" />
+    <ProjectReference Include="..\..\Parsen.Infrastructure\Parsen.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

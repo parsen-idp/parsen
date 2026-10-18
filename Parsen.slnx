@@ -9,10 +9,16 @@
     <Project Path="src/Parsen.Domain/Parsen.Domain.csproj" />
     <Project Path="src/Parsen.Infrastructure/Parsen.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Parsen.Workers/">
+    <Project Path="src/Parsen.Workers/Common/Parsen.Workers.Common.csproj" />
+    <Project Path="src/Parsen.Workers/Finalize/Parsen.Workers.Finalize.csproj" />
+    <Project Path="src/Parsen.Workers/Ingest/Parsen.Workers.Ingest.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Parsen.Api.Tests/Parsen.Api.Tests.csproj" />
     <Project Path="tests/Parsen.Auth.PreTokenGeneration.Tests/Parsen.Auth.PreTokenGeneration.Tests.csproj" />
     <Project Path="tests/Parsen.Domain.Tests/Parsen.Domain.Tests.csproj" />
     <Project Path="tests/Parsen.Infrastructure.Tests/Parsen.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Parsen.Workers.Tests/Parsen.Workers.Tests.csproj" />
   </Folder>
 </Solution>

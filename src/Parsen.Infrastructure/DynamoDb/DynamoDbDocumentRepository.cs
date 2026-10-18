@@ -29,6 +29,22 @@ public sealed class DynamoDbDocumentRepository(IAmazonDynamoDB client, DynamoDbS
         }
     }
 
+    public async Task<Document?> GetAsync(TenantId tenantId, DossierId dossierId, DocumentId documentId, CancellationToken cancellationToken)
+    {
+        var response = await client.GetItemAsync(new GetItemRequest
+        {
+            TableName = settings.TableName,
+            Key = new Dictionary<string, AttributeValue>
+            {
+                [TableSchema.PartitionKey] = new AttributeValue(DocumentItem.PartitionKey(tenantId, dossierId)),
+                [TableSchema.SortKey] = new AttributeValue($"{DocumentItem.SortKeyPrefix}{documentId}"),
+            },
+            ConsistentRead = true,
+        }, cancellationToken);
+
+        return response.Item is { Count: > 0 } item ? DocumentItem.FromItem(item) : null;
+    }
+
     public async Task<IReadOnlyList<Document>> ListByDossierAsync(TenantId tenantId, DossierId dossierId, CancellationToken cancellationToken)
     {
         var documents = new List<Document>();

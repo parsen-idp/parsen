@@ -17,6 +17,11 @@ public sealed class InMemoryDocumentRepository : IDocumentRepository
         return Task.CompletedTask;
     }
 
+    public Task<Document?> GetAsync(TenantId tenantId, DossierId dossierId, DocumentId documentId, CancellationToken cancellationToken) =>
+        Task.FromResult(_items.TryGetValue((tenantId, dossierId), out var documents)
+            ? documents.FirstOrDefault(d => d.Id == documentId)
+            : null);
+
     public Task<IReadOnlyList<Document>> ListByDossierAsync(TenantId tenantId, DossierId dossierId, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<Document>>(
             _items.TryGetValue((tenantId, dossierId), out var documents) ? [.. documents] : []);

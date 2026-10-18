@@ -32,6 +32,14 @@ public static class ObjectKeys
 
         return $"{document.TenantId}/{document.DossierId}/{document.Id}/original.{extension}";
     }
+
+    /// <summary>Página renderizada pelo Ingest: pages/{n}.png, com n começando em 1.</summary>
+    public static string Page(Document document, int pageNumber)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentOutOfRangeException.ThrowIfLessThan(pageNumber, 1);
+        return $"{document.TenantId}/{document.DossierId}/{document.Id}/pages/{pageNumber.ToString(CultureInfo.InvariantCulture)}.png";
+    }
 }
 
 /// <summary>

@@ -41,6 +41,15 @@ public sealed class S3FileStorageTests : IDisposable
     }
 
     [Fact]
+    public void PageKey_IsUnderTheDocumentPagesFolder()
+    {
+        var document = NewDocument(DocumentContentType.Pdf);
+
+        Assert.Equal($"ten_teste/{document.DossierId}/{document.Id}/pages/3.png", ObjectKeys.Page(document, 3));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ObjectKeys.Page(document, 0));
+    }
+
+    [Fact]
     public async Task CreateUpload_ReturnsPutUrlForTheDocumentKey()
     {
         var document = NewDocument(DocumentContentType.Pdf);
