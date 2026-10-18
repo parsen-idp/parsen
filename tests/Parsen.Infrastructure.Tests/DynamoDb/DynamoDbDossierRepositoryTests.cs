@@ -103,6 +103,49 @@ public sealed class DynamoDbDossierRepositoryTests(DynamoDbFixture fixture) : IC
         Assert.False(item.ContainsKey("ExternalRef"));
     }
 
+    // ---------- Atualização com controle otimista de concorrência ----------
+
+    [Fact]
+    public async Task Update_PersistsNewStatusMovesQueueAndAdvancesVersion()
+    {
+        var tenant = TenantId.From("ten_update");
+        var dossier = Dossier.Create(tenant, AnalysisType.Income, null, _clock);
+        await _repository.AddAsync(dossier, CancellationToken.None);
+
+        dossier.Submit(_clock);
+        await _repository.UpdateAsync(dossier, CancellationToken.None);
+
+        Assert.Equal(2, dossier.Version);
+        var loaded = await _repository.GetAsync(tenant, dossier.Id, CancellationToken.None);
+        Assert.Equal(DossierStatus.Processing, loaded?.Status);
+        Assert.Equal(2, loaded?.Version);
+
+        // O dossiê mudou de "gaveta" na fila (GSI1)
+        var item = await GetRawItemAsync("TENANT#ten_update", $"DOSSIER#{dossier.Id}");
+        Assert.Equal("TENANT#ten_update#STATUS#processing", item["GSI1PK"].S);
+    }
+
+    [Fact]
+    public async Task Update_WithStaleVersion_ThrowsConflictAndKeepsWinner()
+    {
+        var dossier = Dossier.Create(NewTenant(), AnalysisType.Income, null, _clock);
+        await _repository.AddAsync(dossier, CancellationToken.None);
+
+        // Duas execuções leem a mesma versão (1)
+        var first = await _repository.GetAsync(dossier.TenantId, dossier.Id, CancellationToken.None);
+        var second = await _repository.GetAsync(dossier.TenantId, dossier.Id, CancellationToken.None);
+
+        first!.Submit(_clock);
+        await _repository.UpdateAsync(first, CancellationToken.None);
+
+        second!.Submit(_clock);
+        await Assert.ThrowsAsync<PersistenceConflictException>(() => _repository.UpdateAsync(second, CancellationToken.None));
+        Assert.Equal(1, second.Version);
+
+        var loaded = await _repository.GetAsync(dossier.TenantId, dossier.Id, CancellationToken.None);
+        Assert.Equal(2, loaded?.Version);
+    }
+
     public static TheoryData<DossierStatus> AllStatuses => new(Enum.GetValues<DossierStatus>());
 
     [Theory]

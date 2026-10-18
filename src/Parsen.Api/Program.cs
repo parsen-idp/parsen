@@ -34,6 +34,9 @@ builder.Services.AddSingleton(TimeProvider.System);
 
 // Persistence:Provider escolhe InMemory (padrão) ou DynamoDb
 builder.Services.AddParsenPersistence(builder.Configuration);
+
+// Storage:* (S3) e Events:* (EventBridge) habilitam o upload de documentos e o submit
+builder.Services.AddParsenIntegrations(builder.Configuration);
 builder.Services.AddScoped<CreateDossierHandler>();
 builder.Services.AddScoped<GetDossierHandler>();
 builder.Services.AddScoped<RequestUploadHandler>();

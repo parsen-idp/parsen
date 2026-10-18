@@ -58,6 +58,13 @@ public sealed class SubmitDossierHandler(
             // Sem o evento, ninguém processaria o dossiê: volta para rascunho e o cliente tenta de novo
             dossier.RevertSubmit(clock);
             await dossiers.UpdateAsync(dossier, CancellationToken.None);
+
+            // Recusa já explicada (ex.: integração não configurada) segue com o próprio código
+            if (ex is RequestRejectedException)
+            {
+                throw;
+            }
+
             throw new RequestRejectedException(
                 "TENTE_NOVAMENTE", "Não foi possível iniciar o processamento. Tente novamente.", RejectionKind.Unavailable, ex);
         }
