@@ -28,11 +28,18 @@ var auth = new AuthStack(app, $"Parsen-{settings.Name}-Auth", new StackProps
     Description = $"Parsen ({settings.Name}): autenticação — Cognito",
 }, settings, data.Table);
 
+// Barramento de eventos (e, no passo 6, o Step Functions): a API publica nele
+var pipeline = new PipelineStack(app, $"Parsen-{settings.Name}-Pipeline", new StackProps
+{
+    Env = env,
+    Description = $"Parsen ({settings.Name}): pipeline — EventBridge",
+}, settings);
+
 _ = new ApiStack(app, $"Parsen-{settings.Name}-Api", new StackProps
 {
     Env = env,
     Description = $"Parsen ({settings.Name}): API pública — API Gateway e Lambda",
-}, settings, data.Table, auth.UserPool, auth.Issuer);
+}, settings, new ApiDependencies(data.Table, auth.UserPool, auth.Issuer, data.DocumentsBucket, data.PlatformKey, pipeline.EventBus));
 
 // Tags aplicadas a todos os recursos: facilitam custo por projeto/estágio no Billing
 Tags.Of(app).Add("Project", "parsen");

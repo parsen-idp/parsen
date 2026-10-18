@@ -20,6 +20,9 @@
         "Auth__CognitoIssuer": "https://cognito-idp.sa-east-1.amazonaws.com/sa-east-1_ouTkXdlv1",
         "Persistence__Provider": "DynamoDb",
         "Persistence__TableName": "parsen-dev",
+        "Storage__BucketName": "parsen-docs-dev-952452277217",
+        "Storage__KmsKeyId": "arn:aws:kms:sa-east-1:952452277217:key/1622b573-c564-4f26-afa3-1d285991fbef",
+        "Events__BusName": "parsen-dev",
         "AWS__Profile": "parsen",
         "AWS__Region": "sa-east-1"
       }

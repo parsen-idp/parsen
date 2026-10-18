@@ -2,12 +2,18 @@ using Amazon.CDK;
 using Amazon.CDK.AWS.APIGateway;
 using Amazon.CDK.AWS.Cognito;
 using Amazon.CDK.AWS.DynamoDB;
+using Amazon.CDK.AWS.Events;
 using Amazon.CDK.AWS.IAM;
+using Amazon.CDK.AWS.KMS;
 using Amazon.CDK.AWS.Lambda;
 using Amazon.CDK.AWS.Logs;
+using Amazon.CDK.AWS.S3;
 using Constructs;
 
 namespace Parsen.Cdk;
+
+/// <summary>Recursos de outras stacks que a API usa.</summary>
+internal sealed record ApiDependencies(ITableV2 Table, IUserPool UserPool, string Issuer, IBucket DocumentsBucket, IKey PlatformKey, IEventBus EventBus);
 
 /// <summary>
 /// Stack da API pública: Lambda com a Minimal API (runtime dotnet10) atrás do API Gateway REST,
@@ -21,10 +27,12 @@ internal sealed class ApiStack : Stack
     /// <summary>A API só alcança dados de tenant, nunca itens de plataforma (APICLIENT#).</summary>
     private static readonly string[] TenantKeys = ["TENANT#*"];
 
-    public ApiStack(Construct scope, string id, IStackProps props, StageSettings settings, ITableV2 table, IUserPool userPool, string issuer)
+    public ApiStack(Construct scope, string id, IStackProps props, StageSettings settings, ApiDependencies dependencies)
         : base(scope, id, props)
     {
-        var function = CreateFunction(settings, table, issuer);
+        ArgumentNullException.ThrowIfNull(dependencies);
+        var function = CreateFunction(settings, dependencies);
+        var userPool = dependencies.UserPool;
 
         var authorizer = new CognitoUserPoolsAuthorizer(this, "Authorizer", new CognitoUserPoolsAuthorizerProps
         {
@@ -71,8 +79,9 @@ internal sealed class ApiStack : Stack
         _ = new CfnOutput(this, "ApiUrl", new CfnOutputProps { Value = api.Url });
     }
 
-    private Function CreateFunction(StageSettings settings, ITableV2 table, string issuer)
+    private Function CreateFunction(StageSettings settings, ApiDependencies dependencies)
     {
+        var (table, _, issuer, bucket, key, eventBus) = dependencies;
         var functionName = $"parsen-{settings.Name}-api";
 
         var logGroup = new LogGroup(this, "ApiLogs", new LogGroupProps
@@ -104,6 +113,9 @@ internal sealed class ApiStack : Stack
                 ["Auth__CognitoIssuer"] = issuer,
                 ["Persistence__Provider"] = "DynamoDb",
                 ["Persistence__TableName"] = table.TableName,
+                ["Storage__BucketName"] = bucket.BucketName,
+                ["Storage__KmsKeyId"] = key.KeyArn,
+                ["Events__BusName"] = eventBus.EventBusName,
             },
             LogGroup = logGroup,
         });
@@ -120,6 +132,36 @@ internal sealed class ApiStack : Stack
                     ["dynamodb:LeadingKeys"] = TenantKeys,
                 },
             },
+        }));
+
+        // URL pré-assinada: o upload do cliente acontece "em nome" de quem assinou, então a Lambda
+        // precisa da permissão de gravar (e de aplicar a tag). GetObject cobre o HeadObject do submit
+        function.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["s3:PutObject", "s3:PutObjectTagging", "s3:GetObject"],
+            Resources = [bucket.ArnForObjects("*")],
+        }));
+
+        // Sem ListBucket, o S3 responde 403 (e não 404) a um HeadObject de arquivo inexistente, para não
+        // revelar quais arquivos existem. Com ela, o submit distingue "arquivo não enviado" de erro de permissão
+        function.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["s3:ListBucket"],
+            Resources = [bucket.BucketArn],
+        }));
+
+        // O S3 pede ao KMS uma chave de dados para cifrar o upload, também em nome de quem assinou
+        function.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["kms:GenerateDataKey"],
+            Resources = [key.KeyArn],
+        }));
+
+        // Publicar DossierSubmitted só no barramento da Parsen
+        function.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["events:PutEvents"],
+            Resources = [eventBus.EventBusArn],
         }));
 
         return function;
