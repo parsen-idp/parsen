@@ -1,7 +1,9 @@
 using Amazon.DynamoDBv2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Parsen.Application.Documents;
 using Parsen.Application.Dossiers;
+using Parsen.Infrastructure.Documents;
 using Parsen.Infrastructure.Dossiers;
 using Parsen.Infrastructure.DynamoDb;
 
@@ -21,6 +23,7 @@ public static class DependencyInjection
         {
             case "InMemory":
                 services.AddSingleton<IDossierRepository, InMemoryDossierRepository>();
+                services.AddSingleton<IDocumentRepository, InMemoryDocumentRepository>();
                 break;
 
             case "DynamoDb":

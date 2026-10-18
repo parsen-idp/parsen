@@ -80,6 +80,16 @@ public sealed class Dossier
     public void Submit(TimeProvider clock) =>
         Transition(nameof(Submit), DossierStatus.Processing, clock, DossierStatus.Draft);
 
+    /// <summary>
+    /// Compensação técnica: desfaz um submit cujo evento não chegou ao pipeline (a publicação falhou).
+    /// Não é uma decisão de negócio; o cliente pode submeter de novo.
+    /// </summary>
+    public void RevertSubmit(TimeProvider clock) =>
+        Transition(nameof(RevertSubmit), DossierStatus.Draft, clock, DossierStatus.Processing);
+
+    /// <summary>Chamado pelo repositório depois de gravar com sucesso: a versão persistida avança.</summary>
+    public void MarkSaved() => Version++;
+
     public void CompleteVerification(VerificationOutcome outcome, TimeProvider clock) =>
         Transition(nameof(CompleteVerification), ToStatus(outcome), clock, DossierStatus.Processing);
 

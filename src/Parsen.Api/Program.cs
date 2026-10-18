@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Parsen.Api;
 using Parsen.Api.Auth;
 using Parsen.Api.Dossiers;
+using Parsen.Application.Documents;
 using Parsen.Application.Dossiers;
 using Parsen.Infrastructure;
 
@@ -35,6 +36,8 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddParsenPersistence(builder.Configuration);
 builder.Services.AddScoped<CreateDossierHandler>();
 builder.Services.AddScoped<GetDossierHandler>();
+builder.Services.AddScoped<RequestUploadHandler>();
+builder.Services.AddScoped<SubmitDossierHandler>();
 
 var app = builder.Build();
 

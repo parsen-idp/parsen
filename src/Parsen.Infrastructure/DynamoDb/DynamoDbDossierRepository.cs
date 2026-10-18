@@ -31,6 +31,37 @@ public sealed class DynamoDbDossierRepository(IAmazonDynamoDB client, DynamoDbSe
         }
     }
 
+    public async Task UpdateAsync(Dossier dossier, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dossier);
+
+        // Grava o item inteiro (status, GSI1 da fila etc.) com a versão seguinte, mas só se ninguém
+        // tiver gravado depois da nossa leitura: controle otimista de concorrência
+        var item = DossierItem.ToItem(dossier);
+        item["Version"] = new AttributeValue { N = StoredValues.From(dossier.Version + 1) };
+
+        try
+        {
+            await client.PutItemAsync(new PutItemRequest
+            {
+                TableName = settings.TableName,
+                Item = item,
+                ConditionExpression = "#version = :expected",
+                ExpressionAttributeNames = new Dictionary<string, string> { ["#version"] = "Version" },
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    [":expected"] = new AttributeValue { N = StoredValues.From(dossier.Version) },
+                },
+            }, cancellationToken);
+        }
+        catch (ConditionalCheckFailedException ex)
+        {
+            throw new PersistenceConflictException($"O dossiê {dossier.Id} foi alterado por outra requisição.", ex);
+        }
+
+        dossier.MarkSaved();
+    }
+
     public async Task<Dossier?> GetAsync(TenantId tenantId, DossierId id, CancellationToken cancellationToken)
     {
         var response = await client.GetItemAsync(new GetItemRequest

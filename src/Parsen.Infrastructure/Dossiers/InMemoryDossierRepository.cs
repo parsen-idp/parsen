@@ -19,4 +19,13 @@ public sealed class InMemoryDossierRepository : IDossierRepository
 
     public Task<Dossier?> GetAsync(TenantId tenantId, DossierId id, CancellationToken cancellationToken) =>
         Task.FromResult(_items.GetValueOrDefault((tenantId, id)));
+
+    /// <summary>Em memória o objeto já é o próprio registro: basta avançar a versão.</summary>
+    public Task UpdateAsync(Dossier dossier, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dossier);
+        _items[(dossier.TenantId, dossier.Id)] = dossier;
+        dossier.MarkSaved();
+        return Task.CompletedTask;
+    }
 }

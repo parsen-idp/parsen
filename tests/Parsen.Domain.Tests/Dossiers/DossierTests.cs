@@ -66,6 +66,28 @@ public class DossierTests
         Assert.Equal(1, NewDossier().Version);
     }
 
+    [Fact]
+    public void MarkSaved_AdvancesVersion()
+    {
+        var dossier = NewDossier();
+
+        dossier.MarkSaved();
+
+        Assert.Equal(2, dossier.Version);
+    }
+
+    // ---------- Compensação do submit ----------
+
+    [Fact]
+    public void RevertSubmit_FromProcessing_GoesBackToDraft()
+    {
+        var dossier = InStatus(DossierStatus.Processing);
+
+        dossier.RevertSubmit(_clock);
+
+        Assert.Equal(DossierStatus.Draft, dossier.Status);
+    }
+
     // ---------- Transições válidas ----------
 
     [Fact]
@@ -183,6 +205,9 @@ public class DossierTests
         { DossierStatus.Approved, nameof(Dossier.Approve) },
         { DossierStatus.Rejected, nameof(Dossier.Approve) },
         { DossierStatus.Draft, nameof(Dossier.Reject) },
+        { DossierStatus.Draft, nameof(Dossier.RevertSubmit) },
+        { DossierStatus.Ready, nameof(Dossier.RevertSubmit) },
+        { DossierStatus.Failed, nameof(Dossier.RevertSubmit) },
         { DossierStatus.Approved, nameof(Dossier.Reject) },
         { DossierStatus.Rejected, nameof(Dossier.Reject) },
     };
@@ -216,6 +241,7 @@ public class DossierTests
             case nameof(Dossier.Reverify): dossier.Reverify(VerificationOutcome.AllPassed, _clock); break;
             case nameof(Dossier.Approve): dossier.Approve("usr_analista", _clock); break;
             case nameof(Dossier.Reject): dossier.Reject("usr_analista", "motivo", _clock); break;
+            case nameof(Dossier.RevertSubmit): dossier.RevertSubmit(_clock); break;
             default: throw new ArgumentOutOfRangeException(nameof(action), action, null);
         }
     }

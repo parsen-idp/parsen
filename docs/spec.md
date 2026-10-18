@@ -293,6 +293,7 @@ Arquivo fora dos limites é recusado na criação da URL (tamanho e formato decl
 | `processing` | `ready` ou `needs_review` | Fim da verificação |
 | `processing` | `failed` | Erro técnico após os retries |
 | `failed` | `processing` | `retry` |
+| `processing` | `draft` | Compensação técnica: o `submit` gravou o status, mas o evento `DossierSubmitted` não foi publicado; a API responde `503 TENTE_NOVAMENTE` e o cliente submete de novo |
 | `needs_review` ↔ `ready` | — | Correção de campo reexecuta as verificações |
 | `ready` ou `needs_review` | `approved` ou `rejected` | Ação do analista do cliente |
 
