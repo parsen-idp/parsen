@@ -3,7 +3,7 @@ using Parsen.Application.Documents;
 using Parsen.Application.Dossiers;
 using Parsen.Domain.Dossiers;
 
-namespace Parsen.Infrastructure;
+namespace Parsen.Api.Composition;
 
 /// <summary>
 /// Usadas quando Storage:* ou Events:* não estão configurados (ex.: API local em memória): a API

@@ -11,9 +11,10 @@ using Parsen.Infrastructure.DynamoDb;
 using Parsen.Infrastructure.Events;
 using Parsen.Infrastructure.Storage;
 
-namespace Parsen.Infrastructure;
+namespace Parsen.Api.Composition;
 
-public static class DependencyInjection
+/// <summary>Composição da API: escolhe as implementações das portas a partir da configuração.</summary>
+internal static class DependencyInjection
 {
     /// <summary>
     /// Persistence:Provider = InMemory (padrão, desenvolvimento) ou DynamoDb (exige Persistence:TableName).

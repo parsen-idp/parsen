@@ -3,10 +3,10 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Parsen.Api;
 using Parsen.Api.Auth;
+using Parsen.Api.Composition;
 using Parsen.Api.Dossiers;
 using Parsen.Application.Documents;
 using Parsen.Application.Dossiers;
-using Parsen.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
