@@ -28,12 +28,12 @@ var auth = new AuthStack(app, $"Parsen-{settings.Name}-Auth", new StackProps
     Description = $"Parsen ({settings.Name}): autenticação — Cognito",
 }, settings, data.Table);
 
-// Barramento de eventos (e, no passo 6, o Step Functions): a API publica nele
+// Barramento de eventos, workers e Step Functions: a API publica no barramento e o pipeline consome
 var pipeline = new PipelineStack(app, $"Parsen-{settings.Name}-Pipeline", new StackProps
 {
     Env = env,
-    Description = $"Parsen ({settings.Name}): pipeline — EventBridge",
-}, settings);
+    Description = $"Parsen ({settings.Name}): pipeline — EventBridge, Step Functions e workers",
+}, settings, new PipelineDependencies(data.Table, data.DocumentsBucket, data.PlatformKey));
 
 _ = new ApiStack(app, $"Parsen-{settings.Name}-Api", new StackProps
 {
