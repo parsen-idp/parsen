@@ -13,14 +13,15 @@ internal static class LambdaCode
     private static readonly string[] RootFiles = ["Directory.Build.props", "Directory.Packages.props", "global.json", "nuget.config"];
 
     /// <summary>
-    /// Native AOT para o runtime provided.al2023: o pacote é só o executável "bootstrap".
+    /// Native AOT para o runtime provided.al2023: o executável "bootstrap" e as bibliotecas nativas que ele
+    /// carrega ao lado (ex.: libpdfium.so e libSkiaSharp.so no Ingest). Os símbolos de depuração (.dbg, .pdb) ficam de fora.
     /// </summary>
     /// <param name="projectDir">Pasta do projeto da Lambda, relativa à raiz do repositório (ex.: src/Parsen.Auth.PreTokenGeneration).</param>
     /// <param name="dependencyDirs">Pastas dos projetos referenciados por ela, no mesmo formato.</param>
     public static Code NativeAot(string projectDir, params string[] dependencyDirs) =>
         Build(projectDir, dependencyDirs,
             publish: $"dotnet publish /tmp/src/{projectDir} -c Release -r linux-x64 -o /tmp/publish",
-            copyOutput: "cp /tmp/publish/bootstrap /asset-output/");
+            copyOutput: "find /tmp/publish -maxdepth 1 -type f ! -name '*.dbg' ! -name '*.pdb' -exec cp {} /asset-output/ \\;");
 
     /// <summary>
     /// Runtime gerenciado (dotnet10): o pacote são as DLLs do publish, executadas pelo .NET da própria Lambda.
@@ -49,16 +50,11 @@ internal static class LambdaCode
 
         return Code.FromAsset(repoRoot, new Amazon.CDK.AWS.S3.Assets.AssetOptions
         {
-            // Só esses arquivos (e as opções de build) entram no hash do asset: o build só roda de novo quando mudam
-            IgnoreMode = IgnoreMode.GIT,
-            Exclude =
-            [
-                "*",
-                .. RootFiles.Select(f => $"!/{f}"),
-                .. IncludeDirs(dirs),
-                "**/bin/",
-                "**/obj/",
-            ],
+            // Hash calculado por nós: o código das pastas do projeto, os arquivos da raiz e o comando de build.
+            // Mudou qualquer um deles → hash novo → build e deploy da Lambda. (Os padrões de exclusão estilo
+            // .gitignore deixavam as pastas de código fora do hash: uma mudança só no C# não era implantada.)
+            AssetHashType = AssetHashType.CUSTOM,
+            AssetHash = SourceHash(repoRoot, dirs, script),
             Bundling = new BundlingOptions
             {
                 Image = DockerImage.FromBuild(buildImageDir),
@@ -72,30 +68,26 @@ internal static class LambdaCode
     }
 
     /// <summary>
-    /// Padrões estilo .gitignore que reincluem pastas aninhadas (ex.: src/Projeto). A ordem importa:
-    /// primeiro as pastas-pai ("!/src/" e "/src/*"), depois as pastas pedidas, para que o "/src/*"
-    /// de uma não volte a excluir a outra.
+    /// SHA-256 dos arquivos que entram no build (sem bin/ e obj/), em ordem estável, mais o comando.
+    /// Inclui o caminho de cada arquivo: renomear ou mover também muda o hash.
     /// </summary>
-    private static IEnumerable<string> IncludeDirs(IEnumerable<string> dirs)
+    internal static string SourceHash(string repoRoot, IEnumerable<string> dirs, string script)
     {
-        var parents = dirs
-            .SelectMany(d =>
-            {
-                var parts = d.Split('/');
-                return Enumerable.Range(1, parts.Length - 1).Select(i => string.Join('/', parts[..i]));
-            })
-            .Distinct()
-            .OrderBy(p => p.Count(c => c == '/'));
+        var files = RootFiles
+            .Select(f => Path.Combine(repoRoot, f))
+            .Concat(dirs.SelectMany(d => Directory.EnumerateFiles(Path.Combine(repoRoot, d), "*", SearchOption.AllDirectories)))
+            .Select(path => (Full: path, Relative: Path.GetRelativePath(repoRoot, path).Replace('\\', '/')))
+            .Where(f => !f.Relative.Split('/').Any(part => part is "bin" or "obj"))
+            .OrderBy(f => f.Relative, StringComparer.Ordinal);
 
-        foreach (var parent in parents)
+        using var sha = System.Security.Cryptography.IncrementalHash.CreateHash(System.Security.Cryptography.HashAlgorithmName.SHA256);
+        foreach (var (full, relative) in files)
         {
-            yield return $"!/{parent}/";
-            yield return $"/{parent}/*";
+            sha.AppendData(System.Text.Encoding.UTF8.GetBytes(relative + "\n"));
+            sha.AppendData(File.ReadAllBytes(full));
         }
 
-        foreach (var dir in dirs)
-        {
-            yield return $"!/{dir}/";
-        }
+        sha.AppendData(System.Text.Encoding.UTF8.GetBytes(script));
+        return Convert.ToHexStringLower(sha.GetHashAndReset());
     }
 }
