@@ -11,7 +11,7 @@ public class ExtractionSchemasTests
     [Fact]
     public void Holerite_loads_schema_and_prompt_of_current_version()
     {
-        Assert.Equal("holerite.v1", Holerite.Id);
+        Assert.Equal("holerite.v2", Holerite.Id);
         Assert.Equal("registrar_holerite", Holerite.ToolName);
         Assert.NotEmpty(Holerite.Schema);
         Assert.NotEmpty(Holerite.SystemPrompt);
@@ -22,6 +22,16 @@ public class ExtractionSchemasTests
     {
         var schema = JsonNode.Parse(Holerite.Schema)!;
         Assert.Equal(Holerite.Id, (string?)schema["title"]);
+    }
+
+    // Versões anteriores continuam embutidas: o resultado gravado registra a versão que o gerou
+    [Theory]
+    [InlineData("v1")]
+    [InlineData("v2")]
+    public void Every_holerite_version_loads_with_matching_title(string version)
+    {
+        var definition = ExtractionSchemas.Load("holerite", version);
+        Assert.Equal(definition.Id, (string?)JsonNode.Parse(definition.Schema)!["title"]);
     }
 
     [Fact]

@@ -16,7 +16,7 @@ public sealed record ExtractionDefinition(string DocumentType, string Version, s
 public static class ExtractionSchemas
 {
     /// <summary>Versão em uso de cada tipo de documento. Trocar a versão exige rodar o Parsen.Eval (regra 8).</summary>
-    public static ExtractionDefinition Holerite => Load("holerite", "v1");
+    public static ExtractionDefinition Holerite => Load("holerite", "v2");
 
     public static ExtractionDefinition Load(string documentType, string version) => new(
         documentType,
