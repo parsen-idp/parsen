@@ -12,7 +12,7 @@ A especificação completa está em `docs/spec.md`. Em caso de dúvida, a spec m
 
 - Totalmente serverless e assíncrona. Desenvolvimento e produção em `sa-east-1`. O Textract não existe em `sa-east-1`: é chamado em `us-east-1` (parâmetro `TextractRegion`) com os bytes da página. Regiões e IDs de modelo do Bedrock são parâmetros, nunca fixos no código.
 - O cliente cria o dossiê na API, recebe URL pré-assinada e envia os arquivos direto ao S3.
-- No `submit`, a API publica `DossierSubmitted` no EventBridge, que inicia uma execução do Step Functions por dossiê: ingestão (PDF → PNG) → split → classificação → OCR (Textract) → extração (Claude Haiku 4.5 via Bedrock) → verificação (regras C# + sinais do Claude Sonnet 5) → resultado (DynamoDB + webhook).
+- No `submit`, a API publica `DossierSubmitted` no EventBridge, que inicia uma execução do Step Functions por dossiê: ingestão (PDF → PNG) → split → classificação → OCR (Textract) → extração (Claude Haiku 5.5 via Bedrock) → verificação (regras C# + sinais do Claude Sonnet 5) → resultado (DynamoDB + webhook).
 - Modo "renda expressa" para fintech: síncrono, até 6 arquivos e 20 páginas (holerite e extrato) inline, só Haiku, sem Step Functions, resposta em segundos; antifraude completa roda depois e avisa por webhook.
 - O backoffice Angular é só mais um cliente da API pública. Não existem endpoints exclusivos do backoffice.
 - **A Parsen verifica fatos; a política é do cliente.** Ela devolve dados, verificações (`checks`), fatos (`facts`) e sinais (`signals`); nunca aprova nem reprova. Limites de política ficam em `TenantPolicy` com valores padrão; configuração pelo cliente só na fase 2.

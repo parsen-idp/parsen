@@ -23,7 +23,7 @@ O desenvolvimento começa numa conta AWS pessoal no Free Plan, usando os crédit
 - [x] Definir sa-east-1 como região padrão do perfil `parsen` da CLI (Textract em us-east-1)
 - [x] Enviar o formulário de caso de uso da Anthropic no console do Bedrock (uma vez por conta)
 - [x] Conferir os modelos Claude em sa-east-1. A página "Model access" foi aposentada; os modelos serverless são habilitados no primeiro uso. Inference profiles Global ativos:
-  - Haiku 4.5: `global.anthropic.claude-haiku-4-5-20251001-v1:0`
+  - Haiku 5.5: `global.anthropic.claude-haiku-5-5`
   - Sonnet 5: `global.anthropic.claude-sonnet-5`
 - [x] Criar o repositório `parsen-idp/parsen` no GitHub
 
@@ -130,8 +130,8 @@ flowchart LR
     EB --> SF
     subgraph SF[AWS Step Functions]
         direction TB
-        S0[1. Ingestão<br/>PDF → PNG por página] --> S1[2–3. Split e classificação<br/>Claude Haiku 4.5]
-        S1 --> S2[4. OCR e extração<br/>Textract + Haiku 4.5 + JSON Schema]
+        S0[1. Ingestão<br/>PDF → PNG por página] --> S1[2–3. Split e classificação<br/>Claude Haiku 5.5]
+        S1 --> S2[4. OCR e extração<br/>Textract + Haiku 5.5 + JSON Schema]
         S2 --> S4[5. Verificação<br/>Regras C# + sinais do Sonnet 5]
         S4 --> S5[6. Resultado<br/>DynamoDB + webhook]
     end
@@ -150,7 +150,7 @@ A API cria dossiês, entrega URLs de upload e, no `submit`, confere os arquivos 
 | EventBridge | Barramento próprio; dispara o pipeline no evento `DossierSubmitted` |
 | Step Functions (Standard) | Orquestração, retries, espera pela revisão humana |
 | Textract | OCR e posições para evidência; chamado em us-east-1 (não existe em sa-east-1), com os bytes da página, sem gravar nada fora do Brasil |
-| Bedrock | Claude Haiku 4.5 e Sonnet 5 |
+| Bedrock | Claude Haiku 5.5 e Sonnet 5 |
 | DynamoDB | Dossiês, campos, verificações, sinais, auditoria, uso, idempotência |
 | SQS + Lambda | Entrega de webhooks com retry e DLQ |
 | Amplify Hosting / CloudFront | Backoffice Angular |
@@ -166,9 +166,9 @@ Seis etapas na mesma linha do Affinda Extract; cada uma é uma Lambda idempotent
 | Etapa | Worker | Entrada | Saída | Serviço |
 | --- | --- | --- | --- | --- |
 | 1. Ingestão | Ingest | Arquivos no S3 + evento `DossierSubmitted` | Páginas renderizadas em PNG, contagem de páginas, débito de créditos | Lambda .NET (PDFium) |
-| 2. Split | Split | PDF com vários documentos | Faixas de páginas por documento | Haiku 4.5 |
-| 3. Classificação | Classify | Primeira página de cada faixa | Tipo do documento + confiança | Haiku 4.5 |
-| 4. OCR e extração | Ocr, Extract | Páginas + texto do Textract | Campos com valor, confiança e evidência | Textract + Haiku 4.5 |
+| 2. Split | Split | PDF com vários documentos | Faixas de páginas por documento | Haiku 5.5 |
+| 3. Classificação | Classify | Primeira página de cada faixa | Tipo do documento + confiança | Haiku 5.5 |
+| 4. OCR e extração | Ocr, Extract | Páginas + texto do Textract | Campos com valor, confiança e evidência | Textract + Haiku 5.5 |
 | 5. Verificação | Validate | Todos os campos do dossiê | Verificações, fatos, sinais e resultado consolidado | Regras C# + Sonnet 5 |
 | 6. Integração | Notify | Resultado | Gravação no DynamoDB, webhook, status | Lambda + SQS |
 
@@ -193,8 +193,8 @@ Haiku faz o volume; Sonnet entra só na análise do dossiê; Textract dá o text
 | Etapa | Modelo / serviço | Por quê |
 | --- | --- | --- |
 | OCR e layout | Textract DetectDocumentText | Barato, suporta português impresso, devolve bounding boxes |
-| Split e classificação | Claude Haiku 4.5 | Tarefa simples, alto volume |
-| Extração estruturada | Claude Haiku 4.5 | JSON Schema por tipo de documento |
+| Split e classificação | Claude Haiku 5.5 | Tarefa simples, alto volume |
+| Extração estruturada | Claude Haiku 5.5 | JSON Schema por tipo de documento |
 | Análise cruzada e fraude | Claude Sonnet 5 | Raciocínio sobre o dossiê inteiro; produz sinais, não decisões |
 
 Modelos disponíveis no Bedrock: [Claude in Amazon Bedrock](https://platform.claude.com/docs/build-with-claude/claude-in-amazon-bedrock). Textract Queries não atende português, por isso a extração semântica fica no Claude.
@@ -220,7 +220,7 @@ Modelos disponíveis no Bedrock: [Claude in Amazon Bedrock](https://platform.cla
 - Fases 1 e 2 usam só Haiku; o Sonnet entra na fase 3, com os sinais
 - Budget `parsen-gasto-real` alerta sobre o que os créditos não cobrem
 
-**Decisão de região:** em produção os dados ficam armazenados em sa-east-1, mas o processamento sai do Brasil: o Claude roda via endpoint Global e o Textract não existe em sa-east-1, então o worker Ocr envia os bytes de cada página (PNG, até 10 MB) ao Textract em us-east-1 e grava o `textract.json` de volta em sa-east-1. Nenhum dos dois armazena o documento. Declarar ambos no DPA. No desenvolvimento não há dados reais. Na Fase 1, confirmar em sa-east-1 structured output, PDF/imagem na Converse e prompt caching com Haiku 4.5 e Sonnet 5 via endpoint Global.
+**Decisão de região:** em produção os dados ficam armazenados em sa-east-1, mas o processamento sai do Brasil: o Claude roda via endpoint Global e o Textract não existe em sa-east-1, então o worker Ocr envia os bytes de cada página (PNG, até 10 MB) ao Textract em us-east-1 e grava o `textract.json` de volta em sa-east-1. Nenhum dos dois armazena o documento. Declarar ambos no DPA. No desenvolvimento não há dados reais. Na Fase 1, confirmar em sa-east-1 structured output, PDF/imagem na Converse e prompt caching com Haiku 5.5 e Sonnet 5 via endpoint Global.
 
 ## 7. API pública
 
@@ -301,7 +301,7 @@ Arquivo fora dos limites é recusado na criação da URL (tamanho e formato decl
 
 **Créditos:** o `submit` estima as páginas do dossiê e, sem saldo, responde `402` com `code` `CREDITOS_INSUFICIENTES`. O débito definitivo ocorre ao fim da ingestão, com as páginas reais. Saldo baixo gera alerta por e-mail e webhook.
 
-**Renda expressa (fintech):** `POST /v1/income-checks` é síncrono. Recebe até 6 arquivos e 20 páginas no total (holerites e extratos; um extrato consolidado de vários meses conta como 1 arquivo) em multipart na própria requisição, respeitando o limite de payload do Lambda (~6 MB após codificação), processa direto na Lambda da API só com Haiku 4.5 (sem Step Functions) e responde em até ~25 s. Internamente cria um dossiê do tipo `income_check`, consultável por `GET /v1/dossiers/{id}` e cobrado como os demais. Na resposta síncrona, a evidência traz página e trecho; a bounding box e a antifraude completa (verificações de fraude e sinais do Sonnet) rodam em seguida, e um segundo webhook é enviado se surgir algum sinal. A resposta não traz decisão: a fintech aplica a própria política sobre os dados.
+**Renda expressa (fintech):** `POST /v1/income-checks` é síncrono. Recebe até 6 arquivos e 20 páginas no total (holerites e extratos; um extrato consolidado de vários meses conta como 1 arquivo) em multipart na própria requisição, respeitando o limite de payload do Lambda (~6 MB após codificação), processa direto na Lambda da API só com Haiku 5.5 (sem Step Functions) e responde em até ~25 s. Internamente cria um dossiê do tipo `income_check`, consultável por `GET /v1/dossiers/{id}` e cobrado como os demais. Na resposta síncrona, a evidência traz página e trecho; a bounding box e a antifraude completa (verificações de fraude e sinais do Sonnet) rodam em seguida, e um segundo webhook é enviado se surgir algum sinal. A resposta não traz decisão: a fintech aplica a própria política sobre os dados.
 
 ```json
 {
@@ -606,7 +606,7 @@ Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 
 1. **Fundação (semanas 1–2):** conta AWS, CDK, Cognito, API de dossiês, upload no S3, spikes técnicos, EventBridge + Step Functions com holerite ponta a ponta. Spikes no início da fase:
    - [x] Ingest (PDFium) em Native AOT: funciona em x64 e arm64 (spike A)
-   - Bedrock em sa-east-1 via endpoint Global: primeira invocação do Haiku 4.5 (confirma a assinatura do Marketplace e a cobrança no Billing), structured output, PDF/imagem na Converse e prompt caching
+   - Bedrock em sa-east-1 via endpoint Global: primeira invocação do Haiku 5.5 (confirma a assinatura do Marketplace e a cobrança no Billing), structured output, PDF/imagem na Converse e prompt caching
 2. **Documentos (semanas 3–4):** split, classificação, extrato, comprovante de residência e matrícula; evidência por campo
 3. **Verificações (semana 5):** verificações, fatos e sinais; resultado consolidado de renda; `TenantPolicy` com valores padrão; renda expressa
 4. **Backoffice (semanas 6–7):** fila, revisão com destaque no PDF, correção, aprovação, auditoria, webhooks, administração do tenant
@@ -623,6 +623,7 @@ Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 | Tenant no token | Gatilho Pre Token Generation (V3) adiciona `tenant_id`: de `custom:tenant_id` para usuários e do item `APICLIENT#{clientId}` para integrações; sem tenant, o token não é emitido |
 | API na Lambda | Runtime gerenciado `dotnet10` (sem AOT) com `AddAWSLambdaHosting`; API Gateway REST em modo proxy com autorizador Cognito (scopes `parsen/dossiers.*`); a API revalida o token e confere o scope por operação |
 | Pipeline da Fase 1 | Ingest → OCR (Textract) → Extract (Haiku, `holerite.v1`) → Result, num Step Functions Standard disparado pelo `DossierSubmitted`. Sem split e classificação (Fase 2): todo documento é tratado como holerite. Sem verificações (Fase 3): extração concluída termina em `needs_review`; erro técnico após os retries termina em `failed` |
+| Modelo do Haiku | Claude Haiku 5.5 (`global.anthropic.claude-haiku-5-5`) no lugar do 4.5: ~10× mais barato por token e cache de prompt a partir de 512 tokens (no 4.5, 4.096; o prompt de extração não alcançaria). Custo por documento é prioridade da margem do SaaS. Sem `temperature`; ler a resposta por tipo de bloco; tratar `stop_reason: refusal` (sem fallback no servidor). Precisão confirmada pelo `Parsen.Eval` |
 | Documentos de teste na Fase 1 | Testes manuais do pipeline (OCR, extração) com documento próprio do fundador, na conta de desenvolvimento (§0), lido de pasta fora do repositório e apagado da AWS ao fim de cada teste. Gerador de holerites sintéticos adiado para antes do `Parsen.Eval` e das fixtures automatizadas (regra 5) |
 | WAF e limite por tenant | Dev: sem WAF e com limite de taxa global no estágio do API Gateway. Antes do piloto: WAF na conta de produção e usage plan por tenant (API key criada junto com a credencial do tenant) |
 | Arquitetura das Lambdas | x64 no desenvolvimento (build rápido no Windows); migrar para arm64 (Graviton) quando o CI tiver runner ARM nativo |
