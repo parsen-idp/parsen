@@ -8,6 +8,7 @@
     <Project Path="src/Parsen.Auth.PreTokenGeneration/Parsen.Auth.PreTokenGeneration.csproj" />
     <Project Path="src/Parsen.Domain/Parsen.Domain.csproj" />
     <Project Path="src/Parsen.Infrastructure/Parsen.Infrastructure.csproj" />
+    <Project Path="src/Parsen.Schemas/Parsen.Schemas.csproj" />
   </Folder>
   <Folder Name="/src/Parsen.Workers/">
     <Project Path="src/Parsen.Workers/Common/Parsen.Workers.Common.csproj" />
@@ -20,6 +21,7 @@
     <Project Path="tests/Parsen.Auth.PreTokenGeneration.Tests/Parsen.Auth.PreTokenGeneration.Tests.csproj" />
     <Project Path="tests/Parsen.Domain.Tests/Parsen.Domain.Tests.csproj" />
     <Project Path="tests/Parsen.Infrastructure.Tests/Parsen.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Parsen.Schemas.Tests/Parsen.Schemas.Tests.csproj" />
     <Project Path="tests/Parsen.Workers.Tests/Parsen.Workers.Tests.csproj" />
   </Folder>
 </Solution>

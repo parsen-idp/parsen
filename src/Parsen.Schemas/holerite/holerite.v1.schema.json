@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parsen.com.br/schemas/holerite.v1.schema.json",
+  "title": "holerite.v1",
+  "description": "Dados extraídos de um holerite (contracheque). Cada campo traz o valor normalizado, a página e o trecho exato do OCR de onde saiu; null quando o campo não aparece no documento.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "nome_funcionario",
+    "cpf",
+    "empregador",
+    "cnpj_empregador",
+    "competencia",
+    "cargo",
+    "data_admissao",
+    "salario_base",
+    "total_vencimentos",
+    "total_descontos",
+    "salario_liquido",
+    "itens",
+    "alertas"
+  ],
+  "properties": {
+    "nome_funcionario": { "$ref": "#/$defs/campo_texto", "description": "Nome completo do funcionário, como impresso." },
+    "cpf": { "$ref": "#/$defs/campo_cpf", "description": "CPF do funcionário, só os 11 dígitos." },
+    "empregador": { "$ref": "#/$defs/campo_texto", "description": "Razão social ou nome do empregador." },
+    "cnpj_empregador": { "$ref": "#/$defs/campo_cnpj", "description": "CNPJ do empregador, sem pontuação (12 caracteres alfanuméricos + 2 dígitos verificadores)." },
+    "competencia": { "$ref": "#/$defs/campo_competencia", "description": "Mês de referência do pagamento, no formato AAAA-MM." },
+    "cargo": { "$ref": "#/$defs/campo_texto", "description": "Cargo ou função, se impresso." },
+    "data_admissao": { "$ref": "#/$defs/campo_data", "description": "Data de admissão no formato AAAA-MM-DD, se impressa." },
+    "salario_base": { "$ref": "#/$defs/campo_valor", "description": "Salário base (contratual) do mês." },
+    "total_vencimentos": { "$ref": "#/$defs/campo_valor", "description": "Total de vencimentos (proventos) impresso no documento." },
+    "total_descontos": { "$ref": "#/$defs/campo_valor", "description": "Total de descontos impresso no documento." },
+    "salario_liquido": { "$ref": "#/$defs/campo_valor", "description": "Valor líquido a receber impresso no documento." },
+    "itens": {
+      "type": "array",
+      "description": "Rubricas (linhas de vencimento ou desconto), na ordem em que aparecem. Lista vazia se não houver.",
+      "items": { "$ref": "#/$defs/item" }
+    },
+    "alertas": {
+      "type": "array",
+      "description": "Observações curtas sobre problemas percebidos no documento (ex.: rasura, campo ilegível, layout incomum). Nunca uma decisão de aprovação.",
+      "items": { "type": "string", "maxLength": 200 }
+    }
+  },
+  "$defs": {
+    "pagina": { "type": "integer", "minimum": 1, "description": "Página do documento (1 = primeira)." },
+    "trecho_fonte": { "type": "string", "minLength": 1, "description": "Texto exato do OCR de onde o valor foi lido, sem correções." },
+    "campo_texto": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["valor", "pagina", "trecho_fonte"],
+      "properties": {
+        "valor": { "type": "string", "minLength": 1 },
+        "pagina": { "$ref": "#/$defs/pagina" },
+        "trecho_fonte": { "$ref": "#/$defs/trecho_fonte" }
+      }
+    },
+    "campo_cpf": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["valor", "pagina", "trecho_fonte"],
+      "properties": {
+        "valor": { "type": "string", "pattern": "^[0-9]{11}$" },
+        "pagina": { "$ref": "#/$defs/pagina" },
+        "trecho_fonte": { "$ref": "#/$defs/trecho_fonte" }
+      }
+    },
+    "campo_cnpj": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["valor", "pagina", "trecho_fonte"],
+      "properties": {
+        "valor": { "type": "string", "pattern": "^[0-9A-Z]{12}[0-9]{2}$" },
+        "pagina": { "$ref": "#/$defs/pagina" },
+        "trecho_fonte": { "$ref": "#/$defs/trecho_fonte" }
+      }
+    },
+    "campo_competencia": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["valor", "pagina", "trecho_fonte"],
+      "properties": {
+        "valor": { "type": "string", "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$" },
+        "pagina": { "$ref": "#/$defs/pagina" },
+        "trecho_fonte": { "$ref": "#/$defs/trecho_fonte" }
+      }
+    },
+    "campo_data": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["valor", "pagina", "trecho_fonte"],
+      "properties": {
+        "valor": { "type": "string", "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$" },
+        "pagina": { "$ref": "#/$defs/pagina" },
+        "trecho_fonte": { "$ref": "#/$defs/trecho_fonte" }
+      }
+    },
+    "campo_valor": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["valor", "pagina", "trecho_fonte"],
+      "properties": {
+        "valor": { "type": "number", "minimum": 0, "description": "Valor em reais com ponto decimal (ex.: 1234.56)." },
+        "pagina": { "$ref": "#/$defs/pagina" },
+        "trecho_fonte": { "$ref": "#/$defs/trecho_fonte" }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["codigo", "descricao", "referencia", "tipo", "valor", "pagina", "trecho_fonte"],
+      "properties": {
+        "codigo": { "type": ["string", "null"], "description": "Código da rubrica, se impresso." },
+        "descricao": { "type": "string", "minLength": 1, "description": "Descrição da rubrica (ex.: SALARIO, INSS, IRRF)." },
+        "referencia": { "type": ["string", "null"], "description": "Coluna de referência como impressa (ex.: 30,00 / 11,00%), sem normalizar." },
+        "tipo": { "type": "string", "enum": ["vencimento", "desconto"] },
+        "valor": { "type": "number", "minimum": 0, "description": "Valor em reais com ponto decimal, sempre positivo; o sinal vem do tipo." },
+        "pagina": { "$ref": "#/$defs/pagina" },
+        "trecho_fonte": { "$ref": "#/$defs/trecho_fonte" }
+      }
+    }
+  }
+}

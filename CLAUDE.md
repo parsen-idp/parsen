@@ -45,6 +45,7 @@ tests/
   Parsen.Domain.Tests/
   Parsen.Api.Tests/
   Parsen.Infrastructure.Tests/  # Integração com DynamoDB Local (Testcontainers; exige Docker)
+  Parsen.Schemas.Tests/    # Consistência dos schemas e prompts (sem chamar o modelo)
   Parsen.Eval/             # Avaliação de precisão por campo contra gabarito (fixtures/ só sintéticos)
 docs/
   spec.md                  # Especificação técnica do MVP

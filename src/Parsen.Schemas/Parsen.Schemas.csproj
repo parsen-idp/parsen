@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- JSON Schemas e prompts de extração, versionados por tipo de documento (regra 8: mudou → nova versão) -->
+  <PropertyGroup>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="**\*.schema.json" />
+    <EmbeddedResource Include="**\*.prompt.md" />
+  </ItemGroup>
+
+</Project>
