@@ -64,6 +64,29 @@ public sealed class FinalizeAndContractsTests
         Assert.Equal("IngestRejectedException", input?.Error?.Error);
     }
 
+    [Fact]
+    public void LambdaSerializer_ReadsTheStepFunctionsPayloadInSnakeCase()
+    {
+        // O mesmo serializador que a Lambda usa em produção (não só o contexto JSON)
+        var serializer = WorkerHost.CreateSerializer();
+        using var payload = new MemoryStream("""{"tenant_id":"ten_a","dossier_id":"dos_1","document_id":"doc_1"}"""u8.ToArray());
+
+        var task = serializer.Deserialize<DocumentTask>(payload);
+
+        Assert.Equal(new DocumentTask("ten_a", "dos_1", "doc_1"), task);
+    }
+
+    [Fact]
+    public void LambdaSerializer_WritesTheResultInSnakeCase()
+    {
+        var serializer = WorkerHost.CreateSerializer();
+        using var output = new MemoryStream();
+
+        serializer.Serialize(new IngestResult("doc_1", 3), output);
+
+        Assert.Equal("""{"document_id":"doc_1","page_count":3}""", System.Text.Encoding.UTF8.GetString(output.ToArray()));
+    }
+
     private async Task<Dossier> AddProcessingDossierAsync()
     {
         var dossier = Dossier.Create(TenantId.From("ten_teste"), AnalysisType.Income, null, _clock);

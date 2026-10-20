@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.RuntimeSupport;
 using Amazon.Lambda.Serialization.SystemTextJson;
@@ -9,9 +10,16 @@ public static class WorkerHost
 {
     public static Task RunAsync<TInput, TOutput>(Func<TInput, ILambdaContext, Task<TOutput>> handler) =>
         LambdaBootstrapBuilder
-            .Create(handler, new SourceGeneratorLambdaJsonSerializer<WorkersJsonContext>())
+            .Create(handler, CreateSerializer())
             .Build()
             .RunAsync();
+
+    /// <summary>
+    /// O serializador da Lambda cria o próprio contexto JSON com as opções dele e ignora o
+    /// JsonSourceGenerationOptions do WorkersJsonContext: o snake_case precisa ser aplicado aqui.
+    /// </summary>
+    public static SourceGeneratorLambdaJsonSerializer<WorkersJsonContext> CreateSerializer() =>
+        new(options => options.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
 
     public static string RequiredEnvironment(string name) =>
         Environment.GetEnvironmentVariable(name) ?? throw new InvalidOperationException($"Variável {name} não definida.");
