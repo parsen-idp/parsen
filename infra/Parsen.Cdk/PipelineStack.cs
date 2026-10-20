@@ -67,13 +67,42 @@ internal sealed class PipelineStack : Stack
             new Dictionary<string, string> { ["TABLE_NAME"] = table.TableName });
         AllowTenantItems(finalize, table, "dynamodb:GetItem", "dynamodb:PutItem");
 
+        // OCR página a página: até 50 páginas de ~1 s no Textract cabem com folga em 3 minutos
+        var ocr = CreateWorker(settings, "Ocr", "ocr", memorySize: 512, timeout: Duration.Minutes(3),
+            new Dictionary<string, string>
+            {
+                ["TABLE_NAME"] = table.TableName,
+                ["BUCKET_NAME"] = bucket.BucketName,
+                ["TEXTRACT_REGION"] = settings.TextractRegion,
+            });
+        AllowTenantItems(ocr, table, "dynamodb:GetItem");
+
+        // Lê as páginas e a retenção; grava o textract.json com a mesma tag
+        ocr.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["s3:GetObject", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
+            Resources = [bucket.ArnForObjects("*")],
+        }));
+        ocr.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["kms:Decrypt", "kms:GenerateDataKey"],
+            Resources = [key.KeyArn],
+        }));
+
+        // O Textract não tem permissão por recurso: a ação só pode ser liberada com "*"
+        ocr.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["textract:DetectDocumentText"],
+            Resources = ["*"],
+        }));
+
         // ---------- Máquina de estados ----------
 
         StateMachine = new StateMachine(this, "StateMachine", new StateMachineProps
         {
             StateMachineName = $"parsen-{settings.Name}-pipeline",
             StateMachineType = StateMachineType.STANDARD,
-            DefinitionBody = DefinitionBody.FromChainable(BuildDefinition(ingest, finalize)),
+            DefinitionBody = DefinitionBody.FromChainable(BuildDefinition(ingest, ocr, finalize)),
 
             // Teto de segurança: um dossiê de 50 páginas leva bem menos que isso
             Timeout = Duration.Minutes(15),
@@ -108,25 +137,39 @@ internal sealed class PipelineStack : Stack
 
     /// <summary>
     /// Entrada: { tenant_id, dossier_id, document_ids, submitted_at }.
-    /// Ingest por documento (em paralelo); qualquer erro definitivo leva o dossiê para failed.
+    /// Para cada documento (em paralelo): Ingest → OCR. Qualquer erro definitivo leva o dossiê para failed.
     /// </summary>
-    private Chain BuildDefinition(IFunction ingest, IFunction finalize)
+    private Chain BuildDefinition(IFunction ingest, IFunction ocr, IFunction finalize)
     {
         var ingestTask = new LambdaInvoke(this, "Ingest", new LambdaInvokeProps
         {
             LambdaFunction = ingest,
             PayloadResponseOnly = true,
             RetryOnServiceExceptions = false,
+
+            // Guarda o resultado (page_count) ao lado dos IDs do item, sem substituí-los
+            ResultPath = "$.ingest",
         });
+        AddRetries(ingestTask);
 
-        // Recusa de regra (PDF com senha, páginas demais...) não melhora com nova tentativa
-        ingestTask.AddRetry(new RetryProps { Errors = ["IngestRejectedException"], MaxAttempts = 0 });
+        var ocrTask = new LambdaInvoke(this, "Ocr", new LambdaInvokeProps
+        {
+            LambdaFunction = ocr,
+            PayloadResponseOnly = true,
+            RetryOnServiceExceptions = false,
+            Payload = TaskInput.FromObject(new Dictionary<string, object>
+            {
+                ["tenant_id"] = JsonPath.StringAt("$.tenant_id"),
+                ["dossier_id"] = JsonPath.StringAt("$.dossier_id"),
+                ["document_id"] = JsonPath.StringAt("$.document_id"),
+                ["page_count"] = JsonPath.NumberAt("$.ingest.page_count"),
+            }),
+            ResultPath = "$.ocr",
+        });
+        AddRetries(ocrTask);
 
-        // Demais falhas: até 3 novas tentativas, esperando 2 s, 4 s e 8 s (regra do CLAUDE.md)
-        ingestTask.AddRetry(TechnicalRetry());
-
-        // Um Ingest por documento, até 5 em paralelo; cada item recebe tenant, dossiê e o ID do documento
-        var ingestDocuments = new Map(this, "IngestDocuments", new MapProps
+        // Cada documento passa pelas etapas em sequência; até 5 documentos em paralelo
+        var processDocuments = new Map(this, "ProcessDocuments", new MapProps
         {
             ItemsPath = JsonPath.StringAt("$.document_ids"),
             ItemSelector = new Dictionary<string, object>
@@ -136,10 +179,9 @@ internal sealed class PipelineStack : Stack
                 ["document_id"] = JsonPath.StringAt("$$.Map.Item.Value"),
             },
             MaxConcurrency = 5,
-            ResultPath = "$.ingest",
+            ResultPath = "$.documents",
         });
-        ingestDocuments.ItemProcessor(ingestTask);
-
+        processDocuments.ItemProcessor(ingestTask.Next(ocrTask));
         // Erro definitivo: grava failed no dossiê e encerra a execução como falha (vermelha no console)
         var markFailed = new LambdaInvoke(this, "MarkFailed", new LambdaInvokeProps
         {
@@ -159,7 +201,7 @@ internal sealed class PipelineStack : Stack
         });
         markFailed.AddRetry(TechnicalRetry());
 
-        ingestDocuments.AddCatch(
+        processDocuments.AddCatch(
             markFailed.Next(new Fail(this, "PipelineFailed", new FailProps
             {
                 Error = "PipelineFailed",
@@ -167,8 +209,18 @@ internal sealed class PipelineStack : Stack
             })),
             new CatchProps { Errors = [Errors.ALL], ResultPath = "$.error" });
 
-        // Fase 1, parte 6a: termina após o Ingest (o dossiê segue em processing até as partes 6c a 6e)
-        return ingestDocuments.Next(new Succeed(this, "IngestCompleted"));
+        // Fase 1, parte 6c: termina após o OCR (o dossiê segue em processing até as partes 6d e 6e)
+        return processDocuments.Next(new Succeed(this, "DocumentsProcessed"));
+    }
+
+    /// <summary>
+    /// Recusa de regra (DocumentRejectedException: PDF com senha, imagem inválida...) não melhora com nova
+    /// tentativa. Demais falhas: até 3 novas tentativas, esperando 2 s, 4 s e 8 s (regra do CLAUDE.md).
+    /// </summary>
+    private static void AddRetries(LambdaInvoke task)
+    {
+        task.AddRetry(new RetryProps { Errors = ["DocumentRejectedException"], MaxAttempts = 0 });
+        task.AddRetry(TechnicalRetry());
     }
 
     private static RetryProps TechnicalRetry() => new()

@@ -27,8 +27,8 @@ public sealed class IngestDocumentHandlerTests
         var pageCount = await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
 
         Assert.Equal(3, pageCount);
-        Assert.Equal([1, 2, 3], _files.Saved.Select(s => s.PageNumber));
-        Assert.All(_files.Saved, s => Assert.Equal(30, s.RetentionDays));
+        Assert.Equal([1, 2, 3], _files.SavedPages.Select(s => s.PageNumber));
+        Assert.All(_files.SavedPages, s => Assert.Equal(30, s.RetentionDays));
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public sealed class IngestDocumentHandlerTests
 
         await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
 
-        Assert.All(_files.Saved, s => Assert.Equal(90, s.RetentionDays));
+        Assert.All(_files.SavedPages, s => Assert.Equal(90, s.RetentionDays));
     }
 
     [Fact]
@@ -48,12 +48,12 @@ public sealed class IngestDocumentHandlerTests
         var document = await AddDocumentAsync();
         _renderer.Pages = UploadLimits.MaxPagesPerDossier + 1;
 
-        var ex = await Assert.ThrowsAsync<IngestRejectedException>(
+        var ex = await Assert.ThrowsAsync<DocumentRejectedException>(
             () => _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None));
 
         Assert.Equal("PAGINAS_EXCEDIDAS", ex.Code);
         Assert.False(_renderer.Rendered);
-        Assert.Empty(_files.Saved);
+        Assert.Empty(_files.SavedPages);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class IngestDocumentHandlerTests
         var document = await AddDocumentAsync();
         _renderer.Pages = 0;
 
-        var ex = await Assert.ThrowsAsync<IngestRejectedException>(
+        var ex = await Assert.ThrowsAsync<DocumentRejectedException>(
             () => _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None));
 
         Assert.Equal("DOCUMENTO_SEM_PAGINAS", ex.Code);
@@ -80,23 +80,6 @@ public sealed class IngestDocumentHandlerTests
         var document = Document.Create(Tenant, DossierId.New(), DocumentContentType.Pdf, 1_000, new FakeTimeProvider());
         await _documents.AddAsync(document, CancellationToken.None);
         return document;
-    }
-
-    private sealed class FakeDocumentFiles : IDocumentFiles
-    {
-        public int? RetentionDays { get; set; } = 90;
-
-        public List<(int PageNumber, int RetentionDays)> Saved { get; } = [];
-
-        public Task<byte[]> ReadOriginalAsync(Document document, CancellationToken cancellationToken) => Task.FromResult(new byte[] { 1 });
-
-        public Task<int?> GetRetentionDaysAsync(Document document, CancellationToken cancellationToken) => Task.FromResult(RetentionDays);
-
-        public Task SavePageAsync(Document document, int pageNumber, byte[] png, int retentionDays, CancellationToken cancellationToken)
-        {
-            Saved.Add((pageNumber, retentionDays));
-            return Task.CompletedTask;
-        }
     }
 
     private sealed class FakeRenderer : IPageRenderer

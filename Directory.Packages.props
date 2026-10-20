@@ -9,6 +9,7 @@
     <PackageVersion Include="AWSSDK.DynamoDBv2" Version="4.0.107.3" />
     <PackageVersion Include="AWSSDK.EventBridge" Version="4.0.101.5" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.104.4" />
+    <PackageVersion Include="AWSSDK.Textract" Version="4.0.100.19" />
     <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.102.4" />
     <PackageVersion Include="AWSSDK.Signin" Version="4.0.101.15" />
   </ItemGroup>

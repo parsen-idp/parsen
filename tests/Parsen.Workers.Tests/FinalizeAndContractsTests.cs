@@ -55,13 +55,13 @@ public sealed class FinalizeAndContractsTests
     {
         const string json = """
             {"tenant_id":"ten_a","dossier_id":"dos_1","outcome":"failed",
-             "error":{"Error":"IngestRejectedException","Cause":"{\"errorMessage\":\"PDF protegido\"}"}}
+             "error":{"Error":"DocumentRejectedException","Cause":"{\"errorMessage\":\"PDF protegido\"}"}}
             """;
 
         var input = JsonSerializer.Deserialize(json, WorkersJsonContext.Default.FinalizeInput);
 
         Assert.Equal(FinalizeOutcomes.Failed, input?.Outcome);
-        Assert.Equal("IngestRejectedException", input?.Error?.Error);
+        Assert.Equal("DocumentRejectedException", input?.Error?.Error);
     }
 
     [Fact]

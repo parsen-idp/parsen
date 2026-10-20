@@ -52,7 +52,7 @@ public sealed class PdfiumPageRenderer : IPageRenderer
         return encoded.ToArray();
     }
 
-    private static IngestRejectedException InvalidImage() =>
+    private static DocumentRejectedException InvalidImage() =>
         new("ARQUIVO_INVALIDO", "A imagem enviada não pôde ser lida.");
 
     /// <summary>
@@ -67,11 +67,11 @@ public sealed class PdfiumPageRenderer : IPageRenderer
         }
         catch (Exception ex) when (ex is PdfPasswordProtectedException or PdfUnsupportedSecuritySchemeException)
         {
-            throw new IngestRejectedException("PDF_PROTEGIDO", "PDF protegido por senha não é aceito.");
+            throw new DocumentRejectedException("PDF_PROTEGIDO", "PDF protegido por senha não é aceito.");
         }
         catch (Exception ex) when (ex is PdfInvalidFormatException or PdfCannotOpenFileException)
         {
-            throw new IngestRejectedException("ARQUIVO_INVALIDO", "O PDF enviado não pôde ser lido.");
+            throw new DocumentRejectedException("ARQUIVO_INVALIDO", "O PDF enviado não pôde ser lido.");
         }
     }
 }

@@ -13,6 +13,7 @@
     <Project Path="src/Parsen.Workers/Common/Parsen.Workers.Common.csproj" />
     <Project Path="src/Parsen.Workers/Finalize/Parsen.Workers.Finalize.csproj" />
     <Project Path="src/Parsen.Workers/Ingest/Parsen.Workers.Ingest.csproj" />
+    <Project Path="src/Parsen.Workers/Ocr/Parsen.Workers.Ocr.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Parsen.Api.Tests/Parsen.Api.Tests.csproj" />

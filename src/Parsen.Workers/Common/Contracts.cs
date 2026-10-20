@@ -10,6 +10,11 @@ public sealed record DocumentTask(string TenantId, string DossierId, string Docu
 
 public sealed record IngestResult(string DocumentId, int PageCount);
 
+/// <summary>Entrada do OCR: o documento e quantas páginas o Ingest renderizou.</summary>
+public sealed record OcrTask(string TenantId, string DossierId, string DocumentId, int PageCount);
+
+public sealed record OcrResult(string DocumentId, int PageCount, int LineCount);
+
 /// <summary>Entrada do Finalize. Error vem do Catch do Step Functions quando alguma etapa falhou de vez.</summary>
 public sealed record FinalizeInput(string TenantId, string DossierId, string Outcome, PipelineError? Error);
 
@@ -30,6 +35,8 @@ public static class FinalizeOutcomes
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
 [JsonSerializable(typeof(DocumentTask))]
 [JsonSerializable(typeof(IngestResult))]
+[JsonSerializable(typeof(OcrTask))]
+[JsonSerializable(typeof(OcrResult))]
 [JsonSerializable(typeof(FinalizeInput))]
 [JsonSerializable(typeof(FinalizeResult))]
 public sealed partial class WorkersJsonContext : JsonSerializerContext;

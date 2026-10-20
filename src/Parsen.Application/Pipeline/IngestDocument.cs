@@ -25,12 +25,12 @@ public sealed class IngestDocumentHandler(IDocumentRepository documents, IDocume
         var pageCount = renderer.CountPages(original, document.ContentType);
         if (pageCount == 0)
         {
-            throw new IngestRejectedException("DOCUMENTO_SEM_PAGINAS", $"O documento {documentId} não tem páginas.");
+            throw new DocumentRejectedException("DOCUMENTO_SEM_PAGINAS", $"O documento {documentId} não tem páginas.");
         }
 
         if (pageCount > UploadLimits.MaxPagesPerDossier)
         {
-            throw new IngestRejectedException(
+            throw new DocumentRejectedException(
                 "PAGINAS_EXCEDIDAS", $"O documento {documentId} tem {pageCount} páginas; o limite é {UploadLimits.MaxPagesPerDossier}.");
         }
 

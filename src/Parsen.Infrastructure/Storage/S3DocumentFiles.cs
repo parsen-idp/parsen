@@ -3,6 +3,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Parsen.Application.Pipeline;
 using Parsen.Domain.Dossiers;
+using Parsen.Infrastructure.Ocr;
 
 namespace Parsen.Infrastructure.Storage;
 
@@ -39,13 +40,31 @@ public sealed class S3DocumentFiles(IAmazonS3 s3, string bucketName) : IDocument
         ArgumentNullException.ThrowIfNull(png);
         using var content = new MemoryStream(png);
 
+        await PutAsync(ObjectKeys.Page(document, pageNumber), content, "image/png", retentionDays, cancellationToken);
+    }
+
+    public async Task<byte[]> ReadPageAsync(Document document, int pageNumber, CancellationToken cancellationToken)
+    {
+        using var response = await s3.GetObjectAsync(bucketName, ObjectKeys.Page(document, pageNumber), cancellationToken);
+        using var buffer = new MemoryStream();
+        await response.ResponseStream.CopyToAsync(buffer, cancellationToken);
+        return buffer.ToArray();
+    }
+
+    public async Task SaveOcrAsync(Document document, OcrDocument ocr, int retentionDays, CancellationToken cancellationToken)
+    {
+        // O texto reconhecido tem dados pessoais: mesma retenção e criptografia KMS do original
+        using var content = new MemoryStream(OcrJson.Serialize(ocr));
+        await PutAsync(ObjectKeys.Ocr(document), content, "application/json", retentionDays, cancellationToken);
+    }
+
+    private async Task PutAsync(string key, Stream content, string contentType, int retentionDays, CancellationToken cancellationToken) =>
         await s3.PutObjectAsync(new PutObjectRequest
         {
             BucketName = bucketName,
-            Key = ObjectKeys.Page(document, pageNumber),
+            Key = key,
             InputStream = content,
-            ContentType = "image/png",
+            ContentType = contentType,
             TagSet = [new Tag { Key = RetentionTag, Value = retentionDays.ToString(CultureInfo.InvariantCulture) }],
         }, cancellationToken);
-    }
 }

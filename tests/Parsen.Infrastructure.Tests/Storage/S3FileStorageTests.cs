@@ -46,6 +46,7 @@ public sealed class S3FileStorageTests : IDisposable
         var document = NewDocument(DocumentContentType.Pdf);
 
         Assert.Equal($"ten_teste/{document.DossierId}/{document.Id}/pages/3.png", ObjectKeys.Page(document, 3));
+        Assert.Equal($"ten_teste/{document.DossierId}/{document.Id}/textract.json", ObjectKeys.Ocr(document));
         Assert.Throws<ArgumentOutOfRangeException>(() => ObjectKeys.Page(document, 0));
     }
 

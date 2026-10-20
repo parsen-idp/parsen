@@ -39,7 +39,7 @@ public sealed class PdfiumPageRendererTests
     [Fact]
     public void InvalidPdf_IsRejectedAsInvalidFile()
     {
-        var ex = Assert.Throws<IngestRejectedException>(
+        var ex = Assert.Throws<DocumentRejectedException>(
             () => _renderer.CountPages("isto não é um PDF"u8.ToArray(), DocumentContentType.Pdf));
 
         Assert.Equal("ARQUIVO_INVALIDO", ex.Code);
@@ -48,7 +48,7 @@ public sealed class PdfiumPageRendererTests
     [Fact]
     public void InvalidImage_IsRejectedAsInvalidFile()
     {
-        var ex = Assert.Throws<IngestRejectedException>(
+        var ex = Assert.Throws<DocumentRejectedException>(
             () => _renderer.Render("isto não é uma imagem"u8.ToArray(), DocumentContentType.Png));
 
         Assert.Equal("ARQUIVO_INVALIDO", ex.Code);

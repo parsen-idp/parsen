@@ -33,6 +33,13 @@ public static class ObjectKeys
         return $"{document.TenantId}/{document.DossierId}/{document.Id}/original.{extension}";
     }
 
+    /// <summary>Resultado do OCR do documento, no formato da Parsen (spec, seção 9).</summary>
+    public static string Ocr(Document document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        return $"{document.TenantId}/{document.DossierId}/{document.Id}/textract.json";
+    }
+
     /// <summary>Página renderizada pelo Ingest: pages/{n}.png, com n começando em 1.</summary>
     public static string Page(Document document, int pageNumber)
     {
