@@ -35,4 +35,8 @@ internal sealed class FakeDocumentFiles : IDocumentFiles
         SavedOcr = (ocr, retentionDays);
         return Task.CompletedTask;
     }
+
+    public OcrDocument StoredOcr { get; set; } = new([]);
+
+    public Task<OcrDocument> ReadOcrAsync(Document document, CancellationToken cancellationToken) => Task.FromResult(StoredOcr);
 }

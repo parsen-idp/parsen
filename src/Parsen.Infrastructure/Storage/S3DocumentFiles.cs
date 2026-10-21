@@ -58,6 +58,14 @@ public sealed class S3DocumentFiles(IAmazonS3 s3, string bucketName) : IDocument
         await PutAsync(ObjectKeys.Ocr(document), content, "application/json", retentionDays, cancellationToken);
     }
 
+    public async Task<OcrDocument> ReadOcrAsync(Document document, CancellationToken cancellationToken)
+    {
+        using var response = await s3.GetObjectAsync(bucketName, ObjectKeys.Ocr(document), cancellationToken);
+        using var buffer = new MemoryStream();
+        await response.ResponseStream.CopyToAsync(buffer, cancellationToken);
+        return OcrJson.Deserialize(buffer.ToArray());
+    }
+
     private async Task PutAsync(string key, Stream content, string contentType, int retentionDays, CancellationToken cancellationToken) =>
         await s3.PutObjectAsync(new PutObjectRequest
         {

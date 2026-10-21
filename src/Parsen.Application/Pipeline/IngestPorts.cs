@@ -16,6 +16,8 @@ public interface IDocumentFiles
 
     /// <summary>Grava o resultado do OCR (textract.json) com a mesma retenção do original.</summary>
     Task SaveOcrAsync(Document document, OcrDocument ocr, int retentionDays, CancellationToken cancellationToken);
+
+    Task<OcrDocument> ReadOcrAsync(Document document, CancellationToken cancellationToken);
 }
 
 /// <summary>Transforma o arquivo original em uma imagem PNG por página.</summary>
