@@ -43,7 +43,8 @@ public sealed class ExtractDocumentHandler(
             l => l.Key,
             l => (IReadOnlyList<ExtractedItem>)l.Value.Select(item => Locate(item, ocr)).ToList());
 
-        var result = new ExtractionResult(DocumentType, output.SchemaId, output.ModelId, fields, lists, output.Alerts, clock.GetUtcNow());
+        var result = new ExtractionResult(
+            DocumentType, output.SchemaId, output.ModelId, fields, lists, output.Alerts, output.Usage, clock.GetUtcNow());
         await extractions.SaveAsync(document, result, cancellationToken);
         return result;
     }

@@ -40,6 +40,41 @@ public sealed class FinalizeAndContractsTests
         Assert.Equal(versionAfterFirst, dossier.Version);
     }
 
+    [Fact]
+    public async Task Complete_MovesProcessingDossierToNeedsReview()
+    {
+        var dossier = await AddProcessingDossierAsync();
+
+        await new FinalizeDossierHandler(_dossiers, _clock).CompleteAsync(dossier.TenantId, dossier.Id, CancellationToken.None);
+
+        var loaded = await _dossiers.GetAsync(dossier.TenantId, dossier.Id, CancellationToken.None);
+        Assert.Equal(DossierStatus.NeedsReview, loaded?.Status);
+    }
+
+    [Fact]
+    public async Task Complete_IsIdempotent()
+    {
+        var dossier = await AddProcessingDossierAsync();
+        var handler = new FinalizeDossierHandler(_dossiers, _clock);
+        await handler.CompleteAsync(dossier.TenantId, dossier.Id, CancellationToken.None);
+        var versionAfterFirst = dossier.Version;
+
+        await handler.CompleteAsync(dossier.TenantId, dossier.Id, CancellationToken.None);
+
+        Assert.Equal(versionAfterFirst, dossier.Version);
+    }
+
+    [Fact]
+    public async Task Complete_OnAFailedDossier_IsAnError()
+    {
+        var dossier = await AddProcessingDossierAsync();
+        var handler = new FinalizeDossierHandler(_dossiers, _clock);
+        await handler.MarkFailedAsync(dossier.TenantId, dossier.Id, CancellationToken.None);
+
+        await Assert.ThrowsAsync<InvalidDossierTransitionException>(
+            () => handler.CompleteAsync(dossier.TenantId, dossier.Id, CancellationToken.None));
+    }
+
     // ---------- Contrato JSON entre as etapas ----------
 
     [Fact]
@@ -93,10 +128,10 @@ public sealed class FinalizeAndContractsTests
         var serializer = WorkerHost.CreateSerializer();
         using var output = new MemoryStream();
 
-        serializer.Serialize(new ExtractResult("doc_1", "holerite.v2", 11, 10, 4, 2, 0), output);
+        serializer.Serialize(new ExtractResult("doc_1", "holerite.v2", 11, 10, 4, 2, 0, 4398, 1036, 0, 0), output);
 
         Assert.Equal(
-            """{"document_id":"doc_1","schema_id":"holerite.v2","field_count":11,"filled_count":10,"item_count":4,"alert_count":2,"unlocated_count":0}""",
+            """{"document_id":"doc_1","schema_id":"holerite.v2","field_count":11,"filled_count":10,"item_count":4,"alert_count":2,"unlocated_count":0,"input_tokens":4398,"output_tokens":1036,"cache_read_tokens":0,"cache_write_tokens":0}""",
             System.Text.Encoding.UTF8.GetString(output.ToArray()));
     }
 

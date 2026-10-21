@@ -115,11 +115,16 @@ public static class ConverseExtraction
             ?? throw new InvalidDataException($"Resposta sem a chamada da ferramenta {definition.ToolName} (stopReason={stopReason}).");
 
         using var json = JsonDocument.Parse(ToJson(toolUse.Input));
-        return Parse(definition.Id, modelId, json.RootElement);
+        return Parse(definition.Id, modelId, json.RootElement, ToUsage(response.Usage));
     }
 
+    // Os campos do SDK são int? (ausentes em respostas sem cache, por exemplo)
+    private static ModelUsage ToUsage(TokenUsage? usage) => usage is null
+        ? ModelUsage.None
+        : new ModelUsage(usage.InputTokens ?? 0, usage.OutputTokens ?? 0, usage.CacheReadInputTokens ?? 0, usage.CacheWriteInputTokens ?? 0);
+
     /// <summary>Converte o JSON da ferramenta no formato da Parsen. Campos ausentes vêm como null.</summary>
-    public static ModelExtraction Parse(string schemaId, string modelId, JsonElement input)
+    public static ModelExtraction Parse(string schemaId, string modelId, JsonElement input, ModelUsage usage)
     {
         if (input.ValueKind != JsonValueKind.Object)
         {
@@ -154,7 +159,7 @@ public static class ConverseExtraction
             }
         }
 
-        return new ModelExtraction(schemaId, modelId, fields, lists, alerts);
+        return new ModelExtraction(schemaId, modelId, fields, lists, alerts, usage);
     }
 
     private static ModelItem ParseItem(JsonElement item)

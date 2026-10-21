@@ -100,6 +100,23 @@ public sealed class ConverseExtractionTests
     }
 
     [Fact]
+    public void Response_CarriesTheTokenUsage()
+    {
+        var extraction = ConverseExtraction.ReadResponse(Holerite, ModelId, Response(StopReason.Tool_use, ToolInput));
+
+        Assert.Equal(new ModelUsage(4398, 1036, 2900, 0), extraction.Usage);
+    }
+
+    [Fact]
+    public void ResponseWithoutUsage_CountsZero()
+    {
+        var response = Response(StopReason.Tool_use, ToolInput);
+        response.Usage = null;
+
+        Assert.Equal(ModelUsage.None, ConverseExtraction.ReadResponse(Holerite, ModelId, response).Usage);
+    }
+
+    [Fact]
     public void CutByMaxTokens_IsRejectedWithoutRetry()
     {
         var error = Assert.Throws<DocumentRejectedException>(
@@ -139,6 +156,7 @@ public sealed class ConverseExtractionTests
     private static ConverseResponse Response(StopReason stopReason, string toolInput) => new()
     {
         StopReason = stopReason,
+        Usage = new TokenUsage { InputTokens = 4398, OutputTokens = 1036, CacheReadInputTokens = 2900, CacheWriteInputTokens = 0, TotalTokens = 5434 },
         Output = new ConverseOutput
         {
             Message = new Message

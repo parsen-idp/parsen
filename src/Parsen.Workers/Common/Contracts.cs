@@ -18,9 +18,20 @@ public sealed record OcrResult(string DocumentId, int PageCount, int LineCount);
 /// <summary>
 /// Saída do Extract: só contagens; os valores ficam no DynamoDB.
 /// UnlocatedCount = campos e linhas cujo trecho não foi achado no OCR (confiança 0, pedem revisão).
+/// Tokens da chamada ao modelo: custo real por documento.
 /// </summary>
 public sealed record ExtractResult(
-    string DocumentId, string SchemaId, int FieldCount, int FilledCount, int ItemCount, int AlertCount, int UnlocatedCount);
+    string DocumentId,
+    string SchemaId,
+    int FieldCount,
+    int FilledCount,
+    int ItemCount,
+    int AlertCount,
+    int UnlocatedCount,
+    int InputTokens,
+    int OutputTokens,
+    int CacheReadTokens,
+    int CacheWriteTokens);
 
 /// <summary>Entrada do Finalize. Error vem do Catch do Step Functions quando alguma etapa falhou de vez.</summary>
 public sealed record FinalizeInput(string TenantId, string DossierId, string Outcome, PipelineError? Error);

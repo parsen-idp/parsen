@@ -23,6 +23,11 @@ await WorkerHost.RunAsync<FinalizeInput, FinalizeResult>(async (input, context) 
             await handler.MarkFailedAsync(tenantId, dossierId, cancellation.Token);
             return new FinalizeResult(input.DossierId, FinalizeOutcomes.Failed);
 
+        case FinalizeOutcomes.NeedsReview:
+            await handler.CompleteAsync(tenantId, dossierId, cancellation.Token);
+            context.Logger.LogInformation($"Pipeline concluído: dossier={input.DossierId} status={FinalizeOutcomes.NeedsReview}");
+            return new FinalizeResult(input.DossierId, FinalizeOutcomes.NeedsReview);
+
         default:
             throw new InvalidOperationException($"Resultado de pipeline não suportado: '{input.Outcome}'.");
     }

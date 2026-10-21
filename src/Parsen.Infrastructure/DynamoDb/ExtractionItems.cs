@@ -28,6 +28,16 @@ internal static class ExtractionItems
         ["SchemaId"] = new AttributeValue(result.SchemaId),
         ["ModelId"] = new AttributeValue(result.ModelId),
         ["Alerts"] = new AttributeValue { L = [.. result.Alerts.Select(a => new AttributeValue(a))] },
+        ["Usage"] = new AttributeValue
+        {
+            M = new Dictionary<string, AttributeValue>
+            {
+                ["InputTokens"] = Integer(result.Usage.InputTokens),
+                ["OutputTokens"] = Integer(result.Usage.OutputTokens),
+                ["CacheReadTokens"] = Integer(result.Usage.CacheReadTokens),
+                ["CacheWriteTokens"] = Integer(result.Usage.CacheWriteTokens),
+            },
+        },
         ["ExtractedAt"] = new AttributeValue(StoredValues.From(result.ExtractedAt)),
     };
 
@@ -90,4 +100,6 @@ internal static class ExtractionItems
     }
 
     private static AttributeValue Number(double value) => new() { N = value.ToString("R", CultureInfo.InvariantCulture) };
+
+    private static AttributeValue Integer(int value) => new() { N = value.ToString(CultureInfo.InvariantCulture) };
 }

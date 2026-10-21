@@ -28,6 +28,9 @@ public sealed class DynamoDbExtractionRepositoryTests(DynamoDbFixture fixture) :
         Assert.Equal("modelo-de-teste", detail["ModelId"].S);
         Assert.Equal(["CPF não aparece no documento"], detail["Alerts"].L.Select(a => a.S));
         Assert.Equal(document.DossierId.ToString(), detail["DossierId"].S);
+        Assert.Equal("4398", detail["Usage"].M["InputTokens"].N);
+        Assert.Equal("1036", detail["Usage"].M["OutputTokens"].N);
+        Assert.Equal("512", detail["Usage"].M["CacheReadTokens"].N);
     }
 
     [Fact]
@@ -114,6 +117,7 @@ public sealed class DynamoDbExtractionRepositoryTests(DynamoDbFixture fixture) :
                 0.5))],
         },
         ["CPF não aparece no documento"],
+        new ModelUsage(4398, 1036, 512, 0),
         Now);
 
     private async Task<SortedDictionary<string, Dictionary<string, AttributeValue>>> QueryAsync(Document document)

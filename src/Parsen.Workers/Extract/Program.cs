@@ -39,10 +39,15 @@ await WorkerHost.RunAsync<DocumentTask, ExtractResult>(async (task, context) =>
         result.Fields.Count(f => f.Value is not null),
         items.Count,
         result.Alerts.Count,
-        unlocated);
+        unlocated,
+        result.Usage.InputTokens,
+        result.Usage.OutputTokens,
+        result.Usage.CacheReadTokens,
+        result.Usage.CacheWriteTokens);
 
     context.Logger.LogInformation(
         $"Extração concluída: dossier={task.DossierId} document={task.DocumentId} schema={summary.SchemaId} model={result.ModelId} " +
-        $"fields={summary.FilledCount}/{summary.FieldCount} items={summary.ItemCount} alerts={summary.AlertCount} unlocated={summary.UnlocatedCount}");
+        $"fields={summary.FilledCount}/{summary.FieldCount} items={summary.ItemCount} alerts={summary.AlertCount} unlocated={summary.UnlocatedCount} " +
+        $"tokens_in={summary.InputTokens} tokens_out={summary.OutputTokens} cache_read={summary.CacheReadTokens} cache_write={summary.CacheWriteTokens}");
     return summary;
 });

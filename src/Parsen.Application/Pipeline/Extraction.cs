@@ -27,6 +27,12 @@ public sealed record ModelField(FieldValue Value, int Page, string SourceText);
 /// <summary>Linha de uma lista (ex.: rubrica do holerite): atributos (null quando ausentes) e de onde foi lida.</summary>
 public sealed record ModelItem(IReadOnlyDictionary<string, FieldValue?> Attributes, int Page, string SourceText);
 
+/// <summary>Tokens de uma chamada ao modelo: base do custo por documento (e do USAGE# por tenant, spec seção 9).</summary>
+public sealed record ModelUsage(int InputTokens, int OutputTokens, int CacheReadTokens, int CacheWriteTokens)
+{
+    public static readonly ModelUsage None = new(0, 0, 0, 0);
+}
+
 /// <summary>Saída do modelo. Campos ausentes no documento vêm como null.</summary>
 /// <param name="SchemaId">Schema e prompt usados (ex.: holerite.v2).</param>
 /// <param name="ModelId">Modelo que extraiu (ID do inference profile).</param>
@@ -35,7 +41,8 @@ public sealed record ModelExtraction(
     string ModelId,
     IReadOnlyDictionary<string, ModelField?> Fields,
     IReadOnlyDictionary<string, IReadOnlyList<ModelItem>> Lists,
-    IReadOnlyList<string> Alerts);
+    IReadOnlyList<string> Alerts,
+    ModelUsage Usage);
 
 /// <summary>Onde o dado está no documento. bbox = [esquerda, topo, largura, altura] em frações da página; null se o trecho não foi achado.</summary>
 public sealed record Evidence(int Page, string Text, IReadOnlyList<double>? Bbox);
@@ -55,6 +62,7 @@ public sealed record ExtractionResult(
     IReadOnlyList<ExtractedField> Fields,
     IReadOnlyDictionary<string, IReadOnlyList<ExtractedItem>> Lists,
     IReadOnlyList<string> Alerts,
+    ModelUsage Usage,
     DateTimeOffset ExtractedAt);
 
 /// <summary>Extrai os campos de um documento a partir do texto do OCR (Claude via Bedrock na infraestrutura).</summary>

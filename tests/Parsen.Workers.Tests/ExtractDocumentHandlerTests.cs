@@ -94,6 +94,7 @@ public sealed class ExtractDocumentHandlerTests
         Assert.Equal("modelo-de-teste", saved.ModelId);
         Assert.Equal(["CPF não aparece no documento"], saved.Alerts);
         Assert.Equal(Now, saved.ExtractedAt);
+        Assert.Equal(new ModelUsage(4398, 1036, 0, 0), saved.Usage);
         Assert.Equal("holerite", _engine.RequestedType);
     }
 
@@ -141,7 +142,8 @@ public sealed class ExtractDocumentHandlerTests
                         }, 1, "INSS 7,50% 365,00"),
                     ],
                 },
-                ["CPF não aparece no documento"]));
+                ["CPF não aparece no documento"],
+                new ModelUsage(4398, 1036, 0, 0)));
         }
     }
 

@@ -10,4 +10,9 @@
     <PackageReference Include="Constructs" />
   </ItemGroup>
 
+  <!-- Só para ler limites do domínio (ex.: páginas por dossiê) sem duplicar o valor na infraestrutura -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Parsen.Domain\Parsen.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

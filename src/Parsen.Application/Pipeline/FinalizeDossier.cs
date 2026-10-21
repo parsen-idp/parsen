@@ -24,4 +24,22 @@ public sealed class FinalizeDossierHandler(IDossierRepository dossiers, TimeProv
         dossier.Fail(clock);
         await dossiers.UpdateAsync(dossier, cancellationToken);
     }
+
+    /// <summary>
+    /// Todos os documentos extraídos: o dossiê vai para a revisão. Fase 1 não tem verificações (spec, seção 14),
+    /// então todo dossiê precisa de revisão. Idempotente como o MarkFailed.
+    /// </summary>
+    public async Task CompleteAsync(TenantId tenantId, DossierId dossierId, CancellationToken cancellationToken)
+    {
+        var dossier = await dossiers.GetAsync(tenantId, dossierId, cancellationToken)
+            ?? throw new InvalidOperationException($"Dossiê {dossierId} não encontrado.");
+
+        if (dossier.Status == DossierStatus.NeedsReview)
+        {
+            return;
+        }
+
+        dossier.CompleteVerification(VerificationOutcome.RequiresReview, clock);
+        await dossiers.UpdateAsync(dossier, cancellationToken);
+    }
 }

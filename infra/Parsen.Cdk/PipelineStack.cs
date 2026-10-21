@@ -9,6 +9,7 @@ using Amazon.CDK.AWS.S3;
 using Amazon.CDK.AWS.StepFunctions;
 using Amazon.CDK.AWS.StepFunctions.Tasks;
 using Constructs;
+using Parsen.Domain.Dossiers;
 using Errors = Amazon.CDK.AWS.StepFunctions.Errors;
 
 namespace Parsen.Cdk;
@@ -18,7 +19,7 @@ internal sealed record PipelineDependencies(ITableV2 Table, IBucket DocumentsBuc
 
 /// <summary>
 /// Stack do pipeline (spec, seções 4 e 5): barramento de eventos, workers (Lambdas Native AOT) e a
-/// máquina de estados que os orquestra. Fase 1: Ingest → OCR → Extract por documento; Result entra na parte 6e.
+/// máquina de estados que os orquestra. Fase 1: Ingest → limite de páginas → OCR → Extract → needs_review.
 /// </summary>
 internal sealed class PipelineStack : Stack
 {
@@ -96,8 +97,9 @@ internal sealed class PipelineStack : Stack
             Resources = ["*"],
         }));
 
-        // Extração: uma chamada ao Claude por documento (~6 s para um holerite); 2 minutos cobrem documentos longos
-        var extract = CreateWorker(settings, "Extract", "extract", memorySize: 512, timeout: Duration.Minutes(2),
+        // Extração: uma chamada ao Claude por documento (~6 s para um holerite); 2 minutos cobrem documentos longos.
+        // 256 MB: usa ~50 MB e passa o tempo esperando o Bedrock, então mais memória (mais CPU) não acelera e custa mais
+        var extract = CreateWorker(settings, "Extract", "extract", memorySize: 256, timeout: Duration.Minutes(2),
             new Dictionary<string, string>
             {
                 ["TABLE_NAME"] = table.TableName,
@@ -173,11 +175,16 @@ internal sealed class PipelineStack : Stack
     public StateMachine StateMachine { get; }
 
     /// <summary>
-    /// Entrada: { tenant_id, dossier_id, document_ids, submitted_at }.
-    /// Para cada documento (em paralelo): Ingest → OCR → Extract. Qualquer erro definitivo leva o dossiê para failed.
+    /// Entrada: { tenant_id, dossier_id, document_ids, submitted_at }. Duas fases, para não pagar OCR e modelo
+    /// por um dossiê que passa do limite de páginas:
+    /// 1. Ingest de todos os documentos (em paralelo) → soma das páginas ≤ limite do dossiê;
+    /// 2. OCR → Extract por documento (em paralelo) → dossiê em needs_review.
+    /// Qualquer erro definitivo leva o dossiê para failed.
     /// </summary>
     private Chain BuildDefinition(IFunction ingest, IFunction ocr, IFunction extract, IFunction finalize)
     {
+        // ---------- Fase 1: Ingest ----------
+
         var ingestTask = new LambdaInvoke(this, "Ingest", new LambdaInvokeProps
         {
             LambdaFunction = ingest,
@@ -189,6 +196,42 @@ internal sealed class PipelineStack : Stack
         });
         AddRetries(ingestTask);
 
+        var ingestDocuments = new Map(this, "IngestDocuments", new MapProps
+        {
+            ItemsPath = JsonPath.StringAt("$.document_ids"),
+            ItemSelector = new Dictionary<string, object>
+            {
+                ["tenant_id"] = JsonPath.StringAt("$.tenant_id"),
+                ["dossier_id"] = JsonPath.StringAt("$.dossier_id"),
+                ["document_id"] = JsonPath.StringAt("$$.Map.Item.Value"),
+            },
+            MaxConcurrency = 5,
+
+            // Lista com { tenant_id, dossier_id, document_id, ingest: { page_count } } de cada documento
+            ResultPath = "$.ingested",
+        });
+        ingestDocuments.ItemProcessor(ingestTask);
+
+        // Soma das páginas do dossiê. O Choice usa JSONata ($sum), que a sintaxe JSONPath clássica não tem;
+        // o limite vem do domínio (UploadLimits), o mesmo que o Ingest aplica a cada documento
+        var checkPageLimit = Choice.Jsonata(this, "CheckPageLimit", new ChoiceJsonataProps
+        {
+            Comment = $"Recusa o dossiê com mais de {UploadLimits.MaxPagesPerDossier} páginas antes do OCR e do modelo",
+        });
+
+        var pageLimitExceeded = new Pass(this, "PageLimitExceeded", new PassProps
+        {
+            // Mesmo formato do Catch ({ Error, Cause }), para o MarkFailed tratar igual a uma recusa de etapa
+            Result = Result.FromObject(new Dictionary<string, object>
+            {
+                ["Error"] = "PAGINAS_EXCEDIDAS_DOSSIE",
+                ["Cause"] = $"O dossiê passa do limite de {UploadLimits.MaxPagesPerDossier} páginas.",
+            }),
+            ResultPath = "$.error",
+        });
+
+        // ---------- Fase 2: OCR → Extract ----------
+
         var ocrTask = new LambdaInvoke(this, "Ocr", new LambdaInvokeProps
         {
             LambdaFunction = ocr,
@@ -199,7 +242,7 @@ internal sealed class PipelineStack : Stack
                 ["tenant_id"] = JsonPath.StringAt("$.tenant_id"),
                 ["dossier_id"] = JsonPath.StringAt("$.dossier_id"),
                 ["document_id"] = JsonPath.StringAt("$.document_id"),
-                ["page_count"] = JsonPath.NumberAt("$.ingest.page_count"),
+                ["page_count"] = JsonPath.NumberAt("$.page_count"),
             }),
             ResultPath = "$.ocr",
         });
@@ -221,19 +264,39 @@ internal sealed class PipelineStack : Stack
         AddRetries(extractTask);
 
         // Cada documento passa pelas etapas em sequência; até 5 documentos em paralelo
-        var processDocuments = new Map(this, "ProcessDocuments", new MapProps
+        var extractDocuments = new Map(this, "ExtractDocuments", new MapProps
         {
-            ItemsPath = JsonPath.StringAt("$.document_ids"),
+            ItemsPath = JsonPath.StringAt("$.ingested"),
             ItemSelector = new Dictionary<string, object>
             {
                 ["tenant_id"] = JsonPath.StringAt("$.tenant_id"),
                 ["dossier_id"] = JsonPath.StringAt("$.dossier_id"),
-                ["document_id"] = JsonPath.StringAt("$$.Map.Item.Value"),
+                ["document_id"] = JsonPath.StringAt("$$.Map.Item.Value.document_id"),
+                ["page_count"] = JsonPath.NumberAt("$$.Map.Item.Value.ingest.page_count"),
             },
             MaxConcurrency = 5,
             ResultPath = "$.documents",
         });
-        processDocuments.ItemProcessor(ingestTask.Next(ocrTask).Next(extractTask));
+        extractDocuments.ItemProcessor(ocrTask.Next(extractTask));
+
+        // ---------- Fim ----------
+
+        // Todos os documentos extraídos: dossiê em needs_review (Fase 1 não tem verificações)
+        var markNeedsReview = new LambdaInvoke(this, "MarkNeedsReview", new LambdaInvokeProps
+        {
+            LambdaFunction = finalize,
+            PayloadResponseOnly = true,
+            RetryOnServiceExceptions = false,
+            Payload = TaskInput.FromObject(new Dictionary<string, object>
+            {
+                ["tenant_id"] = JsonPath.StringAt("$.tenant_id"),
+                ["dossier_id"] = JsonPath.StringAt("$.dossier_id"),
+                ["outcome"] = "needs_review",
+            }),
+            ResultPath = JsonPath.DISCARD,
+        });
+        markNeedsReview.AddRetry(TechnicalRetry());
+
         // Erro definitivo: grava failed no dossiê e encerra a execução como falha (vermelha no console)
         var markFailed = new LambdaInvoke(this, "MarkFailed", new LambdaInvokeProps
         {
@@ -252,17 +315,25 @@ internal sealed class PipelineStack : Stack
             ResultPath = JsonPath.DISCARD,
         });
         markFailed.AddRetry(TechnicalRetry());
+        markFailed.Next(new Fail(this, "PipelineFailed", new FailProps
+        {
+            Error = "PipelineFailed",
+            Cause = "Uma etapa falhou de forma definitiva; o dossiê foi marcado como failed.",
+        }));
 
-        processDocuments.AddCatch(
-            markFailed.Next(new Fail(this, "PipelineFailed", new FailProps
-            {
-                Error = "PipelineFailed",
-                Cause = "Uma etapa falhou de forma definitiva; o dossiê foi marcado como failed.",
-            })),
-            new CatchProps { Errors = [Errors.ALL], ResultPath = "$.error" });
+        var catchToFailed = new CatchProps { Errors = [Errors.ALL], ResultPath = "$.error" };
+        ingestDocuments.AddCatch(markFailed, catchToFailed);
+        extractDocuments.AddCatch(markFailed, catchToFailed);
+        markNeedsReview.AddCatch(markFailed, catchToFailed);
+        pageLimitExceeded.Next(markFailed);
 
-        // Fase 1, parte 6d: termina após a extração (o dossiê segue em processing até a parte 6e)
-        return processDocuments.Next(new Succeed(this, "DocumentsProcessed"));
+        checkPageLimit
+            .When(
+                Condition.Jsonata($"{{% $sum($states.input.ingested.ingest.page_count) > {UploadLimits.MaxPagesPerDossier} %}}"),
+                pageLimitExceeded)
+            .Otherwise(extractDocuments.Next(markNeedsReview).Next(new Succeed(this, "DossierReadyForReview")));
+
+        return ingestDocuments.Next(checkPageLimit);
     }
 
     /// <summary>
