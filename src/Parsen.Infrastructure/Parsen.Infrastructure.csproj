@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.BedrockRuntime" />
     <PackageReference Include="AWSSDK.DynamoDBv2" />
     <PackageReference Include="AWSSDK.EventBridge" />
     <PackageReference Include="AWSSDK.S3" />
@@ -9,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Parsen.Application\Parsen.Application.csproj" />
+    <ProjectReference Include="..\Parsen.Schemas\Parsen.Schemas.csproj" />
   </ItemGroup>
 
 </Project>
