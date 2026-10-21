@@ -87,6 +87,19 @@ public sealed class FinalizeAndContractsTests
         Assert.Equal("""{"document_id":"doc_1","page_count":3}""", System.Text.Encoding.UTF8.GetString(output.ToArray()));
     }
 
+    [Fact]
+    public void LambdaSerializer_WritesTheExtractResultWithCountsOnly()
+    {
+        var serializer = WorkerHost.CreateSerializer();
+        using var output = new MemoryStream();
+
+        serializer.Serialize(new ExtractResult("doc_1", "holerite.v2", 11, 10, 4, 2, 0), output);
+
+        Assert.Equal(
+            """{"document_id":"doc_1","schema_id":"holerite.v2","field_count":11,"filled_count":10,"item_count":4,"alert_count":2,"unlocated_count":0}""",
+            System.Text.Encoding.UTF8.GetString(output.ToArray()));
+    }
+
     private async Task<Dossier> AddProcessingDossierAsync()
     {
         var dossier = Dossier.Create(TenantId.From("ten_teste"), AnalysisType.Income, null, _clock);

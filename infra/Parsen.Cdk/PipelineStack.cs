@@ -18,7 +18,7 @@ internal sealed record PipelineDependencies(ITableV2 Table, IBucket DocumentsBuc
 
 /// <summary>
 /// Stack do pipeline (spec, seções 4 e 5): barramento de eventos, workers (Lambdas Native AOT) e a
-/// máquina de estados que os orquestra. Fase 1: Ingest por documento; OCR, Extract e Result entram nas partes 6c a 6e.
+/// máquina de estados que os orquestra. Fase 1: Ingest → OCR → Extract por documento; Result entra na parte 6e.
 /// </summary>
 internal sealed class PipelineStack : Stack
 {
@@ -27,7 +27,7 @@ internal sealed class PipelineStack : Stack
 
     /// <summary>Projetos que todo worker referencia (o build AOT precisa das pastas de todos).</summary>
     private static readonly string[] WorkerDependencies =
-        ["src/Parsen.Workers/Common", "src/Parsen.Infrastructure", "src/Parsen.Application", "src/Parsen.Domain"];
+        ["src/Parsen.Workers/Common", "src/Parsen.Infrastructure", "src/Parsen.Application", "src/Parsen.Domain", "src/Parsen.Schemas"];
 
     public PipelineStack(Construct scope, string id, IStackProps props, StageSettings settings, PipelineDependencies dependencies)
         : base(scope, id, props)
@@ -96,13 +96,50 @@ internal sealed class PipelineStack : Stack
             Resources = ["*"],
         }));
 
+        // Extração: uma chamada ao Claude por documento (~6 s para um holerite); 2 minutos cobrem documentos longos
+        var extract = CreateWorker(settings, "Extract", "extract", memorySize: 512, timeout: Duration.Minutes(2),
+            new Dictionary<string, string>
+            {
+                ["TABLE_NAME"] = table.TableName,
+                ["BUCKET_NAME"] = bucket.BucketName,
+                ["MODEL_ID"] = settings.ExtractionModelId,
+            });
+
+        // Lê o documento; grava campos e detalhe, e consulta/apaga campos antigos ao substituir a extração
+        AllowTenantItems(extract, table, "dynamodb:GetItem", "dynamodb:Query", "dynamodb:PutItem", "dynamodb:BatchWriteItem");
+
+        // Só lê o textract.json: não grava nada no S3
+        extract.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["s3:GetObject"],
+            Resources = [bucket.ArnForObjects("*")],
+        }));
+        extract.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["kms:Decrypt"],
+            Resources = [key.KeyArn],
+        }));
+
+        // Só o modelo configurado. O profile Global roteia para a região com capacidade: o IAM precisa do
+        // profile, do modelo base em qualquer região e do ARN do modelo sem região, usado no roteamento global
+        extract.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["bedrock:InvokeModel"],
+            Resources =
+            [
+                $"arn:aws:bedrock:{Region}:{Account}:inference-profile/{settings.ExtractionModelId}",
+                $"arn:aws:bedrock:*::foundation-model/{settings.ExtractionFoundationModelId}",
+                $"arn:aws:bedrock:::foundation-model/{settings.ExtractionFoundationModelId}",
+            ],
+        }));
+
         // ---------- Máquina de estados ----------
 
         StateMachine = new StateMachine(this, "StateMachine", new StateMachineProps
         {
             StateMachineName = $"parsen-{settings.Name}-pipeline",
             StateMachineType = StateMachineType.STANDARD,
-            DefinitionBody = DefinitionBody.FromChainable(BuildDefinition(ingest, ocr, finalize)),
+            DefinitionBody = DefinitionBody.FromChainable(BuildDefinition(ingest, ocr, extract, finalize)),
 
             // Teto de segurança: um dossiê de 50 páginas leva bem menos que isso
             Timeout = Duration.Minutes(15),
@@ -137,9 +174,9 @@ internal sealed class PipelineStack : Stack
 
     /// <summary>
     /// Entrada: { tenant_id, dossier_id, document_ids, submitted_at }.
-    /// Para cada documento (em paralelo): Ingest → OCR. Qualquer erro definitivo leva o dossiê para failed.
+    /// Para cada documento (em paralelo): Ingest → OCR → Extract. Qualquer erro definitivo leva o dossiê para failed.
     /// </summary>
-    private Chain BuildDefinition(IFunction ingest, IFunction ocr, IFunction finalize)
+    private Chain BuildDefinition(IFunction ingest, IFunction ocr, IFunction extract, IFunction finalize)
     {
         var ingestTask = new LambdaInvoke(this, "Ingest", new LambdaInvokeProps
         {
@@ -168,6 +205,21 @@ internal sealed class PipelineStack : Stack
         });
         AddRetries(ocrTask);
 
+        var extractTask = new LambdaInvoke(this, "Extract", new LambdaInvokeProps
+        {
+            LambdaFunction = extract,
+            PayloadResponseOnly = true,
+            RetryOnServiceExceptions = false,
+            Payload = TaskInput.FromObject(new Dictionary<string, object>
+            {
+                ["tenant_id"] = JsonPath.StringAt("$.tenant_id"),
+                ["dossier_id"] = JsonPath.StringAt("$.dossier_id"),
+                ["document_id"] = JsonPath.StringAt("$.document_id"),
+            }),
+            ResultPath = "$.extract",
+        });
+        AddRetries(extractTask);
+
         // Cada documento passa pelas etapas em sequência; até 5 documentos em paralelo
         var processDocuments = new Map(this, "ProcessDocuments", new MapProps
         {
@@ -181,7 +233,7 @@ internal sealed class PipelineStack : Stack
             MaxConcurrency = 5,
             ResultPath = "$.documents",
         });
-        processDocuments.ItemProcessor(ingestTask.Next(ocrTask));
+        processDocuments.ItemProcessor(ingestTask.Next(ocrTask).Next(extractTask));
         // Erro definitivo: grava failed no dossiê e encerra a execução como falha (vermelha no console)
         var markFailed = new LambdaInvoke(this, "MarkFailed", new LambdaInvokeProps
         {
@@ -209,7 +261,7 @@ internal sealed class PipelineStack : Stack
             })),
             new CatchProps { Errors = [Errors.ALL], ResultPath = "$.error" });
 
-        // Fase 1, parte 6c: termina após o OCR (o dossiê segue em processing até as partes 6d e 6e)
+        // Fase 1, parte 6d: termina após a extração (o dossiê segue em processing até a parte 6e)
         return processDocuments.Next(new Succeed(this, "DocumentsProcessed"));
     }
 

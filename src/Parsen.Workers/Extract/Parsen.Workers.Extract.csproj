@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Etapa de extração do pipeline: textract.json → campos com evidência no DynamoDB (Claude via Bedrock) -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>bootstrap</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <StripSymbols>true</StripSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Parsen.Workers.Common.csproj" />
+    <ProjectReference Include="..\..\Parsen.Infrastructure\Parsen.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

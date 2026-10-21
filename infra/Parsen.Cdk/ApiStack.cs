@@ -100,7 +100,7 @@ internal sealed class ApiStack : Stack
             Runtime = Runtime.DOTNET_10,
             Architecture = Architecture.X86_64,
             Handler = "Parsen.Api",
-            Code = LambdaCode.Managed("src/Parsen.Api", "src/Parsen.Infrastructure", "src/Parsen.Application", "src/Parsen.Domain"),
+            Code = LambdaCode.Managed("src/Parsen.Api", "src/Parsen.Infrastructure", "src/Parsen.Application", "src/Parsen.Domain", "src/Parsen.Schemas"),
 
             // Na Lambda, mais memória também traz mais CPU: encurta o cold start do ASP.NET
             MemorySize = 512,

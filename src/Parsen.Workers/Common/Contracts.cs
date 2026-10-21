@@ -15,6 +15,13 @@ public sealed record OcrTask(string TenantId, string DossierId, string DocumentI
 
 public sealed record OcrResult(string DocumentId, int PageCount, int LineCount);
 
+/// <summary>
+/// Saída do Extract: só contagens; os valores ficam no DynamoDB.
+/// UnlocatedCount = campos e linhas cujo trecho não foi achado no OCR (confiança 0, pedem revisão).
+/// </summary>
+public sealed record ExtractResult(
+    string DocumentId, string SchemaId, int FieldCount, int FilledCount, int ItemCount, int AlertCount, int UnlocatedCount);
+
 /// <summary>Entrada do Finalize. Error vem do Catch do Step Functions quando alguma etapa falhou de vez.</summary>
 public sealed record FinalizeInput(string TenantId, string DossierId, string Outcome, PipelineError? Error);
 
@@ -37,6 +44,7 @@ public static class FinalizeOutcomes
 [JsonSerializable(typeof(IngestResult))]
 [JsonSerializable(typeof(OcrTask))]
 [JsonSerializable(typeof(OcrResult))]
+[JsonSerializable(typeof(ExtractResult))]
 [JsonSerializable(typeof(FinalizeInput))]
 [JsonSerializable(typeof(FinalizeResult))]
 public sealed partial class WorkersJsonContext : JsonSerializerContext;
