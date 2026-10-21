@@ -204,7 +204,7 @@ Modelos disponíveis no Bedrock: [Claude in Amazon Bedrock](https://platform.cla
 
 - Um JSON Schema versionado por tipo de documento (`holerite.v1.json`), usado em structured output
 - Prompt de sistema + schema em prompt caching; o documento vai no fim da mensagem
-- Envio do PDF/imagem ao Claude junto com o texto do Textract, para cruzar visão e OCR
+- Fase 1: só o texto do Textract vai ao Claude (a imagem somaria ~30% ao custo por holerite e a Spike B acertou sem ela). Enviar também a imagem da página, para cruzar visão e OCR, só se o `Parsen.Eval` mostrar campos que o OCR lê mal; a análise visual de fraude é do Sonnet (Fase 3)
 - Cada campo devolve `valor`, `pagina` e `trecho_fonte`; o backend casa o trecho com as bounding boxes do Textract
 - O modelo nunca decide aprovação; ele extrai e sinaliza. Verificações determinísticas em C# produzem os resultados
 - O Sonnet 5 devolve sinais tipados com evidência (ex.: `suspeita_adulteracao`, `inconsistencia_layout`); a regra C# `SINAL_IA` os registra como sinais do dossiê, com a justificativa visível ao analista
@@ -398,8 +398,8 @@ DynamoDB em tabela única. **Toda PK começa com `TENANT#<id>`**, para isolar ca
 | Usuário | TENANT#{tenantId} | USER#{userId} | e-mail, papel, status |
 | Dossiê | TENANT#{tenantId} | DOSSIER#{dossierId} | tipo de análise, status, referência externa, resultado consolidado, criado em |
 | Documento (resumo) | TENANT#{tenantId}#DOSSIER#{dossierId} | DOC#{docId} | tipo, páginas, status |
-| Documento (detalhe) | TENANT#{tenantId}#DOC#{docId} | META | dossierId, chave S3, versão do schema e do modelo |
-| Campo extraído | TENANT#{tenantId}#DOC#{docId} | FIELD#{nome} | valor, confiança, evidência, valor original, corrigido |
+| Documento (detalhe) | TENANT#{tenantId}#DOC#{docId} | META | dossierId, chave S3, versão do schema e do modelo, `alertas` do modelo (observações de leitura para a revisão; não são `checks` nem `signals`) |
+| Campo extraído | TENANT#{tenantId}#DOC#{docId} | FIELD#{nome} | valor, confiança, evidência, valor original, corrigido; listas (ex.: rubricas `itens`) em `FIELD#{lista}#{ordem}` |
 | Verificação | TENANT#{tenantId}#DOSSIER#{dossierId} | CHECK#{regra}#{docId ou DOSSIER} | resultado, severidade, mensagem, documentos, evidência |
 | Sinal | TENANT#{tenantId}#DOSSIER#{dossierId} | SIGNAL#{ulid} | tipo, origem (regra ou modelo), mensagem, documentos, evidência |
 | Evento de auditoria | TENANT#{tenantId}#DOSSIER#{dossierId} | AUDIT#{ulid} | ator, ação, antes/depois |
