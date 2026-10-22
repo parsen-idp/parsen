@@ -9,12 +9,17 @@
         "pagina_final": 1
       },
       {
-        "tipo": "extrato_bancario",
+        "tipo": "outro",
         "pagina_inicial": 2,
+        "pagina_final": 2
+      },
+      {
+        "tipo": "outro",
+        "pagina_inicial": 3,
         "pagina_final": 3
       },
       {
-        "tipo": "holerite",
+        "tipo": "comprovante_residencia",
         "pagina_inicial": 4,
         "pagina_final": 4
       }

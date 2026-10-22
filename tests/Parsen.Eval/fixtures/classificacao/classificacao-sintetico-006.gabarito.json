@@ -4,24 +4,24 @@
   "lists": {
     "documentos": [
       {
-        "tipo": "holerite",
+        "tipo": "outro",
         "pagina_inicial": 1,
         "pagina_final": 1
       },
       {
-        "tipo": "extrato_bancario",
+        "tipo": "outro",
         "pagina_inicial": 2,
-        "pagina_final": 4
+        "pagina_final": 2
       },
       {
-        "tipo": "comprovante_residencia",
-        "pagina_inicial": 5,
+        "tipo": "extrato_bancario",
+        "pagina_inicial": 3,
+        "pagina_final": 3
+      },
+      {
+        "tipo": "extrato_bancario",
+        "pagina_inicial": 4,
         "pagina_final": 5
-      },
-      {
-        "tipo": "matricula_imovel",
-        "pagina_inicial": 6,
-        "pagina_final": 8
       }
     ]
   }

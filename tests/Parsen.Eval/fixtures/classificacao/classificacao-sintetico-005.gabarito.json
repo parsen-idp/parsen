@@ -4,7 +4,7 @@
   "lists": {
     "documentos": [
       {
-        "tipo": "outro",
+        "tipo": "comprovante_residencia",
         "pagina_inicial": 1,
         "pagina_final": 1
       },

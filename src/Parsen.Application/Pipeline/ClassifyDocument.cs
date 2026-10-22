@@ -63,14 +63,28 @@ public sealed class ClassifyDocumentHandler(
     }
 
     /// <summary>
-    /// Faixas em ordem, sem sobreposição e dentro do arquivo. Se o modelo devolver algo inválido, o arquivo inteiro
-    /// vira um documento "outro": não trava o dossiê e leva o caso à revisão, com o motivo nos alertas.
+    /// Faixas em ordem, sem sobreposição e dentro do arquivo. Correções seguras são aplicadas com alerta: faixa que
+    /// passa do fim é cortada na última página; faixa que começa depois do fim é descartada. O que sobrar inválido
+    /// (ex.: sobreposição) faz o arquivo inteiro virar um documento "outro": não trava o dossiê e leva o caso à revisão.
     /// </summary>
     private static List<ClassifiedPart> Validate(IReadOnlyList<ClassifiedPart> parts, int pageCount, List<string> alerts)
     {
-        var sorted = parts.OrderBy(p => p.Pages.First).ToList();
+        var inside = parts.Where(p => p.Pages.First <= pageCount).ToList();
+        if (inside.Count < parts.Count)
+        {
+            alerts.Add("Faixa de páginas além do fim do arquivo descartada da classificação.");
+        }
+
+        var sorted = inside
+            .Select(p => p.Pages.Last <= pageCount ? p : p with { Pages = new PageRange(p.Pages.First, pageCount) })
+            .OrderBy(p => p.Pages.First)
+            .ToList();
+        if (sorted.Zip(inside.OrderBy(p => p.Pages.First)).Any(pair => pair.First.Pages != pair.Second.Pages))
+        {
+            alerts.Add("Faixa de páginas ajustada ao fim do arquivo na classificação.");
+        }
+
         var valid = sorted.Count > 0
-            && sorted.All(p => p.Pages.Last <= pageCount)
             && sorted.Zip(sorted.Skip(1)).All(pair => pair.Second.Pages.First > pair.First.Pages.Last);
 
         if (valid)

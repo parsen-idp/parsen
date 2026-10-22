@@ -24,7 +24,7 @@ public sealed class ConverseClassificationTests
 
         var text = ConverseClassification.FormatExcerpts(ocr, linesPerPage: 3);
 
-        Assert.Equal("=== PÁGINA 1 (3 de 30 linhas) ===\nlinha 1\nlinha 2\nlinha 3\n=== PÁGINA 2 (1 de 1 linhas) ===\nCONTINUAÇÃO\n", text);
+        Assert.Equal("=== PÁGINA 1 de 2 ===\nlinha 1\nlinha 2\nlinha 3\n=== PÁGINA 2 de 2 ===\nCONTINUAÇÃO\n", text);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public sealed class ConverseClassificationTests
             }
             """));
 
-        Assert.Equal("classificacao.v1", output.SchemaId);
+        Assert.Equal(Classificacao.Id, output.SchemaId);
         Assert.Equal(
             [new ClassifiedPart(DocumentType.Holerite, new PageRange(1, 1)), new ClassifiedPart(DocumentType.ExtratoBancario, new PageRange(2, 4))],
             output.Parts);

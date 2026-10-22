@@ -26,8 +26,11 @@ public sealed class BedrockDocumentClassifier(IAmazonBedrockRuntime bedrock, Bed
 /// <summary>Texto de entrada e leitura da resposta da classificação, sem rede (testável).</summary>
 public static class ConverseClassification
 {
-    /// <summary>Linhas do começo de cada página enviadas ao modelo: o suficiente para o cabeçalho.</summary>
-    public const int LinesPerPage = 20;
+    /// <summary>
+    /// Linhas do começo de cada página enviadas ao modelo. 40 (classificacao.v2): um holerite real sem título só
+    /// mostrava as colunas de vencimentos e descontos na linha 23, e com 20 linhas o tipo oscilava entre holerite e outro.
+    /// </summary>
+    public const int LinesPerPage = 40;
 
     public static string FormatExcerpts(OcrDocument ocr, int linesPerPage = LinesPerPage)
     {
@@ -36,7 +39,9 @@ public static class ConverseClassification
         foreach (var page in ocr.Pages)
         {
             var lines = page.Lines.Take(linesPerPage).ToList();
-            text.Append("=== PÁGINA ").Append(page.Page).Append(" (").Append(lines.Count).Append(" de ").Append(page.Lines.Count).Append(" linhas) ===\n");
+            // Só o número da página e o total: com a contagem de linhas no cabeçalho ("40 de 122 linhas"),
+            // o modelo chegou a devolver a página final 122 num arquivo de uma página
+            text.Append("=== PÁGINA ").Append(page.Page).Append(" de ").Append(ocr.Pages.Count).Append(" ===\n");
             foreach (var line in lines)
             {
                 text.Append(line.Text).Append('\n');

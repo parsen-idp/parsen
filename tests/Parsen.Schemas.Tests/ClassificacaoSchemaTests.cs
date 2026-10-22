@@ -11,7 +11,7 @@ public class ClassificacaoSchemaTests
     [Fact]
     public void Classificacao_loads_current_version_and_names_the_tool()
     {
-        Assert.Equal("classificacao.v1", Classificacao.Id);
+        Assert.Equal("classificacao.v2", Classificacao.Id);
         Assert.Equal("registrar_classificacao", Classificacao.ToolName);
         Assert.Equal(Classificacao.Id, (string?)JsonNode.Parse(Classificacao.Schema)!["title"]);
         Assert.Contains($"`{Classificacao.ToolName}`", Classificacao.SystemPrompt, StringComparison.Ordinal);

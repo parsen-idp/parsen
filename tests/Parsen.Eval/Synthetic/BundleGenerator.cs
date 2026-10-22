@@ -41,7 +41,7 @@ public sealed class BundleGenerator(int seed)
             var type = PickType();
             var documentPages = type switch
             {
-                DocumentType.Holerite => [_holerites.Generate().Ocr.Pages[0].Lines],
+                DocumentType.Holerite => [Holerite()],
                 DocumentType.ExtratoBancario => Extrato(),
                 DocumentType.ComprovanteResidencia => [Comprovante()],
                 DocumentType.MatriculaImovel => Matricula(),
@@ -77,6 +77,31 @@ public sealed class BundleGenerator(int seed)
         < 9 => DocumentType.MatriculaImovel,
         _ => DocumentType.Outro,
     };
+
+    /// <summary>
+    /// Metade dos holerites sem título e com cabeçalho mais longo (endereço, folha, matrícula), como os reais:
+    /// num holerite de verdade sem "Demonstrativo" as colunas Vencimentos e Descontos só aparecem depois da linha 20.
+    /// </summary>
+    private IReadOnlyList<OcrLine> Holerite()
+    {
+        var lines = _holerites.Generate().Ocr.Pages[0].Lines;
+        if (_random.NextDouble() < 0.5)
+        {
+            return lines;
+        }
+
+        var headerRows = Lines(
+        [
+            "Folha Mensal",
+            $"RUA DO COMERCIO, {_random.Next(10, 999)} - CENTRO",
+            "EXEMPLÓPOLIS - SP",
+            $"Matrícula {_random.Next(1000, 9999)}",
+            "Depto: ADMINISTRATIVO",
+        ]);
+
+        var withoutTitle = lines.Where(l => !l.Text.StartsWith("DEMONSTRATIVO", StringComparison.Ordinal)).ToList();
+        return [.. withoutTitle.Take(3), .. headerRows, .. withoutTitle.Skip(3)];
+    }
 
     private List<IReadOnlyList<OcrLine>> Extrato()
     {

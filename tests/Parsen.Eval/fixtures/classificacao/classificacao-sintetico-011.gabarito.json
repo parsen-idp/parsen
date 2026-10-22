@@ -4,19 +4,9 @@
   "lists": {
     "documentos": [
       {
-        "tipo": "extrato_bancario",
+        "tipo": "outro",
         "pagina_inicial": 1,
-        "pagina_final": 3
-      },
-      {
-        "tipo": "extrato_bancario",
-        "pagina_inicial": 4,
-        "pagina_final": 5
-      },
-      {
-        "tipo": "extrato_bancario",
-        "pagina_inicial": 6,
-        "pagina_final": 7
+        "pagina_final": 1
       }
     ]
   }

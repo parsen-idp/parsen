@@ -8,7 +8,7 @@ using Parsen.Infrastructure.Ocr;
 
 // Uso:
 //   dotnet run --project tests/Parsen.Eval -- generate [--kind holerite|classificacao] [--count 10] [--seed 42] [--out <pasta>]
-//   dotnet run --project tests/Parsen.Eval -- run [--dataset <pasta>]... [--only <prefixo>] [--model <id>] [--report <arquivo.md>] [--yes]
+//   dotnet run --project tests/Parsen.Eval -- run [--dataset <pasta>]... [--only <prefixo>] [--repeat N] [--model <id>] [--report <arquivo.md>] [--yes]
 //
 // "run" sem --yes só lista os casos e o custo estimado: chamar o modelo tem custo real (CLAUDE.md).
 // --dataset aponta para documentos próprios, fora do repositório; o relatório deles não mostra valores.
@@ -92,9 +92,10 @@ static async Task<int> RunAsync(Options options)
     // Estimativa: holerite medido na Fase 1 (~4.400 tokens de entrada e ~1.100 de saída); classificação, só o
     // começo das páginas (~1.500 e ~150)
     var classificationCases = cases.Count(c => Path.GetFileName(c.Ocr).StartsWith("classificacao", StringComparison.Ordinal));
-    var estimate = ((cases.Count - classificationCases) * price.Cost(new ModelUsage(4_400, 1_100, 0, 0)))
-        + (classificationCases * price.Cost(new ModelUsage(1_500, 150, 0, 0)));
-    Console.WriteLine($"{cases.Count} casos ({cases.Count(c => c.Synthetic)} sintéticos), modelo {model}: custo estimado US$ {estimate:0.00}.");
+    var repetitions = int.Parse(options.Get("repeat") ?? "1", System.Globalization.CultureInfo.InvariantCulture);
+    var estimate = repetitions * (((cases.Count - classificationCases) * price.Cost(new ModelUsage(4_400, 1_100, 0, 0)))
+        + (classificationCases * price.Cost(new ModelUsage(3_000, 200, 0, 0))));
+    Console.WriteLine($"{cases.Count} casos ({cases.Count(c => c.Synthetic)} sintéticos) x {repetitions} rodada(s), modelo {model}: custo estimado US$ {estimate:0.00}.");
 
     if (!options.Has("yes"))
     {
@@ -116,10 +117,14 @@ static async Task<int> RunAsync(Options options)
     var schemaId = "";
     var classificationSchemaId = "";
 
+    // --repeat N: cada caso N vezes, para medir a instabilidade do modelo (a mesma entrada nem sempre dá a mesma resposta)
+    var repeat = int.Parse(options.Get("repeat") ?? "1", System.Globalization.CultureInfo.InvariantCulture);
+    var runs = cases.SelectMany(c => Enumerable.Range(1, repeat).Select(r => (c.Ocr, c.Gabarito, c.Synthetic, Run: r))).ToList();
+
     // Um caso por vez: a cota da conta é de 10 requisições por minuto no Haiku 4.5
-    foreach (var (ocrPath, gabaritoPath, synthetic) in cases)
+    foreach (var (ocrPath, gabaritoPath, synthetic, run) in runs)
     {
-        var name = Path.GetFileName(ocrPath).Replace(".ocr.json", "", StringComparison.Ordinal);
+        var name = Path.GetFileName(ocrPath).Replace(".ocr.json", "", StringComparison.Ordinal) + (repeat > 1 ? $" #{run}" : "");
         var gabarito = Gabarito.Parse(await File.ReadAllTextAsync(gabaritoPath));
         var ocr = OcrJson.Deserialize(await File.ReadAllBytesAsync(ocrPath));
 
@@ -127,7 +132,7 @@ static async Task<int> RunAsync(Options options)
         {
             try
             {
-                var classification = await classifier.ClassifyAsync(ocr, CancellationToken.None);
+                var classification = await WithThrottlingRetryAsync(() => classifier.ClassifyAsync(ocr, CancellationToken.None));
                 classificationSchemaId = classification.SchemaId;
                 classifications.Add(new CaseResult(name, synthetic, null, classification.Usage, price.Cost(classification.Usage), null,
                     ClassificationComparer.Compare(gabarito, classification)));
@@ -146,7 +151,7 @@ static async Task<int> RunAsync(Options options)
 
         try
         {
-            var output = await engine.ExtractAsync(gabarito.DocumentType, ocr, CancellationToken.None);
+            var output = await WithThrottlingRetryAsync(() => engine.ExtractAsync(gabarito.DocumentType, ocr, CancellationToken.None));
             var extraction = ExtractionAssembler.Assemble(gabarito.DocumentType, output, ocr, DateTimeOffset.UtcNow);
             schemaId = extraction.SchemaId;
             results.Add(new CaseResult(name, synthetic, Comparer.Compare(gabarito, extraction), output.Usage, price.Cost(output.Usage), null));
@@ -183,6 +188,29 @@ static async Task<int> RunAsync(Options options)
     }
 
     return 0;
+}
+
+/// <summary>
+/// A conta tem cota de 10 chamadas por minuto no Haiku 4.5: quando a AWS limita, espera e tenta de novo (até 3 vezes).
+/// Chamada recusada por limite não é cobrada.
+/// </summary>
+internal static partial class Program
+{
+    private static async Task<T> WithThrottlingRetryAsync<T>(Func<Task<T>> call)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await call();
+            }
+            catch (Amazon.BedrockRuntime.Model.ThrottlingException) when (attempt <= 3)
+            {
+                Console.WriteLine($"    limite de chamadas por minuto: aguardando 20 s (tentativa {attempt} de 3)");
+                await Task.Delay(TimeSpan.FromSeconds(20));
+            }
+        }
+    }
 }
 
 /// <summary>Argumentos: o primeiro é o comando; depois, --nome valor (repetível) e --flag.</summary>

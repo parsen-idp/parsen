@@ -121,8 +121,8 @@ public static class Report
                 continue;
             }
 
-            // Documento próprio: só as contagens (os tipos e páginas não são dados pessoais, mas seguem a mesma regra dos campos)
-            var detail = result.Synthetic && !s.Exact ? $"{s.ExpectedSummary} → {s.ActualSummary}" : "";
+            // Tipos e faixas de páginas não são dados pessoais: aparecem também nos documentos próprios
+            var detail = s.Exact ? "" : $"{s.ExpectedSummary} → {s.ActualSummary}";
             md.AppendLine(CultureInfo.InvariantCulture,
                 $"| {result.Name} | {(s.Exact ? "sim" : "não")} | {s.Matched}/{s.Expected}{(s.Extra > 0 ? $" (+{s.Extra})" : "")} | {s.PagesWithRightType}/{s.Pages} | " +
                 $"{result.Usage.InputTokens} / {result.Usage.OutputTokens} | {detail} |");

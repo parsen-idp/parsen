@@ -77,14 +77,12 @@ public sealed class ClassifyDocumentHandlerTests
         Assert.Equal([new PageRange(1, 1), new PageRange(2, 4)], result.Documents.Select(d => d.Pages!.Value));
     }
 
-    // Resposta inválida não trava o dossiê: o arquivo inteiro vira "outro", com alerta, e vai para a revisão
-    [Theory]
-    [InlineData(1, 2, 2, 4)] // sobreposição
-    [InlineData(1, 2, 3, 9)] // página que o arquivo não tem
-    public async Task InvalidParts_FallBackToASingleUnknownDocument(int firstA, int lastA, int firstB, int lastB)
+    // Sobreposição não tem correção segura: o arquivo inteiro vira "outro", com alerta, e vai para a revisão
+    [Fact]
+    public async Task OverlappingParts_FallBackToASingleUnknownDocument()
     {
         var file = await AddFileAsync();
-        _classifier.Parts = [new(DocumentType.Holerite, new PageRange(firstA, lastA)), new(DocumentType.ExtratoBancario, new PageRange(firstB, lastB))];
+        _classifier.Parts = [new(DocumentType.Holerite, new PageRange(1, 2)), new(DocumentType.ExtratoBancario, new PageRange(2, 4))];
 
         var result = await _handler.HandleAsync(Tenant, file.DossierId, file.Id, CancellationToken.None);
 
@@ -92,6 +90,34 @@ public sealed class ClassifyDocumentHandlerTests
         Assert.Equal(DocumentType.Outro, document.Type);
         Assert.Equal(new PageRange(1, 4), document.Pages);
         Assert.Contains(result.Alerts, a => a.Contains("inválida", StringComparison.Ordinal));
+    }
+
+    // Visto no holerite real: o modelo devolveu "páginas 1 a 122" (a contagem de linhas) num arquivo de uma página
+    [Fact]
+    public async Task PartEndingAfterTheFile_IsCutAtTheLastPage()
+    {
+        var file = await AddFileAsync();
+        _classifier.Parts = [new(DocumentType.Holerite, new PageRange(1, 2)), new(DocumentType.ExtratoBancario, new PageRange(3, 122))];
+
+        var result = await _handler.HandleAsync(Tenant, file.DossierId, file.Id, CancellationToken.None);
+
+        Assert.Equal([new PageRange(1, 2), new PageRange(3, 4)], result.Documents.Select(d => d.Pages!.Value));
+        Assert.Equal([DocumentType.Holerite, DocumentType.ExtratoBancario], result.Documents.Select(d => d.Type!.Value));
+        Assert.Contains(result.Alerts, a => a.Contains("ajustada", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task PartStartingAfterTheFile_IsDropped()
+    {
+        var file = await AddFileAsync();
+        _classifier.Parts = [new(DocumentType.Holerite, new PageRange(1, 4)), new(DocumentType.Outro, new PageRange(9, 9))];
+
+        var result = await _handler.HandleAsync(Tenant, file.DossierId, file.Id, CancellationToken.None);
+
+        var document = Assert.Single(result.Documents);
+        Assert.Equal(file.Id, document.Id);
+        Assert.Equal(DocumentType.Holerite, document.Type);
+        Assert.Contains(result.Alerts, a => a.Contains("descartada", StringComparison.Ordinal));
     }
 
     [Fact]
