@@ -6,17 +6,7 @@
       {
         "tipo": "extrato_bancario",
         "pagina_inicial": 1,
-        "pagina_final": 2
-      },
-      {
-        "tipo": "extrato_bancario",
-        "pagina_inicial": 3,
         "pagina_final": 3
-      },
-      {
-        "tipo": "outro",
-        "pagina_inicial": 4,
-        "pagina_final": 4
       }
     ]
   }

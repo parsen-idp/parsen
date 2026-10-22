@@ -4,9 +4,14 @@
   "lists": {
     "documentos": [
       {
-        "tipo": "holerite",
+        "tipo": "outro",
         "pagina_inicial": 1,
         "pagina_final": 1
+      },
+      {
+        "tipo": "holerite",
+        "pagina_inicial": 2,
+        "pagina_final": 2
       }
     ]
   }

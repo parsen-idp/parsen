@@ -82,6 +82,8 @@ public sealed class BundleGenerator(int seed)
     {
         var bank = Pick(Banks);
         var month = _random.Next(1, 13);
+        // Titular, conta e período são do extrato inteiro: mudar um deles entre páginas indicaria outro documento
+        var holder = Pick(Names);
         var account = $"Agência {_random.Next(1000, 9999)}  Conta {_random.Next(10000, 99999)}-{_random.Next(10)}";
         var pageCount = _random.Next(1, 4);
         var repeatHeader = _random.NextDouble() < 0.5;
@@ -92,7 +94,7 @@ public sealed class BundleGenerator(int seed)
             var rows = new List<string>();
             if (p == 1 || repeatHeader)
             {
-                rows.AddRange([bank, "EXTRATO DE CONTA CORRENTE", Pick(Names), account, $"Período: 01/{month:00}/2026 a 28/{month:00}/2026", $"Página {p}/{pageCount}"]);
+                rows.AddRange([bank, "EXTRATO DE CONTA CORRENTE", holder, account, $"Período: 01/{month:00}/2026 a 28/{month:00}/2026", $"Página {p}/{pageCount}"]);
                 rows.Add("Data  Histórico  Documento  Valor  Saldo");
             }
 
