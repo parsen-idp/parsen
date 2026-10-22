@@ -277,7 +277,7 @@ internal sealed class PipelineStack : Stack
             // { documents: [{ document_id, type }] }: o próprio arquivo ou os filhos do split
             ResultPath = "$.classify",
         });
-        AddRetries(classifyTask);
+        AddModelRetries(classifyTask);
 
         // Cada arquivo: OCR → split e classificação; até 5 arquivos em paralelo
         var processFiles = new Map(this, "ProcessFiles", new MapProps
@@ -317,7 +317,7 @@ internal sealed class PipelineStack : Stack
             }),
             ResultPath = "$.extract",
         });
-        AddRetries(extractTask);
+        AddModelRetries(extractTask);
 
         // Um documento lógico por item; tipos sem schema e "outro" são pulados pela própria Lambda
         var extractDocuments = new Map(this, "ExtractDocuments", new MapProps
@@ -403,6 +403,24 @@ internal sealed class PipelineStack : Stack
     private static void AddRetries(LambdaInvoke task)
     {
         task.AddRetry(new RetryProps { Errors = ["DocumentRejectedException"], MaxAttempts = 0 });
+        task.AddRetry(TechnicalRetry());
+    }
+
+    /// <summary>
+    /// Etapas que chamam o Claude. A cota da conta é de 10 chamadas por minuto no Haiku 4.5 (aumento negado
+    /// para conta nova): limite de taxa espera 20 s, 30 s e 45 s, para atravessar a janela de um minuto. Chamada
+    /// recusada por limite não é cobrada. Os demais erros seguem a regra comum.
+    /// </summary>
+    private static void AddModelRetries(LambdaInvoke task)
+    {
+        task.AddRetry(new RetryProps { Errors = ["DocumentRejectedException"], MaxAttempts = 0 });
+        task.AddRetry(new RetryProps
+        {
+            Errors = ["ThrottlingException"],
+            Interval = Duration.Seconds(20),
+            BackoffRate = 1.5,
+            MaxAttempts = 3,
+        });
         task.AddRetry(TechnicalRetry());
     }
 
