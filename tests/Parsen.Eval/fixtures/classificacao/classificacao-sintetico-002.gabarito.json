@@ -6,6 +6,11 @@
       {
         "tipo": "extrato_bancario",
         "pagina_inicial": 1,
+        "pagina_final": 2
+      },
+      {
+        "tipo": "comprovante_residencia",
+        "pagina_inicial": 3,
         "pagina_final": 3
       },
       {
@@ -14,9 +19,9 @@
         "pagina_final": 6
       },
       {
-        "tipo": "comprovante_residencia",
+        "tipo": "extrato_bancario",
         "pagina_inicial": 7,
-        "pagina_final": 7
+        "pagina_final": 9
       }
     ]
   }

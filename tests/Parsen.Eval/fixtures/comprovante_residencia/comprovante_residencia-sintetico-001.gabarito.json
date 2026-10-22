@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "energia",
+    "emissor": "COMPANHIA DE LUZ MODELO",
+    "cnpj_emissor": "94069395000122",
+    "titular": "ANA LIMA SANTOS",
+    "cpf_titular": null,
+    "logradouro": "ALAMEDA DOS ANJOS",
+    "numero": "1726",
+    "complemento": "CASA 2",
+    "bairro": "VILA NOVA",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "cep": "60246053",
+    "endereco_entrega": null,
+    "data_emissao": "2026-10-01",
+    "data_vencimento": "2026-10-20",
+    "mes_referencia": "2026-10",
+    "valor_total": 468.12
+  },
+  "lists": {}
+}

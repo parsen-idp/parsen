@@ -5,10 +5,11 @@ using Parsen.Eval;
 using Parsen.Eval.Synthetic;
 using Parsen.Infrastructure.Extraction;
 using Parsen.Infrastructure.Ocr;
+using Parsen.Schemas;
 
 // Uso:
-//   dotnet run --project tests/Parsen.Eval -- generate [--kind holerite|classificacao] [--count 10] [--seed 42] [--out <pasta>]
-//   dotnet run --project tests/Parsen.Eval -- run [--dataset <pasta>]... [--only <prefixo>] [--repeat N] [--model <id>] [--report <arquivo.md>] [--yes]
+//   dotnet run --project tests/Parsen.Eval -- generate [--kind holerite|comprovante_residencia|classificacao] [--count 10] [--seed 42] [--out <pasta>]
+//   dotnet run --project tests/Parsen.Eval -- run [--dataset <pasta>]... [--only <prefixo>] [--repeat N] [--classificacao vN] [--model <id>] [--report <arquivo.md>] [--yes]
 //
 // "run" sem --yes só lista os casos e o custo estimado: chamar o modelo tem custo real (CLAUDE.md).
 // --dataset aponta para documentos próprios, fora do repositório; o relatório deles não mostra valores.
@@ -41,8 +42,9 @@ static int Generate(Options options)
     Func<(OcrDocument, Gabarito)> generate = kind switch
     {
         "holerite" => new HoleriteGenerator(seed).Generate,
+        "comprovante_residencia" => new ComprovanteGenerator(seed).Generate,
         "classificacao" => new BundleGenerator(seed).Generate,
-        _ => throw new ArgumentException($"Tipo de fixture desconhecido: {kind} (use holerite ou classificacao)."),
+        _ => throw new ArgumentException($"Tipo de fixture desconhecido: {kind} (use holerite, comprovante_residencia ou classificacao)."),
     };
 
     for (var i = 1; i <= count; i++)
@@ -110,11 +112,13 @@ static async Task<int> RunAsync(Options options)
         MaxErrorRetry = 2,
     });
     var engine = new BedrockExtractionEngine(bedrock, new BedrockExtractionSettings(model));
-    var classifier = new BedrockDocumentClassifier(bedrock, new BedrockExtractionSettings(model, MaxTokens: 1024));
+    // --classificacao vN: avalia outra versão do prompt de classificação (comparar antes do merge, regra 8)
+    var classificationDefinition = options.Get("classificacao") is { } version ? ExtractionSchemas.Load("classificacao", version) : null;
+    var classifier = new BedrockDocumentClassifier(bedrock, new BedrockExtractionSettings(model, MaxTokens: 1024), classificationDefinition);
 
-    var results = new List<CaseResult>();
+    // Um relatório por tipo de documento: misturar holerite e comprovante juntaria campos diferentes na mesma tabela
+    var resultsByType = new SortedDictionary<string, (string SchemaId, List<CaseResult> Results)>(StringComparer.Ordinal);
     var classifications = new List<CaseResult>();
-    var schemaId = "";
     var classificationSchemaId = "";
 
     // --repeat N: cada caso N vezes, para medir a instabilidade do modelo (a mesma entrada nem sempre dá a mesma resposta)
@@ -153,23 +157,26 @@ static async Task<int> RunAsync(Options options)
         {
             var output = await WithThrottlingRetryAsync(() => engine.ExtractAsync(gabarito.DocumentType, ocr, CancellationToken.None));
             var extraction = ExtractionAssembler.Assemble(gabarito.DocumentType, output, ocr, DateTimeOffset.UtcNow);
-            schemaId = extraction.SchemaId;
-            results.Add(new CaseResult(name, synthetic, Comparer.Compare(gabarito, extraction), output.Usage, price.Cost(output.Usage), null));
+            var group = resultsByType.TryGetValue(gabarito.DocumentType, out var existing) ? existing.Results : [];
+            group.Add(new CaseResult(name, synthetic, Comparer.Compare(gabarito, extraction), output.Usage, price.Cost(output.Usage), null));
+            resultsByType[gabarito.DocumentType] = (extraction.SchemaId, group);
             Console.WriteLine($"  {name}: ok");
         }
 #pragma warning disable CA1031 // um caso com erro não interrompe a avaliação dos outros
         catch (Exception ex)
 #pragma warning restore CA1031
         {
-            results.Add(new CaseResult(name, synthetic, null, ModelUsage.None, 0, ex.GetType().Name));
+            var group = resultsByType.TryGetValue(gabarito.DocumentType, out var existing) ? existing.Results : [];
+            group.Add(new CaseResult(name, synthetic, null, ModelUsage.None, 0, ex.GetType().Name));
+            resultsByType[gabarito.DocumentType] = (existing.SchemaId ?? gabarito.DocumentType, group);
             Console.WriteLine($"  {name}: erro {ex.GetType().Name}");
         }
     }
 
     var sections = new List<string>();
-    if (results.Count > 0)
+    foreach (var (_, (typeSchemaId, typeResults)) in resultsByType)
     {
-        sections.Add(Report.Render(schemaId, model, results));
+        sections.Add(Report.Render(typeSchemaId, model, typeResults));
     }
 
     if (classifications.Count > 0)

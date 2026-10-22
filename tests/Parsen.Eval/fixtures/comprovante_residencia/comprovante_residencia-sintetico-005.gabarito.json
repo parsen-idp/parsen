@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "energia",
+    "emissor": "COMPANHIA DE LUZ MODELO",
+    "cnpj_emissor": "53550502000152",
+    "titular": "CARLA MARTINS VIEIRA",
+    "cpf_titular": null,
+    "logradouro": "TRAVESSA DO COMÉRCIO",
+    "numero": "700",
+    "complemento": null,
+    "bairro": "VILA NOVA",
+    "cidade": "VILA MODELO",
+    "uf": "MG",
+    "cep": "29621907",
+    "endereco_entrega": "AVENIDA CENTRAL, 773 SALA 29 - CENTRO - VILA MODELO/MG - CEP 99700-988",
+    "data_emissao": "2026-10-05",
+    "data_vencimento": "2026-10-23",
+    "mes_referencia": "2026-10",
+    "valor_total": 268.35
+  },
+  "lists": {}
+}

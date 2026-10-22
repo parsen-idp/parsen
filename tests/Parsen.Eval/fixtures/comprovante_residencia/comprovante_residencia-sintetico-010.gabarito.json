@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "agua",
+    "emissor": "COMPANHIA DE ÁGUAS EXEMPLO",
+    "cnpj_emissor": "89689126000129",
+    "titular": "ANA LIMA SANTOS",
+    "cpf_titular": null,
+    "logradouro": "RUA SETE DE SETEMBRO",
+    "numero": "1426",
+    "complemento": null,
+    "bairro": "JARDIM EXEMPLO",
+    "cidade": "PORTO FICTÍCIO",
+    "uf": "RS",
+    "cep": "54465879",
+    "endereco_entrega": null,
+    "data_emissao": "2026-09-01",
+    "data_vencimento": "2026-09-11",
+    "mes_referencia": "2026-09",
+    "valor_total": 453.56
+  },
+  "lists": {}
+}

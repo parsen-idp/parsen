@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "gas",
+    "emissor": "GÁS CANALIZADO EXEMPLO S.A.",
+    "cnpj_emissor": "49853127000142",
+    "titular": "ELISA NOGUEIRA PEREIRA",
+    "cpf_titular": null,
+    "logradouro": "AVENIDA BRASIL",
+    "numero": "1421",
+    "complemento": "APTO 45",
+    "bairro": "BELA VISTA",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "cep": "32901362",
+    "endereco_entrega": null,
+    "data_emissao": "2026-02-07",
+    "data_vencimento": "2026-02-22",
+    "mes_referencia": "2026-02",
+    "valor_total": 378.36
+  },
+  "lists": {}
+}

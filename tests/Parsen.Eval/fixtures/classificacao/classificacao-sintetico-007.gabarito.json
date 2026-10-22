@@ -9,14 +9,14 @@
         "pagina_final": 1
       },
       {
-        "tipo": "comprovante_residencia",
+        "tipo": "outro",
         "pagina_inicial": 2,
         "pagina_final": 2
       },
       {
-        "tipo": "matricula_imovel",
+        "tipo": "holerite",
         "pagina_inicial": 3,
-        "pagina_final": 4
+        "pagina_final": 3
       }
     ]
   }

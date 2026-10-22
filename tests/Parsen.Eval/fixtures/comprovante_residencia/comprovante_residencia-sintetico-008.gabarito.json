@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "telecom",
+    "emissor": "FIBRA TESTE TELECOMUNICAÇÕES LTDA",
+    "cnpj_emissor": "52706057000104",
+    "titular": "ANA LIMA SANTOS",
+    "cpf_titular": "95255392103",
+    "logradouro": "ALAMEDA DOS ANJOS",
+    "numero": "1979",
+    "complemento": null,
+    "bairro": "BELA VISTA",
+    "cidade": "VILA MODELO",
+    "uf": "MG",
+    "cep": "27476093",
+    "endereco_entrega": null,
+    "data_emissao": "2026-08-05",
+    "data_vencimento": "2026-08-17",
+    "mes_referencia": "2026-08",
+    "valor_total": 605.62
+  },
+  "lists": {}
+}

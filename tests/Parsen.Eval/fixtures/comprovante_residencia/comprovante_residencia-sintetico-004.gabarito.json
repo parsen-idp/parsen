@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "telecom",
+    "emissor": "OPERADORA MODELO S.A.",
+    "cnpj_emissor": "38834571000102",
+    "titular": "CARLA MARTINS VIEIRA",
+    "cpf_titular": "06650287334",
+    "logradouro": "ALAMEDA DOS ANJOS",
+    "numero": "763",
+    "complemento": "APTO 45",
+    "bairro": "CENTRO",
+    "cidade": "VILA MODELO",
+    "uf": "MG",
+    "cep": "79641148",
+    "endereco_entrega": null,
+    "data_emissao": "2026-06-07",
+    "data_vencimento": "2026-06-26",
+    "mes_referencia": "2026-06",
+    "valor_total": 588.67
+  },
+  "lists": {}
+}

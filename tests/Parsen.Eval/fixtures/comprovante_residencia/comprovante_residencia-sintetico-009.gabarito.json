@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "energia",
+    "emissor": "COMPANHIA DE LUZ MODELO",
+    "cnpj_emissor": "01920429000160",
+    "titular": "DIEGO RIBEIRO ALMEIDA",
+    "cpf_titular": "25734017159",
+    "logradouro": "RUA SETE DE SETEMBRO",
+    "numero": "625",
+    "complemento": null,
+    "bairro": "VILA NOVA",
+    "cidade": "PORTO FICTÍCIO",
+    "uf": "RS",
+    "cep": "84859274",
+    "endereco_entrega": null,
+    "data_emissao": "2026-08-04",
+    "data_vencimento": "2026-08-21",
+    "mes_referencia": "2026-08",
+    "valor_total": 259.76
+  },
+  "lists": {}
+}

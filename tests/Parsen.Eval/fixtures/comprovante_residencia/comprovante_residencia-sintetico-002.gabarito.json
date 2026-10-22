@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "agua",
+    "emissor": "SANEAMENTO MODELO S.A.",
+    "cnpj_emissor": "81593856000110",
+    "titular": "ELISA NOGUEIRA PEREIRA",
+    "cpf_titular": "36830265029",
+    "logradouro": "RUA DAS FLORES",
+    "numero": "1440",
+    "complemento": "APTO 45",
+    "bairro": "CENTRO",
+    "cidade": "VILA MODELO",
+    "uf": "MG",
+    "cep": "61417357",
+    "endereco_entrega": null,
+    "data_emissao": "2026-05-08",
+    "data_vencimento": "2026-05-17",
+    "mes_referencia": "2026-05",
+    "valor_total": 234.96
+  },
+  "lists": {}
+}

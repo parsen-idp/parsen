@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "agua",
+    "emissor": "COMPANHIA DE ÁGUAS EXEMPLO",
+    "cnpj_emissor": "71174225000102",
+    "titular": "BRUNO DIAS GOMES",
+    "cpf_titular": "58197798192",
+    "logradouro": "TRAVESSA DO COMÉRCIO",
+    "numero": "936",
+    "complemento": "CASA 2",
+    "bairro": "BELA VISTA",
+    "cidade": "VILA MODELO",
+    "uf": "MG",
+    "cep": "11500490",
+    "endereco_entrega": "AVENIDA CENTRAL, 730 SALA 12 - CENTRO - VILA MODELO/MG - CEP 47584-756",
+    "data_emissao": "2026-05-09",
+    "data_vencimento": "2026-05-27",
+    "mes_referencia": "2026-05",
+    "valor_total": 115.12
+  },
+  "lists": {}
+}

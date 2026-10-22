@@ -13,12 +13,6 @@ namespace Parsen.Eval.Synthetic;
 public sealed class BundleGenerator(int seed)
 {
     private static readonly string[] Banks = ["BANCO EXEMPLO S.A.", "BANCO FICTICIO DO BRASIL S.A.", "COOPERATIVA DE CREDITO MODELO", "INSTITUICAO DE PAGAMENTO TESTE S.A."];
-    private static readonly string[] Utilities =
-    [
-        "COMPANHIA ENERGETICA EXEMPLO|CONTA DE ENERGIA ELÉTRICA",
-        "SANEAMENTO MODELO S.A.|CONTA DE ÁGUA E ESGOTO",
-        "FIBRA TESTE TELECOMUNICACOES LTDA|FATURA DE SERVIÇOS DE INTERNET",
-    ];
     private static readonly string[] Others =
     [
         "CONTRATO DE PRESTAÇÃO DE SERVIÇOS|Pelo presente instrumento particular, as partes abaixo qualificadas",
@@ -29,6 +23,9 @@ public sealed class BundleGenerator(int seed)
 
     private readonly Random _random = new(seed);
     private readonly HoleriteGenerator _holerites = new(seed + 1);
+    private readonly ComprovanteGenerator _comprovantes = new(seed + 2);
+    private int _bundles;
+    private int _negatives;
 
     public (OcrDocument Ocr, Gabarito Gabarito) Generate()
     {
@@ -36,16 +33,20 @@ public sealed class BundleGenerator(int seed)
         var parts = new List<(DocumentType Type, int First, int Last)>();
         var count = _random.Next(1, 5);
 
+        // A cada dois arquivos, um documento negativo do comprovante (IPTU, cartão ou condomínio, em rodízio)
+        // numa posição sorteada: a classificação precisa mandá-lo para "outro"
+        var negativeAt = _bundles++ % 2 == 0 ? _random.Next(count) : -1;
+
         for (var i = 0; i < count; i++)
         {
-            var type = PickType();
+            var type = i == negativeAt ? DocumentType.Outro : PickType();
             var documentPages = type switch
             {
                 DocumentType.Holerite => [Holerite()],
                 DocumentType.ExtratoBancario => Extrato(),
                 DocumentType.ComprovanteResidencia => [Comprovante()],
                 DocumentType.MatriculaImovel => Matricula(),
-                _ => [Outro()],
+                _ => [i == negativeAt ? Negative(_negatives++ % 3) : Outro()],
             };
 
             var first = pages.Count + 1;
@@ -135,22 +136,7 @@ public sealed class BundleGenerator(int seed)
         return pages;
     }
 
-    private List<OcrLine> Comprovante()
-    {
-        var utility = Pick(Utilities).Split('|');
-        return Lines(
-        [
-            utility[0],
-            utility[1],
-            $"Nota fiscal / conta nº {_random.Next(100000, 999999)}",
-            Pick(Names),
-            $"RUA DAS FLORES, {_random.Next(1, 999)} - APTO {_random.Next(1, 200)}",
-            $"CEP {_random.Next(10000, 99999)}-{_random.Next(100, 999)}  EXEMPLÓPOLIS - SP",
-            $"Referência {_random.Next(1, 13):00}/2026   Vencimento {_random.Next(1, 29):00}/{_random.Next(1, 13):00}/2026",
-            $"Total a pagar R$ {Money()}",
-            "Leitura anterior  Leitura atual  Consumo",
-        ]);
-    }
+    private IReadOnlyList<OcrLine> Comprovante() => _comprovantes.Generate().Ocr.Pages[0].Lines;
 
     private List<IReadOnlyList<OcrLine>> Matricula()
     {
@@ -188,7 +174,54 @@ public sealed class BundleGenerator(int seed)
         return pages;
     }
 
-    private List<OcrLine> Outro()
+    /// <summary>
+    /// "Outro": documentos comuns e os casos negativos do comprovante (IPTU, fatura de cartão e boleto de
+    /// condomínio), que no MVP não são aceitos como comprovante de residência e precisam ser classificados como outro.
+    /// </summary>
+    private List<OcrLine> Outro() => _random.Next(6) is var kind && kind < 3 ? Negative(kind) : OtherDocument();
+
+    private List<OcrLine> Negative(int kind) => kind switch
+    {
+        0 => Lines(
+        [
+            "PREFEITURA MUNICIPAL DE EXEMPLÓPOLIS",
+            "SECRETARIA DA FAZENDA",
+            "IPTU 2026 - IMPOSTO PREDIAL E TERRITORIAL URBANO",
+            $"Contribuinte: {Pick(Names)}",
+            $"Inscrição imobiliária {_random.Next(100, 999)}.{_random.Next(100, 999)}.{_random.Next(1000, 9999)}",
+            $"Endereço do imóvel: RUA DAS FLORES, {_random.Next(1, 999)} - CENTRO",
+            "Endereço de entrega: o mesmo do imóvel",
+            "Valor venal do imóvel  Área construída  Área do terreno",
+            $"Parcela 01/10   Vencimento 10/03/2026   Valor R$ {Money()}",
+        ]),
+        1 => Lines(
+        [
+            "BANCO EXEMPLO S.A. - CARTÃO MODELO PLATINUM",
+            "FATURA DO CARTÃO DE CRÉDITO",
+            Pick(Names),
+            $"RUA SETE DE SETEMBRO, {_random.Next(1, 999)}",
+            $"CEP {_random.Next(10000, 99999)}-{_random.Next(100, 999)}  EXEMPLÓPOLIS - SP",
+            $"Vencimento 15/09/2026   Total da fatura R$ {Money()}",
+            "Pagamento mínimo   Limite disponível",
+            "Lançamentos nacionais",
+            $"02/08  SUPERMERCADO EXEMPLO  {Money()}",
+            $"05/08  FARMACIA MODELO  {Money()}",
+        ]),
+        2 => Lines(
+        [
+            "CONDOMÍNIO EDIFÍCIO MODELO",
+            "BOLETO DE COBRANÇA - TAXA CONDOMINIAL",
+            $"Beneficiário: CONDOMÍNIO EDIFÍCIO MODELO   CNPJ {_random.Next(10, 99)}.{_random.Next(100, 999)}.{_random.Next(100, 999)}/0001-{_random.Next(10, 99)}",
+            $"Pagador: {Pick(Names)}",
+            $"Unidade: BLOCO A APTO {_random.Next(11, 140)}",
+            $"Vencimento 10/09/2026   Valor do documento R$ {Money()}",
+            "Taxa condominial  Fundo de reserva  Rateio de água",
+            $"{_random.Next(10000, 99999)}.{_random.Next(10000, 99999)} {_random.Next(10000, 99999)}.{_random.Next(100000, 999999)}",
+        ]),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+    };
+
+    private List<OcrLine> OtherDocument()
     {
         var other = Pick(Others).Split('|');
         return Lines([other[0], other[1], Pick(Names), "EXEMPLÓPOLIS, 10 DE SETEMBRO DE 2026", "Assinatura"]);
@@ -196,15 +229,7 @@ public sealed class BundleGenerator(int seed)
 
     private string Pick(string[] values) => values[_random.Next(values.Length)];
 
-    private string Money() => (_random.Next(1_000, 900_000) / 100m).ToString("#,##0.00", CultureInfo.InvariantCulture)
-        .Replace(",", "_", StringComparison.Ordinal).Replace(".", ",", StringComparison.Ordinal).Replace("_", ".", StringComparison.Ordinal);
+    private string Money() => SyntheticOcr.Pt(_random.Next(1_000, 900_000) / 100m);
 
-    // OCR limpo de linhas inteiras: a classificação só lê o texto, então a posição é aproximada
-    private static List<OcrLine> Lines(IEnumerable<string> rows) =>
-        [.. rows.Select((text, i) =>
-        {
-            var y = Math.Round(0.04 + (i * 0.022), 4);
-            var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(w => new OcrWord(w, 99, [0.05, y, 0.05, 0.012])).ToList();
-            return new OcrLine(text, 99, [0.05, y, Math.Min(0.9, text.Length * 0.0065), 0.012], words);
-        })];
+    private static List<OcrLine> Lines(IEnumerable<string> rows) => SyntheticOcr.Lines(rows);
 }

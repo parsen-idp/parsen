@@ -1,0 +1,23 @@
+{
+  "document_type": "comprovante_residencia",
+  "fields": {
+    "subtipo": "gas",
+    "emissor": "GÁS CANALIZADO EXEMPLO S.A.",
+    "cnpj_emissor": "35930218000120",
+    "titular": "ELISA NOGUEIRA PEREIRA",
+    "cpf_titular": "60089201639",
+    "logradouro": "RUA SETE DE SETEMBRO",
+    "numero": "1489",
+    "complemento": "CASA 2",
+    "bairro": "BELA VISTA",
+    "cidade": "PORTO FICTÍCIO",
+    "uf": "RS",
+    "cep": "50999991",
+    "endereco_entrega": "AVENIDA CENTRAL, 370 SALA 12 - CENTRO - VILA MODELO/MG - CEP 62947-468",
+    "data_emissao": "2026-03-01",
+    "data_vencimento": "2026-03-14",
+    "mes_referencia": "2026-03",
+    "valor_total": 241.07
+  },
+  "lists": {}
+}
