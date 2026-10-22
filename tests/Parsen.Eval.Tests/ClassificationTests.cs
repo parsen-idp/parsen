@@ -81,6 +81,29 @@ public sealed class ClassificationTests
         }
     }
 
+    // Um extrato com cabeçalho repetido tem o mesmo titular e conta em todas as páginas; se mudassem,
+    // o modelo estaria certo em separar (foi o erro do gerador na primeira rodada da classificacao.v1)
+    [Fact]
+    public void Bundles_ExtratoHeaderIsTheSameOnEveryPage()
+    {
+        var generator = new BundleGenerator(11);
+        for (var i = 0; i < 30; i++)
+        {
+            var (ocr, gabarito) = generator.Generate();
+            foreach (var part in gabarito.Lists["documentos"].Where(p => p["tipo"].Text == "extrato_bancario"))
+            {
+                var headers = ocr.Pages
+                    .Where(p => p.Page >= part["pagina_inicial"].Number && p.Page <= part["pagina_final"].Number)
+                    .Where(p => p.Lines.Count > 3 && p.Lines[1].Text == "EXTRATO DE CONTA CORRENTE")
+                    .Select(p => $"{p.Lines[2].Text}|{p.Lines[3].Text}")
+                    .Distinct()
+                    .ToList();
+
+                Assert.Single(headers);
+            }
+        }
+    }
+
     private static ClassificationScore Compare(params (DocumentType Type, int First, int Last)[] parts) =>
         ClassificationComparer.Compare(Expected, new ClassificationOutput(
             "classificacao.v1",

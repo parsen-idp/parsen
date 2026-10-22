@@ -26,14 +26,21 @@ await WorkerHost.RunAsync<DocumentTask, ExtractResult>(async (task, context) =>
 {
     using var cancellation = new CancellationTokenSource(context.RemainingTime - TimeSpan.FromSeconds(2));
 
-    var result = await handler.HandleAsync(
+    var outcome = await handler.HandleAsync(
         TenantId.From(task.TenantId), DossierId.Parse(task.DossierId), DocumentId.Parse(task.DocumentId), cancellation.Token);
+
+    if (outcome.Result is not { } result)
+    {
+        context.Logger.LogInformation($"Extração pulada: dossier={task.DossierId} document={task.DocumentId} reason={outcome.SkipReason}");
+        return new ExtractResult(task.DocumentId, outcome.SkipReason, "", 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    }
 
     // Só contagens no log e na saída, nunca os valores extraídos (regra 3)
     var items = result.Lists.Values.SelectMany(l => l).ToList();
     var unlocated = result.Fields.Count(f => f.Confidence == 0) + items.Count(i => i.Confidence == 0);
     var summary = new ExtractResult(
         task.DocumentId,
+        null,
         result.SchemaId,
         result.Fields.Count,
         result.Fields.Count(f => f.Value is not null),

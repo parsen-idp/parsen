@@ -15,13 +15,30 @@ public sealed record OcrTask(string TenantId, string DossierId, string DocumentI
 
 public sealed record OcrResult(string DocumentId, int PageCount, int LineCount);
 
+/// <summary>Um documento lógico saído da classificação: o que a etapa Extract recebe.</summary>
+public sealed record ClassifiedDocument(string DocumentId, string Type);
+
+/// <summary>
+/// Saída do Classify: os documentos do arquivo (ele mesmo ou os filhos do split), sem dados pessoais.
+/// Reused: classificação já gravada num retry, sem nova chamada ao modelo.
+/// </summary>
+public sealed record ClassifyResult(
+    string DocumentId,
+    IReadOnlyList<ClassifiedDocument> Documents,
+    int AlertCount,
+    bool Reused,
+    int InputTokens,
+    int OutputTokens);
+
 /// <summary>
 /// Saída do Extract: só contagens; os valores ficam no DynamoDB.
 /// UnlocatedCount = campos e linhas cujo trecho não foi achado no OCR (confiança 0, pedem revisão).
-/// Tokens da chamada ao modelo: custo real por documento.
+/// Tokens da chamada ao modelo: custo real por documento. Skipped: motivo de não ter extraído (já extraído,
+/// tipo sem schema ou "outro"); nesse caso as contagens são zero.
 /// </summary>
 public sealed record ExtractResult(
     string DocumentId,
+    string? Skipped,
     string SchemaId,
     int FieldCount,
     int FilledCount,
@@ -55,6 +72,7 @@ public static class FinalizeOutcomes
 [JsonSerializable(typeof(IngestResult))]
 [JsonSerializable(typeof(OcrTask))]
 [JsonSerializable(typeof(OcrResult))]
+[JsonSerializable(typeof(ClassifyResult))]
 [JsonSerializable(typeof(ExtractResult))]
 [JsonSerializable(typeof(FinalizeInput))]
 [JsonSerializable(typeof(FinalizeResult))]

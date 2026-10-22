@@ -21,6 +21,13 @@ public static class ExtractionSchemas
     /// <summary>Split e classificação de um arquivo (não é um tipo de documento: decide os tipos).</summary>
     public static ExtractionDefinition Classificacao => Load("classificacao", "v1");
 
+    /// <summary>Schema de extração em uso para o código do tipo (ex.: holerite); null se o tipo ainda não tem schema.</summary>
+    public static ExtractionDefinition? ForDocumentType(string documentType) => documentType switch
+    {
+        "holerite" => Holerite,
+        _ => null,
+    };
+
     public static ExtractionDefinition Load(string documentType, string version) => new(
         documentType,
         version,

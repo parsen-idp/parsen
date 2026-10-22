@@ -11,10 +11,17 @@ public interface IExtractionRepository
     Task SaveAsync(Document document, ExtractionResult result, CancellationToken cancellationToken);
 }
 
+/// <param name="Result">Campos extraídos; null quando a extração foi pulada.</param>
+/// <param name="SkipReason">Por que não houve extração: already_extracted, unsupported_type ou unknown_type.</param>
+public sealed record ExtractionOutcome(ExtractionResult? Result, string? SkipReason)
+{
+    public static ExtractionOutcome Skipped(string reason) => new(null, reason);
+}
+
 /// <summary>
-/// Etapa de extração (spec, seção 5): lê o OCR gravado pelo Ocr, pede os campos ao modelo e casa cada
-/// trecho_fonte com o OCR para obter evidência e confiança. Os dados extraídos vão só para o repositório;
-/// quem chama recebe o resultado para contar, nunca para logar.
+/// Etapa de extração (spec, seção 5), por documento lógico: lê do OCR do arquivo só as páginas do documento,
+/// pede os campos ao modelo com o schema do tipo e casa cada trecho_fonte com o OCR para obter evidência e
+/// confiança. Os dados extraídos vão só para o repositório; quem chama recebe o resultado para contar, nunca para logar.
 /// </summary>
 public sealed class ExtractDocumentHandler(
     IDocumentRepository documents,
@@ -23,21 +30,46 @@ public sealed class ExtractDocumentHandler(
     IExtractionRepository extractions,
     TimeProvider clock)
 {
-    /// <summary>Fase 1: todo documento é tratado como holerite; a classificação entra na Fase 2 (spec, seção 14).</summary>
-    public const string DocumentType = "holerite";
-
-    public async Task<ExtractionResult> HandleAsync(
+    public async Task<ExtractionOutcome> HandleAsync(
         TenantId tenantId, DossierId dossierId, DocumentId documentId, CancellationToken cancellationToken)
     {
         var document = await documents.GetAsync(tenantId, dossierId, documentId, cancellationToken)
             ?? throw new InvalidOperationException($"Documento {documentId} não encontrado no dossiê {dossierId}.");
 
-        var ocr = await files.ReadOcrAsync(document, cancellationToken);
-        var output = await engine.ExtractAsync(DocumentType, ocr, cancellationToken);
+        // Retry depois de gravar: não paga o modelo de novo
+        if (document.Status == DocumentStatus.Extracted)
+        {
+            return ExtractionOutcome.Skipped("already_extracted");
+        }
 
-        var result = ExtractionAssembler.Assemble(DocumentType, output, ocr, clock.GetUtcNow());
+        if (document.Status != DocumentStatus.Classified || document.Type is not { } type || document.Pages is not { } pages)
+        {
+            throw new InvalidOperationException($"Documento {documentId} não está classificado ({document.Status}).");
+        }
+
+        // "outro" nunca é extraído (spec, seção 5); tipos sem schema ainda ficam só classificados
+        var code = DocumentTypeCodes.ToCode(type);
+        if (type == Domain.Dossiers.DocumentType.Outro)
+        {
+            return ExtractionOutcome.Skipped("unknown_type");
+        }
+
+        if (!engine.Supports(code))
+        {
+            return ExtractionOutcome.Skipped("unsupported_type");
+        }
+
+        // Só as páginas do documento, com a numeração do arquivo enviado (a evidência aponta para ela)
+        var fileOcr = await files.ReadOcrAsync(document, cancellationToken);
+        var ocr = new OcrDocument([.. fileOcr.Pages.Where(p => pages.Contains(p.Page))]);
+
+        var output = await engine.ExtractAsync(code, ocr, cancellationToken);
+        var result = ExtractionAssembler.Assemble(code, output, ocr, clock.GetUtcNow());
         await extractions.SaveAsync(document, result, cancellationToken);
-        return result;
+
+        document.MarkExtracted();
+        await documents.UpdateAsync(document, cancellationToken);
+        return new ExtractionOutcome(result, null);
     }
 }
 

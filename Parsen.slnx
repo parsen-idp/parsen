@@ -11,6 +11,7 @@
     <Project Path="src/Parsen.Schemas/Parsen.Schemas.csproj" />
   </Folder>
   <Folder Name="/src/Parsen.Workers/">
+    <Project Path="src/Parsen.Workers/Classify/Parsen.Workers.Classify.csproj" />
     <Project Path="src/Parsen.Workers/Common/Parsen.Workers.Common.csproj" />
     <Project Path="src/Parsen.Workers/Extract/Parsen.Workers.Extract.csproj" />
     <Project Path="src/Parsen.Workers/Finalize/Parsen.Workers.Finalize.csproj" />

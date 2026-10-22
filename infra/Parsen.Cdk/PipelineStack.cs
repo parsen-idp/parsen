@@ -19,7 +19,7 @@ internal sealed record PipelineDependencies(ITableV2 Table, IBucket DocumentsBuc
 
 /// <summary>
 /// Stack do pipeline (spec, seções 4 e 5): barramento de eventos, workers (Lambdas Native AOT) e a
-/// máquina de estados que os orquestra. Fase 1: Ingest → limite de páginas → OCR → Extract → needs_review.
+/// máquina de estados que os orquestra: Ingest → limite de páginas → OCR → Classify → Extract → needs_review.
 /// </summary>
 internal sealed class PipelineStack : Stack
 {
@@ -122,18 +122,31 @@ internal sealed class PipelineStack : Stack
             Resources = [key.KeyArn],
         }));
 
-        // Só o modelo configurado. O profile Global roteia para a região com capacidade: o IAM precisa do
-        // profile, do modelo base em qualquer região e do ARN do modelo sem região, usado no roteamento global
-        extract.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        AllowModel(extract, settings);
+
+        // Split e classificação: uma chamada curta ao Claude por arquivo (só o começo de cada página)
+        var classify = CreateWorker(settings, "Classify", "classify", memorySize: 256, timeout: Duration.Minutes(1),
+            new Dictionary<string, string>
+            {
+                ["TABLE_NAME"] = table.TableName,
+                ["BUCKET_NAME"] = bucket.BucketName,
+                ["MODEL_ID"] = settings.ExtractionModelId,
+            });
+
+        // Lê o arquivo e, num retry, os filhos já gravados (Query); grava classificação e filhos numa transação,
+        // que exige a permissão de PutItem de cada item
+        AllowTenantItems(classify, table, "dynamodb:GetItem", "dynamodb:Query", "dynamodb:PutItem");
+        classify.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
         {
-            Actions = ["bedrock:InvokeModel"],
-            Resources =
-            [
-                $"arn:aws:bedrock:{Region}:{Account}:inference-profile/{settings.ExtractionModelId}",
-                $"arn:aws:bedrock:*::foundation-model/{settings.ExtractionFoundationModelId}",
-                $"arn:aws:bedrock:::foundation-model/{settings.ExtractionFoundationModelId}",
-            ],
+            Actions = ["s3:GetObject"],
+            Resources = [bucket.ArnForObjects("*")],
         }));
+        classify.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["kms:Decrypt"],
+            Resources = [key.KeyArn],
+        }));
+        AllowModel(classify, settings);
 
         // ---------- Máquina de estados ----------
 
@@ -141,7 +154,7 @@ internal sealed class PipelineStack : Stack
         {
             StateMachineName = $"parsen-{settings.Name}-pipeline",
             StateMachineType = StateMachineType.STANDARD,
-            DefinitionBody = DefinitionBody.FromChainable(BuildDefinition(ingest, ocr, extract, finalize)),
+            DefinitionBody = DefinitionBody.FromChainable(BuildDefinition(ingest, ocr, classify, extract, finalize)),
 
             // Teto de segurança: um dossiê de 50 páginas leva bem menos que isso
             Timeout = Duration.Minutes(15),
@@ -175,13 +188,14 @@ internal sealed class PipelineStack : Stack
     public StateMachine StateMachine { get; }
 
     /// <summary>
-    /// Entrada: { tenant_id, dossier_id, document_ids, submitted_at }. Duas fases, para não pagar OCR e modelo
+    /// Entrada: { tenant_id, dossier_id, document_ids, submitted_at }. Três fases, para não pagar OCR e modelo
     /// por um dossiê que passa do limite de páginas:
-    /// 1. Ingest de todos os documentos (em paralelo) → soma das páginas ≤ limite do dossiê;
-    /// 2. OCR → Extract por documento (em paralelo) → dossiê em needs_review.
+    /// 1. Ingest de todos os arquivos (em paralelo) → soma das páginas ≤ limite do dossiê;
+    /// 2. Por arquivo: OCR → split e classificação (um arquivo pode virar vários documentos);
+    /// 3. Por documento lógico: Extract → dossiê em needs_review.
     /// Qualquer erro definitivo leva o dossiê para failed.
     /// </summary>
-    private Chain BuildDefinition(IFunction ingest, IFunction ocr, IFunction extract, IFunction finalize)
+    private Chain BuildDefinition(IFunction ingest, IFunction ocr, IFunction classify, IFunction extract, IFunction finalize)
     {
         // ---------- Fase 1: Ingest ----------
 
@@ -230,7 +244,7 @@ internal sealed class PipelineStack : Stack
             ResultPath = "$.error",
         });
 
-        // ---------- Fase 2: OCR → Extract ----------
+        // ---------- Fase 2: OCR → Classify por arquivo ----------
 
         var ocrTask = new LambdaInvoke(this, "Ocr", new LambdaInvokeProps
         {
@@ -248,6 +262,48 @@ internal sealed class PipelineStack : Stack
         });
         AddRetries(ocrTask);
 
+        var classifyTask = new LambdaInvoke(this, "Classify", new LambdaInvokeProps
+        {
+            LambdaFunction = classify,
+            PayloadResponseOnly = true,
+            RetryOnServiceExceptions = false,
+            Payload = TaskInput.FromObject(new Dictionary<string, object>
+            {
+                ["tenant_id"] = JsonPath.StringAt("$.tenant_id"),
+                ["dossier_id"] = JsonPath.StringAt("$.dossier_id"),
+                ["document_id"] = JsonPath.StringAt("$.document_id"),
+            }),
+
+            // { documents: [{ document_id, type }] }: o próprio arquivo ou os filhos do split
+            ResultPath = "$.classify",
+        });
+        AddRetries(classifyTask);
+
+        // Cada arquivo: OCR → split e classificação; até 5 arquivos em paralelo
+        var processFiles = new Map(this, "ProcessFiles", new MapProps
+        {
+            ItemsPath = JsonPath.StringAt("$.ingested"),
+            ItemSelector = new Dictionary<string, object>
+            {
+                ["tenant_id"] = JsonPath.StringAt("$.tenant_id"),
+                ["dossier_id"] = JsonPath.StringAt("$.dossier_id"),
+                ["document_id"] = JsonPath.StringAt("$$.Map.Item.Value.document_id"),
+                ["page_count"] = JsonPath.NumberAt("$$.Map.Item.Value.ingest.page_count"),
+            },
+            MaxConcurrency = 5,
+            ResultPath = "$.files",
+        });
+        processFiles.ItemProcessor(ocrTask.Next(classifyTask));
+
+        // Junta os documentos de todos os arquivos numa lista só. JSONata achata listas de listas; os colchetes
+        // garantem uma lista mesmo quando o dossiê tem um documento só
+        var collectDocuments = Pass.Jsonata(this, "CollectDocuments", new PassJsonataProps
+        {
+            Outputs = "{% $merge([$states.input, { \"to_extract\": [$states.input.files.classify.documents] }]) %}",
+        });
+
+        // ---------- Fase 3: Extract por documento ----------
+
         var extractTask = new LambdaInvoke(this, "Extract", new LambdaInvokeProps
         {
             LambdaFunction = extract,
@@ -263,21 +319,20 @@ internal sealed class PipelineStack : Stack
         });
         AddRetries(extractTask);
 
-        // Cada documento passa pelas etapas em sequência; até 5 documentos em paralelo
+        // Um documento lógico por item; tipos sem schema e "outro" são pulados pela própria Lambda
         var extractDocuments = new Map(this, "ExtractDocuments", new MapProps
         {
-            ItemsPath = JsonPath.StringAt("$.ingested"),
+            ItemsPath = JsonPath.StringAt("$.to_extract"),
             ItemSelector = new Dictionary<string, object>
             {
                 ["tenant_id"] = JsonPath.StringAt("$.tenant_id"),
                 ["dossier_id"] = JsonPath.StringAt("$.dossier_id"),
                 ["document_id"] = JsonPath.StringAt("$$.Map.Item.Value.document_id"),
-                ["page_count"] = JsonPath.NumberAt("$$.Map.Item.Value.ingest.page_count"),
             },
             MaxConcurrency = 5,
             ResultPath = "$.documents",
         });
-        extractDocuments.ItemProcessor(ocrTask.Next(extractTask));
+        extractDocuments.ItemProcessor(extractTask);
 
         // ---------- Fim ----------
 
@@ -323,6 +378,7 @@ internal sealed class PipelineStack : Stack
 
         var catchToFailed = new CatchProps { Errors = [Errors.ALL], ResultPath = "$.error" };
         ingestDocuments.AddCatch(markFailed, catchToFailed);
+        processFiles.AddCatch(markFailed, catchToFailed);
         extractDocuments.AddCatch(markFailed, catchToFailed);
         markNeedsReview.AddCatch(markFailed, catchToFailed);
         pageLimitExceeded.Next(markFailed);
@@ -331,7 +387,11 @@ internal sealed class PipelineStack : Stack
             .When(
                 Condition.Jsonata($"{{% $sum($states.input.ingested.ingest.page_count) > {UploadLimits.MaxPagesPerDossier} %}}"),
                 pageLimitExceeded)
-            .Otherwise(extractDocuments.Next(markNeedsReview).Next(new Succeed(this, "DossierReadyForReview")));
+            .Otherwise(processFiles
+                .Next(collectDocuments)
+                .Next(extractDocuments)
+                .Next(markNeedsReview)
+                .Next(new Succeed(this, "DossierReadyForReview")));
 
         return ingestDocuments.Next(checkPageLimit);
     }
@@ -380,6 +440,22 @@ internal sealed class PipelineStack : Stack
             LogGroup = logGroup,
         });
     }
+
+    /// <summary>
+    /// Só o modelo configurado. O profile Global roteia para a região com capacidade: o IAM precisa do
+    /// profile, do modelo base em qualquer região e do ARN do modelo sem região, usado no roteamento global.
+    /// </summary>
+    private void AllowModel(Function function, StageSettings settings) =>
+        function.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+        {
+            Actions = ["bedrock:InvokeModel"],
+            Resources =
+            [
+                $"arn:aws:bedrock:{Region}:{Account}:inference-profile/{settings.ExtractionModelId}",
+                $"arn:aws:bedrock:*::foundation-model/{settings.ExtractionFoundationModelId}",
+                $"arn:aws:bedrock:::foundation-model/{settings.ExtractionFoundationModelId}",
+            ],
+        }));
 
     private static void AllowTenantItems(Function function, ITableV2 table, params string[] actions) =>
         function.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps

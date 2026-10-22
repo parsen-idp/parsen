@@ -15,11 +15,12 @@ public sealed record BedrockExtractionSettings(string ModelId, int MaxTokens = 4
 /// <summary>Extração com o Claude via Bedrock Converse: o schema é uma ferramenta que o modelo é obrigado a chamar.</summary>
 public sealed class BedrockExtractionEngine(IAmazonBedrockRuntime bedrock, BedrockExtractionSettings settings) : IExtractionEngine
 {
+    public bool Supports(string documentType) => ExtractionSchemas.ForDocumentType(documentType) is not null;
+
     public async Task<ModelExtraction> ExtractAsync(string documentType, OcrDocument ocr, CancellationToken cancellationToken)
     {
-        var definition = documentType == "holerite"
-            ? ExtractionSchemas.Holerite
-            : throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Tipo de documento sem schema de extração.");
+        var definition = ExtractionSchemas.ForDocumentType(documentType)
+            ?? throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Tipo de documento sem schema de extração.");
 
         var response = await bedrock.ConverseAsync(ConverseExtraction.BuildRequest(definition, settings, ocr), cancellationToken);
         return ConverseExtraction.ReadResponse(definition, settings.ModelId, response);

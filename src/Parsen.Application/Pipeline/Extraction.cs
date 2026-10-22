@@ -68,6 +68,9 @@ public sealed record ExtractionResult(
 /// <summary>Extrai os campos de um documento a partir do texto do OCR (Claude via Bedrock na infraestrutura).</summary>
 public interface IExtractionEngine
 {
+    /// <summary>Há schema de extração para o tipo (ex.: holerite). Tipos sem schema ficam classificados, sem campos.</summary>
+    bool Supports(string documentType);
+
     /// <exception cref="DocumentRejectedException">Documento que o modelo não extrai (ex.: recusa); não adianta tentar de novo.</exception>
     Task<ModelExtraction> ExtractAsync(string documentType, OcrDocument ocr, CancellationToken cancellationToken);
 }

@@ -122,13 +122,29 @@ public sealed class FinalizeAndContractsTests
         Assert.Equal("""{"document_id":"doc_1","page_count":3}""", System.Text.Encoding.UTF8.GetString(output.ToArray()));
     }
 
+    // A máquina de estados lê classify.documents[*].document_id para montar a etapa Extract
+    [Fact]
+    public void LambdaSerializer_WritesTheClassifyResultWithTheDocumentList()
+    {
+        var serializer = WorkerHost.CreateSerializer();
+        using var output = new MemoryStream();
+
+        serializer.Serialize(
+            new ClassifyResult("doc_1", [new ClassifiedDocument("doc_2", "holerite"), new ClassifiedDocument("doc_3", "extrato_bancario")], 0, false, 1500, 150),
+            output);
+
+        Assert.Equal(
+            """{"document_id":"doc_1","documents":[{"document_id":"doc_2","type":"holerite"},{"document_id":"doc_3","type":"extrato_bancario"}],"alert_count":0,"reused":false,"input_tokens":1500,"output_tokens":150}""",
+            System.Text.Encoding.UTF8.GetString(output.ToArray()));
+    }
+
     [Fact]
     public void LambdaSerializer_WritesTheExtractResultWithCountsOnly()
     {
         var serializer = WorkerHost.CreateSerializer();
         using var output = new MemoryStream();
 
-        serializer.Serialize(new ExtractResult("doc_1", "holerite.v2", 11, 10, 4, 2, 0, 4398, 1036, 0, 0), output);
+        serializer.Serialize(new ExtractResult("doc_1", null, "holerite.v2", 11, 10, 4, 2, 0, 4398, 1036, 0, 0), output);
 
         Assert.Equal(
             """{"document_id":"doc_1","schema_id":"holerite.v2","field_count":11,"filled_count":10,"item_count":4,"alert_count":2,"unlocated_count":0,"input_tokens":4398,"output_tokens":1036,"cache_read_tokens":0,"cache_write_tokens":0}""",

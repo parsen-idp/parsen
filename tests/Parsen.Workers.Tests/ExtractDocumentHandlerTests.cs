@@ -37,7 +37,7 @@ public sealed class ExtractDocumentHandlerTests
     {
         var document = await AddDocumentAsync();
 
-        var result = await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
+        var result = (await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None)).Result!;
 
         var liquido = Assert.Single(result.Fields, f => f.Name == "salario_liquido");
         Assert.Equal(FieldValue.Number("4870.35"), liquido.Value);
@@ -50,7 +50,7 @@ public sealed class ExtractDocumentHandlerTests
     {
         var document = await AddDocumentAsync();
 
-        var result = await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
+        var result = (await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None)).Result!;
 
         Assert.Equal(new ExtractedField("cpf", null, null, null), Assert.Single(result.Fields, f => f.Name == "cpf"));
     }
@@ -60,7 +60,7 @@ public sealed class ExtractDocumentHandlerTests
     {
         var document = await AddDocumentAsync();
 
-        var result = await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
+        var result = (await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None)).Result!;
 
         var nome = Assert.Single(result.Fields, f => f.Name == "nome_funcionario");
         Assert.Equal(0, nome.Confidence);
@@ -72,7 +72,7 @@ public sealed class ExtractDocumentHandlerTests
     {
         var document = await AddDocumentAsync();
 
-        var result = await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
+        var result = (await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None)).Result!;
 
         var inss = Assert.Single(result.Lists["itens"]);
         Assert.Equal(FieldValue.Text("desconto"), inss.Attributes["tipo"]);
@@ -84,7 +84,7 @@ public sealed class ExtractDocumentHandlerTests
     {
         var document = await AddDocumentAsync();
 
-        var result = await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
+        var result = (await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None)).Result!;
 
         var (savedDocument, saved) = Assert.Single(_extractions.Saved);
         Assert.Equal(document.Id, savedDocument.Id);
@@ -99,6 +99,68 @@ public sealed class ExtractDocumentHandlerTests
     }
 
     [Fact]
+    public async Task ExtractedDocument_IsMarkedAsExtracted()
+    {
+        var document = await AddDocumentAsync();
+
+        await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
+
+        Assert.Equal(DocumentStatus.Extracted, document.Status);
+    }
+
+    // Retry do Step Functions depois de gravar: não paga o modelo de novo
+    [Fact]
+    public async Task AlreadyExtracted_IsSkippedWithoutCallingTheModel()
+    {
+        var document = await AddDocumentAsync();
+        await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
+
+        var second = await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
+
+        Assert.Equal("already_extracted", second.SkipReason);
+        Assert.Equal(1, _engine.Calls);
+    }
+
+    [Theory]
+    [InlineData(DocumentType.Outro, "unknown_type")]
+    [InlineData(DocumentType.ExtratoBancario, "unsupported_type")]
+    public async Task TypesWithoutExtraction_AreSkipped(DocumentType type, string reason)
+    {
+        var document = await AddDocumentAsync(type);
+
+        var outcome = await _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None);
+
+        Assert.Equal(reason, outcome.SkipReason);
+        Assert.Equal(0, _engine.Calls);
+        Assert.Equal(DocumentStatus.Classified, document.Status);
+    }
+
+    [Fact]
+    public async Task NotClassifiedYet_IsATechnicalError()
+    {
+        var document = Document.Create(Tenant, DossierId.New(), DocumentContentType.Pdf, 1_000, new FakeTimeProvider());
+        await _documents.AddAsync(document, CancellationToken.None);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _handler.HandleAsync(Tenant, document.DossierId, document.Id, CancellationToken.None));
+    }
+
+    // Filho de um split: o modelo recebe só as páginas do documento, com a numeração do arquivo enviado
+    [Fact]
+    public async Task SplitChild_GetsOnlyItsPages()
+    {
+        _files.StoredOcr = new OcrDocument([.. Enumerable.Range(1, 4).Select(p => new OcrPage(p, []))]);
+        var file = Document.Create(Tenant, DossierId.New(), DocumentContentType.Pdf, 1_000, new FakeTimeProvider());
+        await _documents.AddAsync(file, CancellationToken.None);
+        var children = file.Split([(DocumentType.Outro, new PageRange(1, 1)), (DocumentType.Holerite, new PageRange(2, 3))], new FakeTimeProvider());
+        await _documents.SaveClassificationAsync(file, children, CancellationToken.None);
+
+        await _handler.HandleAsync(Tenant, file.DossierId, children[1].Id, CancellationToken.None);
+
+        Assert.Equal([2, 3], _engine.ReceivedPages);
+    }
+
+    [Fact]
     public async Task UnknownDocument_IsATechnicalError()
     {
         await Assert.ThrowsAsync<InvalidOperationException>(
@@ -106,9 +168,10 @@ public sealed class ExtractDocumentHandlerTests
         Assert.Empty(_extractions.Saved);
     }
 
-    private async Task<Document> AddDocumentAsync()
+    private async Task<Document> AddDocumentAsync(DocumentType type = DocumentType.Holerite)
     {
         var document = Document.Create(Tenant, DossierId.New(), DocumentContentType.Pdf, 1_000, new FakeTimeProvider());
+        document.Classify(type, new PageRange(1, 1));
         await _documents.AddAsync(document, CancellationToken.None);
         return document;
     }
@@ -117,9 +180,17 @@ public sealed class ExtractDocumentHandlerTests
     {
         public string? RequestedType { get; private set; }
 
+        public int Calls { get; private set; }
+
+        public IReadOnlyList<int> ReceivedPages { get; private set; } = [];
+
+        public bool Supports(string documentType) => documentType == "holerite";
+
         public Task<ModelExtraction> ExtractAsync(string documentType, OcrDocument ocr, CancellationToken cancellationToken)
         {
             RequestedType = documentType;
+            Calls++;
+            ReceivedPages = [.. ocr.Pages.Select(p => p.Page)];
             return Task.FromResult(new ModelExtraction(
                 "holerite.v2",
                 "modelo-de-teste",
