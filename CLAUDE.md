@@ -99,5 +99,5 @@ cd web/backoffice && npm start        # backoffice local
 
 ## Status
 
-Fase atual: 1 — Fundação (em andamento). Fase 0 concluída (pendente só trocar o e-mail do root para o domínio).
+Fase atual: 2 — Documentos (a iniciar). Fase 1 concluída em 2026-10-21 (holerite ponta a ponta na AWS; pendências menores listadas na seção 14 da spec). Fase 0 concluída (pendente só trocar o e-mail do root para o domínio).
 Atualize esta linha ao avançar de fase.

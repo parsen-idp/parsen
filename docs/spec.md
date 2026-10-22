@@ -4,14 +4,15 @@
 
 ## 0. Setup do ambiente
 
-O desenvolvimento começa numa conta AWS pessoal no Free Plan, usando os créditos para criar e validar o MVP antes de qualquer upgrade. O acesso é por usuário IAM com MFA, porque o IAM Identity Center exige AWS Organizations, que exige o Paid Plan. Quando o CNPJ existir, essa mesma conta faz upgrade, passa a faturar contra a empresa, vira a conta de gestão da organização e o produto vai para contas-membro de dev e produção, via CDK.
+O desenvolvimento começou numa conta AWS pessoal no Free Plan e passou ao Paid Plan em 20/10/2026, porque o Free Plan não libera o Textract (`SubscriptionRequiredException`); os créditos continuam sendo consumidos antes do cartão. O acesso segue por usuário IAM com MFA; AWS Organizations e IAM Identity Center ficam para quando o CNPJ existir. Nesse momento, essa mesma conta passa a faturar contra a empresa, vira a conta de gestão da organização e o produto vai para contas-membro de dev e produção, via CDK.
 
 > Atenção: AWS Builder ID é só um perfil de desenvolvedor, não uma conta AWS; nele não há MFA de root, IAM nem Identity Center.
 
 **Criação da conta**
 
 - [x] Criar a conta AWS (o root usa o e-mail pessoal; trocar para um endereço do domínio, ver abaixo)
-- [x] Escolher o Free Plan, com US$ 200 em créditos; o upgrade fica para quando o CNPJ existir
+- [x] Escolher o Free Plan, com US$ 140 em créditos (US$ 100 iniciais + US$ 40 do "Explore AWS")
+- [x] Upgrade para o Paid Plan (20/10/2026), exigido pelo Textract; créditos preservados e aplicados antes do cartão
 - [x] Confirmar em Billing → Credits se os créditos cobrem os modelos Claude: **não cobrem** (cobrança via AWS Marketplace). Todo uso do Claude no desenvolvimento é gasto real no cartão; os créditos cobrem o restante (Lambda, S3, Textract, Step Functions etc.)
 
 **Primeiro dia**
@@ -19,7 +20,7 @@ O desenvolvimento começa numa conta AWS pessoal no Free Plan, usando os crédit
 - [x] Ativar MFA no usuário root e não usá-lo no dia a dia
 - [x] Criar usuário IAM de trabalho (`parsen-development`) com acesso ao console, MFA e `AdministratorAccess` (restringir quando o CDK tiver role própria); sem access keys
 - [x] Configurar a CLI com `aws login --profile parsen` (AWS CLI v2 recente; credenciais temporárias via console, nada de chaves fixas). Plano B: access key que só pode assumir uma role de administrador com MFA
-- [x] Configurar AWS Budgets com alertas em US$ 50, 100 e 150 (budget `parsen-mensal`, consumo bruto sem descontar créditos, mais alerta de previsão em US$ 150)
+- [x] Configurar AWS Budgets: `parsen-mensal` (consumo bruto sem descontar créditos; alertas em US$ 50, 100 e 150, mais previsão em US$ 150) e `parsen-gasto-real` (líquido após créditos, o que vai para o cartão; alertas em US$ 5, 15 e 30, mais previsão em US$ 30)
 - [x] Definir sa-east-1 como região padrão do perfil `parsen` da CLI (Textract em us-east-1)
 - [x] Enviar o formulário de caso de uso da Anthropic no console do Bedrock (uma vez por conta)
 - [x] Conferir os modelos Claude em sa-east-1. A página "Model access" foi aposentada; os modelos serverless são habilitados no primeiro uso. Inference profiles Global ativos:
@@ -40,7 +41,7 @@ O CI/CD usa GitHub Actions com OIDC (role IAM com trust no repositório), sem ch
 **Quando o CNPJ for aberto**
 
 - [ ] Atualizar dados de faturamento e fiscais para a AWS Brasil faturar contra o CNPJ
-- [ ] Fazer upgrade para o Paid Plan, ativar AWS Organizations e IAM Identity Center (esta conta vira a gestão); migrar o acesso do usuário IAM para o Identity Center
+- [ ] Ativar AWS Organizations e IAM Identity Center (esta conta, já no Paid Plan, vira a gestão); migrar o acesso do usuário IAM para o Identity Center
 - [ ] Criar, dentro da organização, as contas-membro `parsen-dev` e `parsen-prod`; a conta de gestão fica só com faturamento e acesso
 - [ ] Implantar dev e produção nas contas-membro (mesmo código CDK, conta e região por parâmetro)
 
@@ -589,7 +590,9 @@ Se o piloto mostrar dossiês grandes com frequência, reduzir o limite do pacote
 
 **Piloto:** 5.000 páginas grátis por 60 dias para a fintech parceira, em troca de feedback semanal, dados anonimizados para o dataset de avaliação e permissão de uso como case. Revisão de preços após 30 dias com a média real de páginas por dossiê e o custo real por página.
 
-**Desenvolvimento:** conta AWS nova no Free Plan, com até US$ 200 em créditos por até 6 meses; os créditos não cobrem o Claude (Marketplace), que é pago no cartão. Dois budgets: `parsen-mensal` (consumo bruto, alertas em US$ 50, 100 e 150) e `parsen-gasto-real` (custo líquido após créditos, ou seja, o que vai para o cartão; alertas em US$ 5, 15 e 30).
+**Custo medido na Fase 1 (21/10/2026):** um holerite de 1 página, ponta a ponta, custou ~US$ 0,011: Textract DetectDocumentText ~US$ 0,0015 por página e Haiku 4.5 US$ 0,0098 (4.401 tokens de entrada e 1.087 de saída, sem cache). Fica abaixo da estimativa de US$ 0,02 por página; a saída é ~55% do custo do modelo. Com o Haiku 5.5 (quando a cota for liberada, §14), a estimativa cai para ~US$ 0,001 de modelo por holerite. A Lambda Extract custa centavos por milhar (256 MB, ~8 s).
+
+**Desenvolvimento:** conta AWS nova, com US$ 140 em créditos (Paid Plan desde 20/10/2026, créditos aplicados antes do cartão); os créditos não cobrem o Claude (Marketplace), que é pago no cartão. Dois budgets: `parsen-mensal` (consumo bruto, alertas em US$ 50, 100 e 150) e `parsen-gasto-real` (custo líquido após créditos, ou seja, o que vai para o cartão; alertas em US$ 5, 15 e 30).
 
 **Métricas de produto (registradas desde o primeiro dossiê)**
 
@@ -607,7 +610,14 @@ Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 
 1. **Fundação (semanas 1–2):** conta AWS, CDK, Cognito, API de dossiês, upload no S3, spikes técnicos, EventBridge + Step Functions com holerite ponta a ponta. Spikes no início da fase:
    - [x] Ingest (PDFium) em Native AOT: funciona em x64 e arm64 (spike A)
-   - Bedrock em sa-east-1 via endpoint Global: primeira invocação do Haiku (confirma a assinatura do Marketplace e a cobrança no Billing), structured output, PDF/imagem na Converse e prompt caching
+   - [x] Bedrock em sa-east-1 via endpoint Global (spike B): Haiku 4.5 invocado (Marketplace assinado), tool use forçado devolve o JSON do schema, trecho_fonte casa com o OCR (`holerite.v2`, 10/10). Prompt caching não se aplica no Haiku 4.5 (prompt abaixo de 4.096 tokens); será medido no Haiku 5.5. PDF/imagem na Converse ficou fora da Fase 1 por decisão (§6)
+
+   **Concluída em 21/10/2026:** holerite ponta a ponta na AWS (API → S3 → EventBridge → Step Functions: Ingest → limite de páginas → OCR → Extract → `needs_review`). Pendências menores, sem bloquear a Fase 2:
+   - [ ] Gateway responses do API Gateway com `Content-Type: application/json` em vez de `application/problem+json`
+   - [ ] Token adulterado recebe 403 do API Gateway em vez de 401
+   - [ ] Cold start da API (~3 s)
+   - [ ] Haiku 5.5: cota negada pela AWS (histórico de conta nova); conferir a cota `L-F26CA8D1` periodicamente
+   - [ ] Deduplicar as duas vias do holerite antes do modelo (quase metade da entrada é repetida), medindo no `Parsen.Eval`
 2. **Documentos (semanas 3–4):** split, classificação, extrato, comprovante de residência e matrícula; evidência por campo
 3. **Verificações (semana 5):** verificações, fatos e sinais; resultado consolidado de renda; `TenantPolicy` com valores padrão; renda expressa
 4. **Backoffice (semanas 6–7):** fila, revisão com destaque no PDF, correção, aprovação, auditoria, webhooks, administração do tenant
@@ -628,7 +638,7 @@ Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 | Documentos de teste na Fase 1 | Testes manuais do pipeline (OCR, extração) com documento próprio do fundador, na conta de desenvolvimento (§0), lido de pasta fora do repositório e apagado da AWS ao fim de cada teste. Gerador de holerites sintéticos adiado para antes do `Parsen.Eval` e das fixtures automatizadas (regra 5) |
 | WAF e limite por tenant | Dev: sem WAF e com limite de taxa global no estágio do API Gateway. Antes do piloto: WAF na conta de produção e usage plan por tenant (API key criada junto com a credencial do tenant) |
 | Arquitetura das Lambdas | x64 no desenvolvimento (build rápido no Windows); migrar para arm64 (Graviton) quando o CI tiver runner ARM nativo |
-| Contas AWS | MVP no Free Plan com usuário IAM + MFA + `aws login` (sem chaves fixas); com o CNPJ, upgrade, Organizations + Identity Center e contas-membro `parsen-dev` e `parsen-prod` |
+| Contas AWS | MVP numa conta pessoal (Paid Plan desde 20/10/2026, exigido pelo Textract; créditos aplicados antes do cartão) com usuário IAM + MFA + `aws login` (sem chaves fixas); com o CNPJ, faturamento na empresa, Organizations + Identity Center e contas-membro `parsen-dev` e `parsen-prod` |
 | Códigos de verificação | Forma neutra (`CPF_VALIDO`, `CPF_CONSISTENTE`...) com resultado `passed`/`failed`/`not_applicable` |
 | Renda com holerite | Média do líquido dos holerites; extrato junto entra só em `comparacao_renda` |
 | Limites de upload | 20 MB por arquivo, 50 páginas por dossiê, PDF/JPG/PNG, PDF com senha recusado |
