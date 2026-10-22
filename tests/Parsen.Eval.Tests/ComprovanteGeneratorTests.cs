@@ -32,7 +32,11 @@ public sealed class ComprovanteGeneratorTests
     {
         Assert.All(Samples, s =>
         {
-            Assert.True(Cnpj.IsValid(s.Gabarito.Fields["cnpj_emissor"].Text!));
+            if (s.Gabarito.Fields["cnpj_emissor"].Text is { } cnpj)
+            {
+                Assert.True(Cnpj.IsValid(cnpj));
+            }
+
             Assert.Matches("^[0-9]{8}$", s.Gabarito.Fields["cep"].Text!);
             if (s.Gabarito.Fields["cpf_titular"].Text is { } cpf)
             {
@@ -49,6 +53,7 @@ public sealed class ComprovanteGeneratorTests
         Assert.Contains(Samples, s => !s.Gabarito.Fields["cpf_titular"].IsAbsent);
         Assert.Contains(Samples, s => !s.Gabarito.Fields["endereco_entrega"].IsAbsent);
         Assert.Contains(Samples, s => s.Gabarito.Fields["complemento"].IsAbsent);
+        Assert.Contains(Samples, s => s.Gabarito.Fields["cnpj_emissor"].IsAbsent && s.Ocr.Pages[0].Lines.Any(l => l.Text.StartsWith("CNPJ:", StringComparison.Ordinal) && l.Text.Contains("***", StringComparison.Ordinal)));
     }
 
     // Os valores esperados estão impressos no OCR (o endereço de entrega numa linha só): a evidência é localizável

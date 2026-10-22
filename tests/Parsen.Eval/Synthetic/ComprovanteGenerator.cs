@@ -37,6 +37,9 @@ public sealed class ComprovanteGenerator(int seed)
         var emitter = Pick(service.Emitters);
         var cnpjBase = Digits(8) + "0001";
         var cnpj = cnpjBase + Cnpj.CheckDigits(cnpjBase);
+
+        // Contas reais mascaram o CNPJ do emissor (61.***.***/****-93): o gabarito é null, nunca o número completo
+        var cnpjMasked = _random.NextDouble() < 0.3;
         var holder = Pick(Names);
         var street = Pick(Streets);
         var number = _random.Next(10, 2000).ToString(CultureInfo.InvariantCulture);
@@ -63,7 +66,7 @@ public sealed class ComprovanteGenerator(int seed)
         var rows = new List<string>
         {
             emitter,
-            $"CNPJ {cnpj[..2]}.{cnpj[2..5]}.{cnpj[5..8]}/{cnpj[8..12]}-{cnpj[12..]}",
+            cnpjMasked ? $"CNPJ: {cnpj[..2]}.***.***/****-{cnpj[12..]}" : $"CNPJ {cnpj[..2]}.{cnpj[2..5]}.{cnpj[5..8]}/{cnpj[8..12]}-{cnpj[12..]}",
             service.Title,
             $"Código do cliente {Digits(7)}   Instalação {Digits(9)}",
         };
@@ -104,7 +107,7 @@ public sealed class ComprovanteGenerator(int seed)
             {
                 ["subtipo"] = Text(subtype),
                 ["emissor"] = Text(emitter),
-                ["cnpj_emissor"] = Text(cnpj),
+                ["cnpj_emissor"] = cnpjMasked ? ExpectedValue.Absent : Text(cnpj),
                 ["titular"] = Text(holder),
                 ["cpf_titular"] = cpfDraw < 0.4 ? Text(cpf) : ExpectedValue.Absent,
                 ["logradouro"] = Text(street),

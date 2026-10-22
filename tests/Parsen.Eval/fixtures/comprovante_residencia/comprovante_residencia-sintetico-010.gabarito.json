@@ -2,22 +2,22 @@
   "document_type": "comprovante_residencia",
   "fields": {
     "subtipo": "agua",
-    "emissor": "COMPANHIA DE ÁGUAS EXEMPLO",
-    "cnpj_emissor": "89689126000129",
-    "titular": "ANA LIMA SANTOS",
+    "emissor": "SANEAMENTO MODELO S.A.",
+    "cnpj_emissor": "51339136000161",
+    "titular": "CARLA MARTINS VIEIRA",
     "cpf_titular": null,
-    "logradouro": "RUA SETE DE SETEMBRO",
-    "numero": "1426",
+    "logradouro": "TRAVESSA DO COMÉRCIO",
+    "numero": "1595",
     "complemento": null,
-    "bairro": "JARDIM EXEMPLO",
+    "bairro": "BELA VISTA",
     "cidade": "PORTO FICTÍCIO",
     "uf": "RS",
-    "cep": "54465879",
+    "cep": "89126147",
     "endereco_entrega": null,
-    "data_emissao": "2026-09-01",
-    "data_vencimento": "2026-09-11",
-    "mes_referencia": "2026-09",
-    "valor_total": 453.56
+    "data_emissao": "2026-11-01",
+    "data_vencimento": "2026-11-17",
+    "mes_referencia": "2026-11",
+    "valor_total": 395.86
   },
   "lists": {}
 }

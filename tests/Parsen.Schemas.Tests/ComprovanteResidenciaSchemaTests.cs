@@ -11,7 +11,7 @@ public class ComprovanteResidenciaSchemaTests
     [Fact]
     public void Loads_current_version_names_the_tool_and_limits_pages()
     {
-        Assert.Equal("comprovante_residencia.v1", Comprovante.Id);
+        Assert.Equal("comprovante_residencia.v2", Comprovante.Id);
         Assert.Equal(Comprovante.Id, (string?)Schema["title"]);
         Assert.Contains("`registrar_comprovante_residencia`", Comprovante.SystemPrompt, StringComparison.Ordinal);
         Assert.Equal(2, Comprovante.MaxPages);

@@ -28,7 +28,7 @@ public static class ExtractionSchemas
     public static ExtractionDefinition Classificacao => Load("classificacao", "v3");
 
     /// <summary>Contas de consumo (spec, seção 14): os dados ficam na primeira página; a segunda é margem de segurança.</summary>
-    public static ExtractionDefinition ComprovanteResidencia => Load("comprovante_residencia", "v1") with { MaxPages = 2 };
+    public static ExtractionDefinition ComprovanteResidencia => Load("comprovante_residencia", "v2") with { MaxPages = 2 };
 
     /// <summary>Schema de extração em uso para o código do tipo (ex.: holerite); null se o tipo ainda não tem schema.</summary>
     public static ExtractionDefinition? ForDocumentType(string documentType) => documentType switch
