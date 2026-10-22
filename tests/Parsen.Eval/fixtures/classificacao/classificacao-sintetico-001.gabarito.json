@@ -1,0 +1,18 @@
+{
+  "document_type": "classificacao",
+  "fields": {},
+  "lists": {
+    "documentos": [
+      {
+        "tipo": "matricula_imovel",
+        "pagina_inicial": 1,
+        "pagina_final": 2
+      },
+      {
+        "tipo": "extrato_bancario",
+        "pagina_inicial": 3,
+        "pagina_final": 5
+      }
+    ]
+  }
+}

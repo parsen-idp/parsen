@@ -18,6 +18,9 @@ public static class ExtractionSchemas
     /// <summary>Versão em uso de cada tipo de documento. Trocar a versão exige rodar o Parsen.Eval (regra 8).</summary>
     public static ExtractionDefinition Holerite => Load("holerite", "v2");
 
+    /// <summary>Split e classificação de um arquivo (não é um tipo de documento: decide os tipos).</summary>
+    public static ExtractionDefinition Classificacao => Load("classificacao", "v1");
+
     public static ExtractionDefinition Load(string documentType, string version) => new(
         documentType,
         version,

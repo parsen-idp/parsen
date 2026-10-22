@@ -32,7 +32,11 @@ public static class ConverseExtraction
     /// <summary>Lista de observações do modelo; todo outro array do schema é uma lista de itens (ex.: rubricas).</summary>
     private const string AlertsProperty = "alertas";
 
-    public static ConverseRequest BuildRequest(ExtractionDefinition definition, BedrockExtractionSettings settings, OcrDocument ocr)
+    public static ConverseRequest BuildRequest(ExtractionDefinition definition, BedrockExtractionSettings settings, OcrDocument ocr) =>
+        BuildRequest(definition, settings, FormatOcr(ocr));
+
+    /// <summary>Requisição com o schema como ferramenta obrigatória e o texto do documento na mensagem.</summary>
+    public static ConverseRequest BuildRequest(ExtractionDefinition definition, BedrockExtractionSettings settings, string text)
     {
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentNullException.ThrowIfNull(settings);
@@ -52,7 +56,7 @@ public static class ConverseExtraction
                 new Message
                 {
                     Role = ConversationRole.User,
-                    Content = [new ContentBlock { Text = FormatOcr(ocr) }],
+                    Content = [new ContentBlock { Text = text }],
                 },
             ],
             InferenceConfig = new InferenceConfiguration { MaxTokens = settings.MaxTokens },
@@ -96,6 +100,15 @@ public static class ConverseExtraction
     /// <exception cref="InvalidDataException">Saída malformada: erro técnico, o Step Functions tenta de novo.</exception>
     public static ModelExtraction ReadResponse(ExtractionDefinition definition, string modelId, ConverseResponse response)
     {
+        using var json = ReadToolInput(definition, response);
+        return Parse(definition.Id, modelId, json.RootElement, ToUsage(response.Usage));
+    }
+
+    /// <summary>JSON que o modelo passou para a ferramenta, depois de conferir por que a resposta parou.</summary>
+    /// <exception cref="DocumentRejectedException">Resposta cortada ou recusada: repetir daria o mesmo resultado.</exception>
+    /// <exception cref="InvalidDataException">Sem a chamada da ferramenta: erro técnico, o Step Functions tenta de novo.</exception>
+    public static JsonDocument ReadToolInput(ExtractionDefinition definition, ConverseResponse response)
+    {
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentNullException.ThrowIfNull(response);
 
@@ -114,12 +127,11 @@ public static class ConverseExtraction
         var toolUse = response.Output?.Message?.Content?.FirstOrDefault(c => c.ToolUse?.Name == definition.ToolName)?.ToolUse
             ?? throw new InvalidDataException($"Resposta sem a chamada da ferramenta {definition.ToolName} (stopReason={stopReason}).");
 
-        using var json = JsonDocument.Parse(ToJson(toolUse.Input));
-        return Parse(definition.Id, modelId, json.RootElement, ToUsage(response.Usage));
+        return JsonDocument.Parse(ToJson(toolUse.Input));
     }
 
     // Os campos do SDK são int? (ausentes em respostas sem cache, por exemplo)
-    private static ModelUsage ToUsage(TokenUsage? usage) => usage is null
+    public static ModelUsage ToUsage(TokenUsage? usage) => usage is null
         ? ModelUsage.None
         : new ModelUsage(usage.InputTokens ?? 0, usage.OutputTokens ?? 0, usage.CacheReadInputTokens ?? 0, usage.CacheWriteInputTokens ?? 0);
 

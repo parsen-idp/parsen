@@ -1,0 +1,18 @@
+{
+  "document_type": "classificacao",
+  "fields": {},
+  "lists": {
+    "documentos": [
+      {
+        "tipo": "extrato_bancario",
+        "pagina_inicial": 1,
+        "pagina_final": 3
+      },
+      {
+        "tipo": "extrato_bancario",
+        "pagina_inicial": 4,
+        "pagina_final": 6
+      }
+    ]
+  }
+}

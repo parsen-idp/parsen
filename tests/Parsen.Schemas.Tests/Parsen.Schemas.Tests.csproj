@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Parsen.Schemas\Parsen.Schemas.csproj" />
+    <ProjectReference Include="..\..\src\Parsen.Domain\Parsen.Domain.csproj" />
   </ItemGroup>
 
 </Project>

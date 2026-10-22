@@ -7,8 +7,8 @@ using Parsen.Infrastructure.Extraction;
 using Parsen.Infrastructure.Ocr;
 
 // Uso:
-//   dotnet run --project tests/Parsen.Eval -- generate [--count 10] [--seed 42] [--out tests/Parsen.Eval/fixtures/holerite]
-//   dotnet run --project tests/Parsen.Eval -- run [--dataset <pasta>]... [--model <id>] [--report <arquivo.md>] [--yes]
+//   dotnet run --project tests/Parsen.Eval -- generate [--kind holerite|classificacao] [--count 10] [--seed 42] [--out <pasta>]
+//   dotnet run --project tests/Parsen.Eval -- run [--dataset <pasta>]... [--only <prefixo>] [--model <id>] [--report <arquivo.md>] [--yes]
 //
 // "run" sem --yes só lista os casos e o custo estimado: chamar o modelo tem custo real (CLAUDE.md).
 // --dataset aponta para documentos próprios, fora do repositório; o relatório deles não mostra valores.
@@ -34,19 +34,26 @@ static int Generate(Options options)
 {
     var count = int.Parse(options.Get("count") ?? "10", System.Globalization.CultureInfo.InvariantCulture);
     var seed = int.Parse(options.Get("seed") ?? "42", System.Globalization.CultureInfo.InvariantCulture);
-    var output = options.Get("out") ?? Path.Combine(DefaultFixtures, "holerite");
+    var kind = options.Get("kind") ?? "holerite";
+    var output = options.Get("out") ?? Path.Combine(DefaultFixtures, kind);
     Directory.CreateDirectory(output);
 
-    var generator = new HoleriteGenerator(seed);
+    Func<(OcrDocument, Gabarito)> generate = kind switch
+    {
+        "holerite" => new HoleriteGenerator(seed).Generate,
+        "classificacao" => new BundleGenerator(seed).Generate,
+        _ => throw new ArgumentException($"Tipo de fixture desconhecido: {kind} (use holerite ou classificacao)."),
+    };
+
     for (var i = 1; i <= count; i++)
     {
-        var (ocr, gabarito) = generator.Generate();
-        var name = $"holerite-sintetico-{i:000}";
+        var (ocr, gabarito) = generate();
+        var name = $"{kind}-sintetico-{i:000}";
         File.WriteAllBytes(Path.Combine(output, $"{name}.ocr.json"), OcrJson.Serialize(ocr));
         File.WriteAllText(Path.Combine(output, $"{name}.gabarito.json"), gabarito.ToJson());
     }
 
-    Console.WriteLine($"{count} holerites sintéticos gerados em {output} (semente {seed}).");
+    Console.WriteLine($"{count} casos sintéticos ({kind}) gerados em {output} (semente {seed}).");
     return 0;
 }
 
@@ -67,6 +74,12 @@ static async Task<int> RunAsync(Options options)
         .Where(c => File.Exists(c.Gabarito))
         .ToList();
 
+    // --only <prefixo>: avalia só um tipo (ex.: classificacao), sem pagar de novo pelos outros
+    if (options.Get("only") is { } only)
+    {
+        cases = [.. cases.Where(c => Path.GetFileName(c.Ocr).StartsWith(only, StringComparison.Ordinal))];
+    }
+
     // Gabarito gerado a partir do próprio modelo e ainda não conferido com o documento: medir contra ele seria medir o modelo contra si mesmo
     var unreviewed = cases.Where(c => File.ReadAllText(c.Gabarito).Contains("\"_revisar\"", StringComparison.Ordinal)).ToList();
     foreach (var c in unreviewed)
@@ -76,8 +89,11 @@ static async Task<int> RunAsync(Options options)
 
     cases = [.. cases.Except(unreviewed)];
 
-    // Estimativa pelo holerite medido na Fase 1 (~4.400 tokens de entrada e ~1.100 de saída)
-    var estimate = cases.Count * price.Cost(new ModelUsage(4_400, 1_100, 0, 0));
+    // Estimativa: holerite medido na Fase 1 (~4.400 tokens de entrada e ~1.100 de saída); classificação, só o
+    // começo das páginas (~1.500 e ~150)
+    var classificationCases = cases.Count(c => Path.GetFileName(c.Ocr).StartsWith("classificacao", StringComparison.Ordinal));
+    var estimate = ((cases.Count - classificationCases) * price.Cost(new ModelUsage(4_400, 1_100, 0, 0)))
+        + (classificationCases * price.Cost(new ModelUsage(1_500, 150, 0, 0)));
     Console.WriteLine($"{cases.Count} casos ({cases.Count(c => c.Synthetic)} sintéticos), modelo {model}: custo estimado US$ {estimate:0.00}.");
 
     if (!options.Has("yes"))
@@ -93,9 +109,12 @@ static async Task<int> RunAsync(Options options)
         MaxErrorRetry = 2,
     });
     var engine = new BedrockExtractionEngine(bedrock, new BedrockExtractionSettings(model));
+    var classifier = new BedrockDocumentClassifier(bedrock, new BedrockExtractionSettings(model, MaxTokens: 1024));
 
     var results = new List<CaseResult>();
+    var classifications = new List<CaseResult>();
     var schemaId = "";
+    var classificationSchemaId = "";
 
     // Um caso por vez: a cota da conta é de 10 requisições por minuto no Haiku 4.5
     foreach (var (ocrPath, gabaritoPath, synthetic) in cases)
@@ -103,6 +122,27 @@ static async Task<int> RunAsync(Options options)
         var name = Path.GetFileName(ocrPath).Replace(".ocr.json", "", StringComparison.Ordinal);
         var gabarito = Gabarito.Parse(await File.ReadAllTextAsync(gabaritoPath));
         var ocr = OcrJson.Deserialize(await File.ReadAllBytesAsync(ocrPath));
+
+        if (gabarito.DocumentType == "classificacao")
+        {
+            try
+            {
+                var classification = await classifier.ClassifyAsync(ocr, CancellationToken.None);
+                classificationSchemaId = classification.SchemaId;
+                classifications.Add(new CaseResult(name, synthetic, null, classification.Usage, price.Cost(classification.Usage), null,
+                    ClassificationComparer.Compare(gabarito, classification)));
+                Console.WriteLine($"  {name}: ok");
+            }
+#pragma warning disable CA1031 // um caso com erro não interrompe a avaliação dos outros
+            catch (Exception ex)
+#pragma warning restore CA1031
+            {
+                classifications.Add(new CaseResult(name, synthetic, null, ModelUsage.None, 0, ex.GetType().Name));
+                Console.WriteLine($"  {name}: erro {ex.GetType().Name}");
+            }
+
+            continue;
+        }
 
         try
         {
@@ -121,7 +161,18 @@ static async Task<int> RunAsync(Options options)
         }
     }
 
-    var report = Report.Render(schemaId, model, results);
+    var sections = new List<string>();
+    if (results.Count > 0)
+    {
+        sections.Add(Report.Render(schemaId, model, results));
+    }
+
+    if (classifications.Count > 0)
+    {
+        sections.Add(Report.RenderClassification(classificationSchemaId, model, classifications));
+    }
+
+    var report = string.Join(Environment.NewLine, sections);
     Console.WriteLine();
     Console.WriteLine(report);
 

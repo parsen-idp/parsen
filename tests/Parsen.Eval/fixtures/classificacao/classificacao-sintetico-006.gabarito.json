@@ -1,0 +1,13 @@
+{
+  "document_type": "classificacao",
+  "fields": {},
+  "lists": {
+    "documentos": [
+      {
+        "tipo": "matricula_imovel",
+        "pagina_inicial": 1,
+        "pagina_final": 2
+      }
+    ]
+  }
+}

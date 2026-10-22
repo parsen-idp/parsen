@@ -70,26 +70,11 @@ internal static class StoredValues
         _ => throw new InvalidDataException($"Status de documento desconhecido na tabela: '{value}'."),
     };
 
-    // Mesmos nomes da API e dos schemas (holerite.v2...): o tipo também escolhe o schema de extração
-    public static string From(DocumentType type) => type switch
-    {
-        DocumentType.Holerite => "holerite",
-        DocumentType.ExtratoBancario => "extrato_bancario",
-        DocumentType.ComprovanteResidencia => "comprovante_residencia",
-        DocumentType.MatriculaImovel => "matricula_imovel",
-        DocumentType.Outro => "outro",
-        _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
-    };
+    // Códigos do domínio (DocumentTypeCodes): os mesmos da API e dos schemas
+    public static string From(DocumentType type) => DocumentTypeCodes.ToCode(type);
 
-    public static DocumentType ToDocumentType(string value) => value switch
-    {
-        "holerite" => DocumentType.Holerite,
-        "extrato_bancario" => DocumentType.ExtratoBancario,
-        "comprovante_residencia" => DocumentType.ComprovanteResidencia,
-        "matricula_imovel" => DocumentType.MatriculaImovel,
-        "outro" => DocumentType.Outro,
-        _ => throw new InvalidDataException($"Tipo de documento desconhecido na tabela: '{value}'."),
-    };
+    public static DocumentType ToDocumentType(string value) =>
+        DocumentTypeCodes.TryParse(value, out var type) ? type : throw new InvalidDataException($"Tipo de documento desconhecido na tabela: '{value}'.");
 
     public static string From(DateTimeOffset timestamp) =>
         timestamp.UtcDateTime.ToString(TimestampFormat, CultureInfo.InvariantCulture);

@@ -145,6 +145,25 @@ public class DocumentClassificationTests
         Assert.False(range.Contains(5));
     }
 
+    [Theory]
+    [InlineData(DocumentType.Holerite, "holerite")]
+    [InlineData(DocumentType.ExtratoBancario, "extrato_bancario")]
+    [InlineData(DocumentType.ComprovanteResidencia, "comprovante_residencia")]
+    [InlineData(DocumentType.MatriculaImovel, "matricula_imovel")]
+    [InlineData(DocumentType.Outro, "outro")]
+    public void TypeCodes_RoundTrip(DocumentType type, string code)
+    {
+        Assert.Equal(code, DocumentTypeCodes.ToCode(type));
+        Assert.True(DocumentTypeCodes.TryParse(code, out var parsed));
+        Assert.Equal(type, parsed);
+    }
+
+    [Theory]
+    [InlineData("Holerite")]
+    [InlineData("rg")]
+    [InlineData(null)]
+    public void TypeCodes_UnknownCode_IsRefused(string? code) => Assert.False(DocumentTypeCodes.TryParse(code, out _));
+
     private Document NewDocument() =>
         Document.Create(TenantId.From("ten_teste"), DossierId.New(), DocumentContentType.Pdf, 1_000, _clock);
 }

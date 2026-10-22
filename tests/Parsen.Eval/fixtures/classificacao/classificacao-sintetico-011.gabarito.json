@@ -1,0 +1,28 @@
+{
+  "document_type": "classificacao",
+  "fields": {},
+  "lists": {
+    "documentos": [
+      {
+        "tipo": "extrato_bancario",
+        "pagina_inicial": 1,
+        "pagina_final": 1
+      },
+      {
+        "tipo": "matricula_imovel",
+        "pagina_inicial": 2,
+        "pagina_final": 4
+      },
+      {
+        "tipo": "holerite",
+        "pagina_inicial": 5,
+        "pagina_final": 5
+      },
+      {
+        "tipo": "extrato_bancario",
+        "pagina_inicial": 6,
+        "pagina_final": 7
+      }
+    ]
+  }
+}

@@ -26,7 +26,8 @@ public sealed record ModelPrice(decimal Input, decimal Output, decimal CacheRead
 }
 
 /// <param name="Synthetic">Caso sintético (fixtures/): o relatório pode mostrar os valores. Documento próprio: só nomes de campo.</param>
-public sealed record CaseResult(string Name, bool Synthetic, CaseScore? Score, ModelUsage Usage, decimal Cost, string? Error);
+public sealed record CaseResult(
+    string Name, bool Synthetic, CaseScore? Score, ModelUsage Usage, decimal Cost, string? Error, ClassificationScore? Classification = null);
 
 /// <summary>Relatório em Markdown: totais, acerto por campo, casos e falhas.</summary>
 public static class Report
@@ -84,6 +85,47 @@ public static class Report
                 $"| {result.Name} | {score.Fields.Count(f => f.Outcome == FieldOutcome.Correct)}/{score.Fields.Count} | " +
                 $"{string.Join(", ", score.Lists.Select(l => $"{l.List} {l.Matched}/{l.Expected}{(l.Extra > 0 ? $" (+{l.Extra})" : "")}"))} | " +
                 $"{result.Usage.InputTokens} / {result.Usage.OutputTokens} | US$ {result.Cost:0.0000} | {string.Join("; ", failures)} |");
+        }
+
+        return md.ToString();
+    }
+
+    public static string RenderClassification(string schemaId, string modelId, IReadOnlyList<CaseResult> results)
+    {
+        ArgumentNullException.ThrowIfNull(results);
+        var scores = results.Where(r => r.Classification is not null).Select(r => r.Classification!).ToList();
+        var md = new StringBuilder();
+
+        md.AppendLine(CultureInfo.InvariantCulture, $"# Parsen.Eval — {schemaId}");
+        md.AppendLine();
+        md.AppendLine(CultureInfo.InvariantCulture, $"Modelo: `{modelId}` · arquivos: {results.Count} ({results.Count(r => r.Synthetic)} sintéticos) · erros: {results.Count(r => r.Error is not null)}");
+        md.AppendLine();
+        md.AppendLine("| Métrica | Valor |");
+        md.AppendLine("| --- | --- |");
+        md.AppendLine(CultureInfo.InvariantCulture, $"| Arquivos 100% certos (separação e tipos) | {Percent(scores.Count(s => s.Exact), scores.Count)} |");
+        md.AppendLine(CultureInfo.InvariantCulture, $"| Documentos certos (tipo e páginas exatos) | {Percent(scores.Sum(s => s.Matched), scores.Sum(s => s.Expected))} |");
+        md.AppendLine(CultureInfo.InvariantCulture, $"| Documentos a mais (errados) | {scores.Sum(s => s.Extra)} |");
+        md.AppendLine(CultureInfo.InvariantCulture, $"| Páginas com o tipo certo | {Percent(scores.Sum(s => s.PagesWithRightType), scores.Sum(s => s.Pages))} |");
+        md.AppendLine(CultureInfo.InvariantCulture, $"| Tokens (entrada / saída / cache lido) | {results.Sum(r => r.Usage.InputTokens)} / {results.Sum(r => r.Usage.OutputTokens)} / {results.Sum(r => r.Usage.CacheReadTokens)} |");
+        md.AppendLine(CultureInfo.InvariantCulture, $"| Custo total / por arquivo | US$ {results.Sum(r => r.Cost):0.0000} / US$ {(results.Count == 0 ? 0 : results.Average(r => r.Cost)):0.0000} |");
+        md.AppendLine();
+        md.AppendLine("## Arquivos");
+        md.AppendLine();
+        md.AppendLine("| Arquivo | Certo | Documentos | Páginas | Tokens (entrada / saída) | Esperado → obtido |");
+        md.AppendLine("| --- | --- | --- | --- | --- | --- |");
+        foreach (var result in results)
+        {
+            if (result.Classification is not { } s)
+            {
+                md.AppendLine(CultureInfo.InvariantCulture, $"| {result.Name} | — | — | — | — | erro: {result.Error} |");
+                continue;
+            }
+
+            // Documento próprio: só as contagens (os tipos e páginas não são dados pessoais, mas seguem a mesma regra dos campos)
+            var detail = result.Synthetic && !s.Exact ? $"{s.ExpectedSummary} → {s.ActualSummary}" : "";
+            md.AppendLine(CultureInfo.InvariantCulture,
+                $"| {result.Name} | {(s.Exact ? "sim" : "não")} | {s.Matched}/{s.Expected}{(s.Extra > 0 ? $" (+{s.Extra})" : "")} | {s.PagesWithRightType}/{s.Pages} | " +
+                $"{result.Usage.InputTokens} / {result.Usage.OutputTokens} | {detail} |");
         }
 
         return md.ToString();

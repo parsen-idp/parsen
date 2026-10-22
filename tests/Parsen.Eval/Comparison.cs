@@ -1,5 +1,6 @@
 using System.Globalization;
 using Parsen.Application.Pipeline;
+using Parsen.Domain.Dossiers;
 
 namespace Parsen.Eval;
 
@@ -26,6 +27,47 @@ public sealed record FieldScore(string Field, FieldOutcome Outcome, string Expec
 public sealed record ListScore(string List, int Expected, int Matched, int Extra);
 
 public sealed record CaseScore(IReadOnlyList<FieldScore> Fields, IReadOnlyList<ListScore> Lists);
+
+/// <param name="Exact">Separação e tipos iguais ao gabarito, documento por documento.</param>
+/// <param name="Matched">Documentos com tipo e faixa de páginas exatos.</param>
+/// <param name="PagesWithRightType">Páginas cujo tipo atribuído é o do gabarito (a medida mais fina).</param>
+public sealed record ClassificationScore(
+    bool Exact, int Expected, int Matched, int Extra, int Pages, int PagesWithRightType, string ExpectedSummary, string ActualSummary);
+
+/// <summary>Compara a classificação com o gabarito (lista "documentos" com tipo, pagina_inicial e pagina_final).</summary>
+public static class ClassificationComparer
+{
+    public static ClassificationScore Compare(Gabarito expected, ClassificationOutput actual)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        ArgumentNullException.ThrowIfNull(actual);
+
+        var expectedParts = expected.Lists["documentos"]
+            .Select(d => (Type: d["tipo"].Text!, First: (int)d["pagina_inicial"].Number!.Value, Last: (int)d["pagina_final"].Number!.Value))
+            .ToList();
+        var actualParts = actual.Parts.Select(p => (Type: DocumentTypeCodes.ToCode(p.Type), p.Pages.First, p.Pages.Last)).ToList();
+
+        var matched = expectedParts.Count(actualParts.Contains);
+        var pages = expectedParts.Count == 0 ? 0 : expectedParts.Max(p => p.Last);
+        var rightPages = Enumerable.Range(1, pages).Count(page => TypeAt(expectedParts, page) == TypeAt(actualParts, page));
+
+        return new ClassificationScore(
+            expectedParts.SequenceEqual(actualParts),
+            expectedParts.Count,
+            matched,
+            actualParts.Count - actualParts.Count(expectedParts.Contains),
+            pages,
+            rightPages,
+            Summary(expectedParts),
+            Summary(actualParts));
+    }
+
+    private static string? TypeAt(List<(string Type, int First, int Last)> parts, int page) =>
+        parts.FirstOrDefault(p => page >= p.First && page <= p.Last).Type;
+
+    private static string Summary(List<(string Type, int First, int Last)> parts) =>
+        string.Join(" + ", parts.Select(p => p.First == p.Last ? $"{p.Type} {p.First}" : $"{p.Type} {p.First}–{p.Last}"));
+}
 
 /// <summary>Compara uma extração com o gabarito: números como decimal exato; textos sem diferenciar maiúsculas e espaços.</summary>
 public static class Comparer

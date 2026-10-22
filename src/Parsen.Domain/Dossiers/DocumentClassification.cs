@@ -10,6 +10,42 @@ public enum DocumentType
     Outro,
 }
 
+/// <summary>
+/// Códigos dos tipos em português snake_case (spec, convenções): os mesmos na API, no DynamoDB, nos schemas
+/// (holerite.v2) e na resposta do modelo. Mapeamento explícito: renomear o enum não muda o código gravado.
+/// </summary>
+public static class DocumentTypeCodes
+{
+    private static readonly Dictionary<DocumentType, string> Codes = new()
+    {
+        [DocumentType.Holerite] = "holerite",
+        [DocumentType.ExtratoBancario] = "extrato_bancario",
+        [DocumentType.ComprovanteResidencia] = "comprovante_residencia",
+        [DocumentType.MatriculaImovel] = "matricula_imovel",
+        [DocumentType.Outro] = "outro",
+    };
+
+    public static IReadOnlyCollection<string> All => Codes.Values;
+
+    public static string ToCode(DocumentType type) =>
+        Codes.TryGetValue(type, out var code) ? code : throw new ArgumentOutOfRangeException(nameof(type), type, null);
+
+    public static bool TryParse(string? code, out DocumentType type)
+    {
+        foreach (var (key, value) in Codes)
+        {
+            if (value == code)
+            {
+                type = key;
+                return true;
+            }
+        }
+
+        type = default;
+        return false;
+    }
+}
+
 public enum DocumentStatus
 {
     /// <summary>Upload pedido; ainda não classificado.</summary>
