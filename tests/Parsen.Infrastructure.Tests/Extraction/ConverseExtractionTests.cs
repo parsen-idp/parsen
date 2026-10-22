@@ -67,7 +67,7 @@ public sealed class ConverseExtractionTests
     {
         var extraction = ConverseExtraction.ReadResponse(Holerite, ModelId, Response(StopReason.Tool_use, ToolInput));
 
-        Assert.Equal("holerite.v2", extraction.SchemaId);
+        Assert.Equal(Holerite.Id, extraction.SchemaId);
         Assert.Equal(ModelId, extraction.ModelId);
         Assert.Null(extraction.Fields["cpf"]);
         Assert.Equal(new ModelField(FieldValue.Text("FULANO DE TAL"), 1, "FULANO DE TAL"), extraction.Fields["nome_funcionario"]);

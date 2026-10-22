@@ -65,7 +65,14 @@ public static class ExtractionAssembler
     private static ExtractedField Locate(string name, ModelField field, OcrDocument ocr)
     {
         var located = EvidenceLocator.Locate(ocr, field.Page, field.SourceText);
-        return new ExtractedField(name, field.Value, located.Evidence, located.Confidence);
+
+        // Identificadores saem do texto do OCR quando o trecho foi achado: o modelo localiza bem, mas reescreve mal
+        // sequências de letras e dígitos (CNPJ alfanumérico, no Parsen.Eval)
+        var value = located.Confidence > 0 && IdentifierFromSource.For(name, field.SourceText) is { } fromSource
+            ? fromSource
+            : field.Value;
+
+        return new ExtractedField(name, value, located.Evidence, located.Confidence);
     }
 
     private static ExtractedItem Locate(ModelItem item, OcrDocument ocr)
