@@ -81,7 +81,7 @@ O MVP entrega um caso de uso ponta a ponta — análise de renda para locação 
 | Documento | Nicho | Campos-chave |
 | --- | --- | --- |
 | Holerite | Fintech e imobiliário | Nome, CPF, empregador, CNPJ, competência, salário bruto, descontos, líquido |
-| Extrato bancário | Fintech e imobiliário | Titular, banco, período, créditos recorrentes, saldo médio |
+| Extrato bancário | Fintech e imobiliário | Titular, banco, período, créditos (só as entradas: data, descrição, valor), saldos impressos |
 | Comprovante de residência | Fintech e imobiliário | Titular, endereço, CEP, data de emissão |
 | Matrícula do imóvel | Imobiliário | Número, cartório, proprietários, ônus e averbações |
 
@@ -132,9 +132,10 @@ flowchart LR
     EB --> SF
     subgraph SF[AWS Step Functions]
         direction TB
-        S0[1. Ingestão<br/>PDF → PNG por página] --> S1[2–3. Split e classificação<br/>Claude Haiku]
-        S1 --> S2[4. OCR e extração<br/>Textract + Haiku + JSON Schema]
-        S2 --> S4[5. Verificação<br/>Regras C# + sinais do Sonnet 5]
+        S0[1. Ingestão<br/>PDF → PNG por página] --> S1[2. OCR<br/>Textract]
+        S1 --> S2[3. Split e classificação<br/>Haiku, só texto]
+        S2 --> S3x[4. Extração<br/>Haiku + JSON Schema]
+        S3x --> S4[5. Verificação<br/>Regras C# + sinais do Sonnet 5]
         S4 --> S5[6. Resultado<br/>DynamoDB + webhook]
     end
     S0 -.-> S3
@@ -168,9 +169,9 @@ Seis etapas na mesma linha do Affinda Extract; cada uma é uma Lambda idempotent
 | Etapa | Worker | Entrada | Saída | Serviço |
 | --- | --- | --- | --- | --- |
 | 1. Ingestão | Ingest | Arquivos no S3 + evento `DossierSubmitted` | Páginas renderizadas em PNG, contagem de páginas, débito de créditos | Lambda .NET (PDFium) |
-| 2. Split | Split | PDF com vários documentos | Faixas de páginas por documento | Haiku |
-| 3. Classificação | Classify | Primeira página de cada faixa | Tipo do documento + confiança | Haiku |
-| 4. OCR e extração | Ocr, Extract | Páginas + texto do Textract | Campos com valor, confiança e evidência | Textract + Haiku |
+| 2. OCR | Ocr | Páginas PNG | Texto e posições por página (`textract.json`) | Textract |
+| 3. Split e classificação | Classify | Texto do OCR de todas as páginas do arquivo | Faixas de páginas, tipo de cada documento + confiança | Haiku (uma chamada por arquivo, só texto) |
+| 4. Extração | Extract | Texto do OCR de cada documento | Campos com valor, confiança e evidência | Haiku + JSON Schema do tipo |
 | 5. Verificação | Validate | Todos os campos do dossiê | Verificações, fatos, sinais e resultado consolidado | Regras C# + Sonnet 5 |
 | 6. Integração | Notify | Resultado | Gravação no DynamoDB, webhook, status | Lambda + SQS |
 
@@ -528,9 +529,8 @@ src/
   Parsen.Infrastructure/      # DynamoDB, S3, Bedrock, Textract, webhooks
   Parsen.Workers/
     Ingest/
-    Split/
-    Classify/
     Ocr/
+    Classify/                 # split + classificação numa chamada
     Extract/
     Validate/
     Notify/
@@ -635,6 +635,9 @@ Seis a oito semanas até o piloto; cada entrega termina com algo demonstrável.
 | API na Lambda | Runtime gerenciado `dotnet10` (sem AOT) com `AddAWSLambdaHosting`; API Gateway REST em modo proxy com autorizador Cognito (scopes `parsen/dossiers.*`); a API revalida o token e confere o scope por operação |
 | Pipeline da Fase 1 | Ingest → OCR (Textract) → Extract (Haiku, `holerite.v2`) → Result, num Step Functions Standard disparado pelo `DossierSubmitted`. Sem split e classificação (Fase 2): todo documento é tratado como holerite. Sem verificações (Fase 3): extração concluída termina em `needs_review`; erro técnico após os retries termina em `failed` |
 | Modelo do Haiku | Alvo: Claude Haiku 5.5 (`global.anthropic.claude-haiku-5-5`), ~10× mais barato por token que o 4.5 (US$ 0,10/0,50 contra 1,00/5,00 por MTok no Bedrock global) e com cache de prompt a partir de 512 tokens (no 4.5, 4.096; o prompt de extração não alcança). Em 2026-10-20 a AWS negou a cota do 5.5 para a conta (histórico de conta nova), então o MVP usa o Haiku 4.5 (`global.anthropic.claude-haiku-4-5-20251001-v1:0`, ~US$ 0,009 por holerite na Spike B). O ID do modelo é parâmetro do CDK: trocar para o 5.5 quando a cota for liberada, medindo no `Parsen.Eval`. No 5.5: sem `temperature`, ler a resposta por tipo de bloco e tratar `stop_reason: refusal` (sem fallback no servidor). Custo por documento é prioridade da margem do SaaS |
+| Ordem do pipeline (Fase 2) | Ingest → OCR → split e classificação → Extract: o split e a classificação usam o texto do OCR numa única chamada ao Haiku por arquivo, sem imagens (~1.500 a 2.300 tokens a menos por página). O Textract roda em todas as páginas de qualquer forma |
+| Extrato bancário | Extrai só os créditos (data, descrição, valor), mais cabeçalho e saldos impressos: é o que a renda do autônomo usa (Fase 3) e corta a saída do modelo à metade |
+| Ordem da Fase 2 | `Parsen.Eval` primeiro (gabaritos, gerador de documentos sintéticos e relatório de precisão por campo), depois split/classificação e os schemas novos, cada um medido no Eval antes do merge (regra 8) |
 | Documentos de teste na Fase 1 | Testes manuais do pipeline (OCR, extração) com documento próprio do fundador, na conta de desenvolvimento (§0), lido de pasta fora do repositório e apagado da AWS ao fim de cada teste. Gerador de holerites sintéticos adiado para antes do `Parsen.Eval` e das fixtures automatizadas (regra 5) |
 | WAF e limite por tenant | Dev: sem WAF e com limite de taxa global no estágio do API Gateway. Antes do piloto: WAF na conta de produção e usage plan por tenant (API key criada junto com a credencial do tenant) |
 | Arquitetura das Lambdas | x64 no desenvolvimento (build rápido no Windows); migrar para arm64 (Graviton) quando o CI tiver runner ARM nativo |
