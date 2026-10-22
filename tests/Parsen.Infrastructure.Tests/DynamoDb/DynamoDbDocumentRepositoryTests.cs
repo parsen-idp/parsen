@@ -89,6 +89,100 @@ public sealed class DynamoDbDocumentRepositoryTests(DynamoDbFixture fixture) : I
         Assert.Equal("Document", item["EntityType"].S);
         Assert.Equal("image/jpeg", item["ContentType"].S);
         Assert.Equal("2048", item["DeclaredSizeBytes"].N);
+        Assert.Equal("pending", item["Status"].S);
         Assert.False(item.ContainsKey("GSI1PK"));
+    }
+
+    [Fact]
+    public async Task SaveClassification_SingleDocument_KeepsTypeAndPages()
+    {
+        var tenant = NewTenant();
+        var document = Document.Create(tenant, DossierId.New(), DocumentContentType.Pdf, 1_000, _clock);
+        await _repository.AddAsync(document, CancellationToken.None);
+
+        document.Classify(DocumentType.Holerite, new PageRange(1, 2));
+        await _repository.SaveClassificationAsync(document, [], CancellationToken.None);
+        var loaded = await _repository.GetAsync(tenant, document.DossierId, document.Id, CancellationToken.None);
+
+        Assert.Equal(DocumentStatus.Classified, loaded?.Status);
+        Assert.Equal(DocumentType.Holerite, loaded?.Type);
+        Assert.Equal(new PageRange(1, 2), loaded?.Pages);
+        Assert.Null(loaded?.SourceDocumentId);
+    }
+
+    [Fact]
+    public async Task SaveClassification_Split_StoresSourceAndChildrenTogether()
+    {
+        var tenant = NewTenant();
+        var source = Document.Create(tenant, DossierId.New(), DocumentContentType.Pdf, 1_000, _clock);
+        await _repository.AddAsync(source, CancellationToken.None);
+
+        var children = source.Split(
+            [(DocumentType.Holerite, new PageRange(1, 1)), (DocumentType.ExtratoBancario, new PageRange(2, 4))], _clock);
+        await _repository.SaveClassificationAsync(source, children, CancellationToken.None);
+        var listed = await _repository.ListByDossierAsync(tenant, source.DossierId, CancellationToken.None);
+
+        Assert.Equal(3, listed.Count);
+        Assert.Equal(DocumentStatus.Split, listed.Single(d => d.Id == source.Id).Status);
+        var extrato = listed.Single(d => d.Type == DocumentType.ExtratoBancario);
+        Assert.Equal(source.Id, extrato.SourceDocumentId);
+        Assert.Equal(source.Id, extrato.FileId);
+        Assert.Equal(new PageRange(2, 4), extrato.Pages);
+        Assert.Equal(DocumentStatus.Classified, extrato.Status);
+    }
+
+    [Fact]
+    public async Task Update_PersistsTheNewStatus()
+    {
+        var tenant = NewTenant();
+        var document = Document.Create(tenant, DossierId.New(), DocumentContentType.Pdf, 1_000, _clock);
+        await _repository.AddAsync(document, CancellationToken.None);
+        document.Classify(DocumentType.Holerite, new PageRange(1, 1));
+        await _repository.SaveClassificationAsync(document, [], CancellationToken.None);
+
+        document.MarkExtracted();
+        await _repository.UpdateAsync(document, CancellationToken.None);
+
+        var loaded = await _repository.GetAsync(tenant, document.DossierId, document.Id, CancellationToken.None);
+        Assert.Equal(DocumentStatus.Extracted, loaded?.Status);
+    }
+
+    [Fact]
+    public async Task Update_OfADocumentThatDoesNotExist_Fails()
+    {
+        var document = Document.Create(NewTenant(), DossierId.New(), DocumentContentType.Pdf, 1_000, _clock);
+
+        await Assert.ThrowsAsync<ConditionalCheckFailedException>(() => _repository.UpdateAsync(document, CancellationToken.None));
+    }
+
+    // Documentos gravados na Fase 1 não têm Status: são lidos como pendentes
+    [Fact]
+    public async Task ItemWithoutStatus_IsReadAsPending()
+    {
+        var tenant = NewTenant();
+        var dossierId = DossierId.New();
+        var documentId = DocumentId.New();
+
+        // Item exatamente como a Fase 1 gravava
+        await fixture.Client.PutItemAsync(new PutItemRequest
+        {
+            TableName = fixture.Settings.TableName,
+            Item = new()
+            {
+                ["PK"] = new AttributeValue($"TENANT#{tenant}#DOSSIER#{dossierId}"),
+                ["SK"] = new AttributeValue($"DOC#{documentId}"),
+                ["EntityType"] = new AttributeValue("Document"),
+                ["Id"] = new AttributeValue(documentId.ToString()),
+                ["TenantId"] = new AttributeValue(tenant.Value),
+                ["DossierId"] = new AttributeValue(dossierId.ToString()),
+                ["ContentType"] = new AttributeValue("application/pdf"),
+                ["DeclaredSizeBytes"] = new AttributeValue { N = "1000" },
+                ["CreatedAt"] = new AttributeValue("2026-10-18T14:00:00.0000000Z"),
+            },
+        });
+
+        var loaded = await _repository.GetAsync(tenant, dossierId, documentId, CancellationToken.None);
+
+        Assert.Equal(DocumentStatus.Pending, loaded?.Status);
     }
 }

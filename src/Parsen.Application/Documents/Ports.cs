@@ -12,6 +12,15 @@ public interface IDocumentRepository
 
     /// <summary>Retorna null se o documento não existe nesse dossiê e tenant.</summary>
     Task<Document?> GetAsync(TenantId tenantId, DossierId dossierId, DocumentId documentId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Grava a classificação de um arquivo: o próprio documento e, num split, os filhos. Tudo ou nada,
+    /// para que um retry nunca encontre um split pela metade.
+    /// </summary>
+    Task SaveClassificationAsync(Document document, IReadOnlyList<Document> children, CancellationToken cancellationToken);
+
+    /// <summary>Grava a mudança de status de um documento já existente (ex.: extraído).</summary>
+    Task UpdateAsync(Document document, CancellationToken cancellationToken);
 }
 
 /// <summary>

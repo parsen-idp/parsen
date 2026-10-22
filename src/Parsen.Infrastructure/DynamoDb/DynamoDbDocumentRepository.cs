@@ -45,6 +45,35 @@ public sealed class DynamoDbDocumentRepository(IAmazonDynamoDB client, DynamoDbS
         return response.Item is { Count: > 0 } item ? DocumentItem.FromItem(item) : null;
     }
 
+    // Uma transação: documento e filhos entram juntos ou nenhum entra (até 100 itens; um dossiê tem no máximo 50 páginas)
+    public async Task SaveClassificationAsync(Document document, IReadOnlyList<Document> children, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(children);
+
+        await client.TransactWriteItemsAsync(new TransactWriteItemsRequest
+        {
+            TransactItems =
+            [
+                new TransactWriteItem { Put = new Put { TableName = settings.TableName, Item = DocumentItem.ToItem(document) } },
+                .. children.Select(child => new TransactWriteItem { Put = new Put { TableName = settings.TableName, Item = DocumentItem.ToItem(child) } }),
+            ],
+        }, cancellationToken);
+    }
+
+    public async Task UpdateAsync(Document document, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+
+        // Só atualiza documento existente: um PutItem sem condição recriaria um documento apagado
+        await client.PutItemAsync(new PutItemRequest
+        {
+            TableName = settings.TableName,
+            Item = DocumentItem.ToItem(document),
+            ConditionExpression = $"attribute_exists({TableSchema.PartitionKey})",
+        }, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Document>> ListByDossierAsync(TenantId tenantId, DossierId dossierId, CancellationToken cancellationToken)
     {
         var documents = new List<Document>();

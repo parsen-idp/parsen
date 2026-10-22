@@ -48,6 +48,11 @@ public sealed class S3FileStorageTests : IDisposable
         Assert.Equal($"ten_teste/{document.DossierId}/{document.Id}/pages/3.png", ObjectKeys.Page(document, 3));
         Assert.Equal($"ten_teste/{document.DossierId}/{document.Id}/textract.json", ObjectKeys.Ocr(document));
         Assert.Throws<ArgumentOutOfRangeException>(() => ObjectKeys.Page(document, 0));
+
+        // Filho de um split: as páginas e o OCR são os do arquivo de origem
+        var child = document.Split([(DocumentType.Holerite, new PageRange(1, 1)), (DocumentType.Outro, new PageRange(2, 2))], TimeProvider.System)[0];
+        Assert.Equal($"ten_teste/{document.DossierId}/{document.Id}/textract.json", ObjectKeys.Ocr(child));
+        Assert.Equal($"ten_teste/{document.DossierId}/{document.Id}/pages/1.png", ObjectKeys.Page(child, 1));
     }
 
     [Fact]

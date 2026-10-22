@@ -25,4 +25,18 @@ public sealed class InMemoryDocumentRepository : IDocumentRepository
     public Task<IReadOnlyList<Document>> ListByDossierAsync(TenantId tenantId, DossierId dossierId, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<Document>>(
             _items.TryGetValue((tenantId, dossierId), out var documents) ? [.. documents] : []);
+
+    // Em memória o documento já é o objeto guardado: só os filhos precisam entrar na lista
+    public Task SaveClassificationAsync(Document document, IReadOnlyList<Document> children, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(children);
+        foreach (var child in children)
+        {
+            _items.GetOrAdd((child.TenantId, child.DossierId), _ => new()).Enqueue(child);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateAsync(Document document, CancellationToken cancellationToken) => Task.CompletedTask;
 }

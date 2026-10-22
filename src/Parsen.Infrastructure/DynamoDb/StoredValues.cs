@@ -52,6 +52,45 @@ internal static class StoredValues
         _ => throw new InvalidDataException($"Tipo de análise desconhecido na tabela: '{value}'."),
     };
 
+    public static string From(DocumentStatus status) => status switch
+    {
+        DocumentStatus.Pending => "pending",
+        DocumentStatus.Classified => "classified",
+        DocumentStatus.Split => "split",
+        DocumentStatus.Extracted => "extracted",
+        _ => throw new ArgumentOutOfRangeException(nameof(status), status, null),
+    };
+
+    public static DocumentStatus ToDocumentStatus(string value) => value switch
+    {
+        "pending" => DocumentStatus.Pending,
+        "classified" => DocumentStatus.Classified,
+        "split" => DocumentStatus.Split,
+        "extracted" => DocumentStatus.Extracted,
+        _ => throw new InvalidDataException($"Status de documento desconhecido na tabela: '{value}'."),
+    };
+
+    // Mesmos nomes da API e dos schemas (holerite.v2...): o tipo também escolhe o schema de extração
+    public static string From(DocumentType type) => type switch
+    {
+        DocumentType.Holerite => "holerite",
+        DocumentType.ExtratoBancario => "extrato_bancario",
+        DocumentType.ComprovanteResidencia => "comprovante_residencia",
+        DocumentType.MatriculaImovel => "matricula_imovel",
+        DocumentType.Outro => "outro",
+        _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
+    };
+
+    public static DocumentType ToDocumentType(string value) => value switch
+    {
+        "holerite" => DocumentType.Holerite,
+        "extrato_bancario" => DocumentType.ExtratoBancario,
+        "comprovante_residencia" => DocumentType.ComprovanteResidencia,
+        "matricula_imovel" => DocumentType.MatriculaImovel,
+        "outro" => DocumentType.Outro,
+        _ => throw new InvalidDataException($"Tipo de documento desconhecido na tabela: '{value}'."),
+    };
+
     public static string From(DateTimeOffset timestamp) =>
         timestamp.UtcDateTime.ToString(TimestampFormat, CultureInfo.InvariantCulture);
 
