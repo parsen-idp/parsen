@@ -12,14 +12,16 @@ namespace Parsen.Infrastructure.Extraction;
 /// Split e classificação com o Claude via Bedrock Converse: uma chamada por arquivo, com só o começo de
 /// cada página (o cabeçalho identifica o tipo e onde cada documento começa; spec, seção 14).
 /// </summary>
-public sealed class BedrockDocumentClassifier(IAmazonBedrockRuntime bedrock, BedrockExtractionSettings settings) : IDocumentClassifier
+/// <param name="definition">Versão do schema e do prompt; null usa a versão em uso (o Parsen.Eval passa outra para comparar).</param>
+public sealed class BedrockDocumentClassifier(
+    IAmazonBedrockRuntime bedrock, BedrockExtractionSettings settings, ExtractionDefinition? definition = null) : IDocumentClassifier
 {
     public async Task<ClassificationOutput> ClassifyAsync(OcrDocument ocr, CancellationToken cancellationToken)
     {
-        var definition = ExtractionSchemas.Classificacao;
-        var request = ConverseExtraction.BuildRequest(definition, settings, ConverseClassification.FormatExcerpts(ocr));
+        var current = definition ?? ExtractionSchemas.Classificacao;
+        var request = ConverseExtraction.BuildRequest(current, settings, ConverseClassification.FormatExcerpts(ocr));
         var response = await bedrock.ConverseAsync(request, cancellationToken);
-        return ConverseClassification.ReadResponse(definition, settings.ModelId, response);
+        return ConverseClassification.ReadResponse(current, settings.ModelId, response);
     }
 }
 

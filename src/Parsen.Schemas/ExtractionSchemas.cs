@@ -25,7 +25,7 @@ public static class ExtractionSchemas
     public static ExtractionDefinition Holerite => Load("holerite", "v2");
 
     /// <summary>Split e classificação de um arquivo (não é um tipo de documento: decide os tipos).</summary>
-    public static ExtractionDefinition Classificacao => Load("classificacao", "v2");
+    public static ExtractionDefinition Classificacao => Load("classificacao", "v3");
 
     /// <summary>Contas de consumo (spec, seção 14): os dados ficam na primeira página; a segunda é margem de segurança.</summary>
     public static ExtractionDefinition ComprovanteResidencia => Load("comprovante_residencia", "v1") with { MaxPages = 2 };

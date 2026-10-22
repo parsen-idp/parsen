@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parsen.com.br/schemas/classificacao.v3.schema.json",
+  "title": "classificacao.v3",
+  "description": "Documentos encontrados num arquivo enviado: o tipo de cada um e as páginas que ele ocupa.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["documentos", "alertas"],
+  "properties": {
+    "documentos": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Um item por documento, na ordem das páginas. As faixas não se sobrepõem.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tipo", "pagina_inicial", "pagina_final"],
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": ["holerite", "extrato_bancario", "comprovante_residencia", "matricula_imovel", "outro"],
+            "description": "outro: documento que não é de nenhum dos tipos anteriores, ou cujo tipo não dá para saber."
+          },
+          "pagina_inicial": { "type": "integer", "minimum": 1 },
+          "pagina_final": { "type": "integer", "minimum": 1, "description": "Igual a pagina_inicial quando o documento tem uma página." }
+        }
+      }
+    },
+    "alertas": {
+      "type": "array",
+      "description": "Observações curtas sobre dúvidas na separação ou no tipo (ex.: página ilegível, tipo incerto). Sem dados pessoais.",
+      "items": { "type": "string", "maxLength": 200 }
+    }
+  }
+}
