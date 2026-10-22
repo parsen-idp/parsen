@@ -17,6 +17,7 @@ public sealed class ExtractionAssemblerTests
             Line("ZETA ALIMENTOS LTDA"),
             Line("CEP 01234-567 EXEMPLÓPOLIS - SP"),
             Line("CPF: ***.531.078-**"),
+            Line("CNPJ: 61.***.***/****-93"),
         ]),
     ]);
 
@@ -52,13 +53,25 @@ public sealed class ExtractionAssemblerTests
         Assert.Equal(FieldValue.Text("01234567"), Field(result, "cep").Value);
     }
 
-    // CPF mascarado não tem os 11 dígitos: fica o que o modelo devolveu (o prompt manda null nesse caso)
+    // Visto na conta da Enel: o OCR tinha "61.***.***/****-93" e o modelo devolveu o CNPJ completo, da memória.
+    // Identificador que não está inteiro no trecho achado não existe no documento: vira null, com alerta
     [Fact]
-    public void MaskedCpf_IsNotRebuiltFromTheSnippet()
+    public void MaskedCnpj_BecomesNullWithAlert()
+    {
+        var result = Assemble(("cnpj_emissor", FieldValue.Text("61695227000193"), "61.***.***/****-93"));
+
+        var cnpj = Field(result, "cnpj_emissor");
+        Assert.Null(cnpj.Value);
+        Assert.NotNull(cnpj.Evidence);
+        Assert.Contains(result.Alerts, a => a.Contains("cnpj_emissor", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void MaskedCpf_BecomesNull()
     {
         var result = Assemble(("cpf_titular", FieldValue.Text("53107800000"), "CPF: ***.531.078-**"));
 
-        Assert.Equal(FieldValue.Text("53107800000"), Field(result, "cpf_titular").Value);
+        Assert.Null(Field(result, "cpf_titular").Value);
     }
 
     [Fact]
@@ -71,12 +84,21 @@ public sealed class ExtractionAssemblerTests
         Assert.Equal(0, cnpj.Confidence);
     }
 
+    // O trecho apontado não mostra o número: o valor não tem evidência no documento
     [Fact]
-    public void SnippetWithoutAnIdentifier_KeepsTheModelValue()
+    public void SnippetWithoutAnIdentifier_BecomesNull()
     {
         var result = Assemble(("cnpj_empregador", FieldValue.Text("216X592R000124"), "ZETA ALIMENTOS LTDA"));
 
-        Assert.Equal(FieldValue.Text("216X592R000124"), Field(result, "cnpj_empregador").Value);
+        Assert.Null(Field(result, "cnpj_empregador").Value);
+    }
+
+    [Fact]
+    public void FullIdentifier_DoesNotRaiseAlerts()
+    {
+        var result = Assemble(("cpf", FieldValue.Text("50853107807"), "508.531.078-07"));
+
+        Assert.Empty(result.Alerts);
     }
 
     [Fact]

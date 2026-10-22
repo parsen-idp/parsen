@@ -83,28 +83,36 @@ public static class ExtractionAssembler
     {
         ArgumentNullException.ThrowIfNull(output);
 
+        var alerts = output.Alerts.ToList();
         var fields = output.Fields
-            .Select(f => f.Value is { } field ? Locate(f.Key, field, ocr) : new ExtractedField(f.Key, null, null, null))
+            .Select(f => f.Value is { } field ? Locate(f.Key, field, ocr, alerts) : new ExtractedField(f.Key, null, null, null))
             .ToList();
 
         var lists = output.Lists.ToDictionary(
             l => l.Key,
             l => (IReadOnlyList<ExtractedItem>)l.Value.Select(item => Locate(item, ocr)).ToList());
 
-        return new ExtractionResult(documentType, output.SchemaId, output.ModelId, fields, lists, output.Alerts, output.Usage, extractedAt);
+        return new ExtractionResult(documentType, output.SchemaId, output.ModelId, fields, lists, alerts, output.Usage, extractedAt);
     }
 
-    private static ExtractedField Locate(string name, ModelField field, OcrDocument ocr)
+    private static ExtractedField Locate(string name, ModelField field, OcrDocument ocr, List<string> alerts)
     {
         var located = EvidenceLocator.Locate(ocr, field.Page, field.SourceText);
+        if (!IdentifierFromSource.Applies(name) || located.Confidence == 0)
+        {
+            return new ExtractedField(name, field.Value, located.Evidence, located.Confidence);
+        }
 
-        // Identificadores saem do texto do OCR quando o trecho foi achado: o modelo localiza bem, mas reescreve mal
-        // sequências de letras e dígitos (CNPJ alfanumérico, no Parsen.Eval)
-        var value = located.Confidence > 0 && IdentifierFromSource.For(name, field.SourceText) is { } fromSource
-            ? fromSource
-            : field.Value;
+        // Identificadores (CPF, CNPJ, CEP) saem só do texto achado no OCR: o modelo localiza bem, mas reescreve mal
+        // letras e dígitos (CNPJ alfanumérico) e chegou a "completar" um CNPJ mascarado com o da memória (conta da Enel).
+        // Sem o número inteiro no trecho, o valor não está no documento: null, com a evidência apontando o que está impresso
+        if (IdentifierFromSource.For(name, field.SourceText) is { } fromSource)
+        {
+            return new ExtractedField(name, fromSource, located.Evidence, located.Confidence);
+        }
 
-        return new ExtractedField(name, value, located.Evidence, located.Confidence);
+        alerts.Add($"{name} não está completo no documento (mascarado ou ilegível); o valor ficou vazio.");
+        return new ExtractedField(name, null, located.Evidence, located.Confidence);
     }
 
     private static ExtractedItem Locate(ModelItem item, OcrDocument ocr)

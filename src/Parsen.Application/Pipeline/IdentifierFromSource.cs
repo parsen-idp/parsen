@@ -10,6 +10,15 @@ namespace Parsen.Application.Pipeline;
 /// </summary>
 public static partial class IdentifierFromSource
 {
+    /// <summary>O campo é um identificador cujo valor sai do trecho do OCR (cpf*, cnpj*, cep*).</summary>
+    public static bool Applies(string fieldName)
+    {
+        ArgumentNullException.ThrowIfNull(fieldName);
+        return fieldName.StartsWith("cpf", StringComparison.Ordinal)
+            || fieldName.StartsWith("cnpj", StringComparison.Ordinal)
+            || fieldName.StartsWith("cep", StringComparison.Ordinal);
+    }
+
     public static FieldValue? For(string fieldName, string sourceText)
     {
         ArgumentNullException.ThrowIfNull(fieldName);
