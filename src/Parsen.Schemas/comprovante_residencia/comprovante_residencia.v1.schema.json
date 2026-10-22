@@ -1,0 +1,340 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parsen.com.br/schemas/comprovante_residencia.v1.schema.json",
+  "title": "comprovante_residencia.v1",
+  "description": "Dados de uma conta de consumo (energia, água, gás ou telecom) usada como comprovante de residência. Cada campo traz o valor normalizado, a página e o trecho exato do OCR; null quando o campo não aparece no documento.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "subtipo",
+    "emissor",
+    "cnpj_emissor",
+    "titular",
+    "cpf_titular",
+    "logradouro",
+    "numero",
+    "complemento",
+    "bairro",
+    "cidade",
+    "uf",
+    "cep",
+    "endereco_entrega",
+    "data_emissao",
+    "data_vencimento",
+    "mes_referencia",
+    "valor_total",
+    "alertas"
+  ],
+  "properties": {
+    "subtipo": {
+      "$ref": "#/$defs/campo_subtipo",
+      "description": "Serviço da conta: energia, agua, gas ou telecom (telefone, internet, TV)."
+    },
+    "emissor": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Empresa que emitiu a conta (concessionária ou operadora)."
+    },
+    "cnpj_emissor": {
+      "$ref": "#/$defs/campo_cnpj",
+      "description": "CNPJ do emissor, sem pontuação."
+    },
+    "titular": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Pessoa a quem a conta é endereçada (cliente ou destinatário), como impressa."
+    },
+    "cpf_titular": {
+      "$ref": "#/$defs/campo_cpf",
+      "description": "CPF do titular, só os 11 dígitos; null se não impresso ou mascarado."
+    },
+    "logradouro": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Rua, avenida etc. do endereço do serviço (local de consumo ou instalação), sem o número."
+    },
+    "numero": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Número do endereço do serviço, como impresso (pode ser S/N)."
+    },
+    "complemento": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Complemento do endereço do serviço (apto, bloco, casa, sala)."
+    },
+    "bairro": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Bairro do endereço do serviço."
+    },
+    "cidade": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Cidade do endereço do serviço."
+    },
+    "uf": {
+      "$ref": "#/$defs/campo_uf",
+      "description": "Sigla do estado do endereço do serviço (ex.: SP)."
+    },
+    "cep": {
+      "$ref": "#/$defs/campo_cep",
+      "description": "CEP do endereço do serviço, só os 8 dígitos."
+    },
+    "endereco_entrega": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Endereço de entrega ou correspondência, em uma linha, só quando impresso separado do endereço do serviço."
+    },
+    "data_emissao": {
+      "$ref": "#/$defs/campo_data",
+      "description": "Data de emissão da conta, AAAA-MM-DD."
+    },
+    "data_vencimento": {
+      "$ref": "#/$defs/campo_data",
+      "description": "Data de vencimento, AAAA-MM-DD."
+    },
+    "mes_referencia": {
+      "$ref": "#/$defs/campo_competencia",
+      "description": "Mês de referência do consumo ou do serviço, AAAA-MM."
+    },
+    "valor_total": {
+      "$ref": "#/$defs/campo_valor",
+      "description": "Total a pagar impresso na conta."
+    },
+    "alertas": {
+      "type": "array",
+      "description": "Observações curtas sobre problemas percebidos (ex.: CPF mascarado, endereço cortado, documento que não parece conta de consumo). Nunca uma decisão de aprovação.",
+      "items": {
+        "type": "string",
+        "maxLength": 200
+      }
+    }
+  },
+  "$defs": {
+    "pagina": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Página do documento (1 = primeira)."
+    },
+    "trecho_fonte": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Só o texto do valor, copiado exatamente de uma única linha do OCR, sem rótulo e sem correções."
+    },
+    "campo_texto": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_cpf": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[0-9]{11}$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_cnpj": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[0-9A-Z]{12}[0-9]{2}$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_competencia": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_data": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_valor": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Valor em reais com ponto decimal (ex.: 1234.56)."
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_subtipo": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "enum": [
+            "energia",
+            "agua",
+            "gas",
+            "telecom"
+          ]
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_cep": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[0-9]{8}$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_uf": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    }
+  }
+}

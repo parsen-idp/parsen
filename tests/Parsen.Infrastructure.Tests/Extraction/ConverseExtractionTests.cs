@@ -62,6 +62,29 @@ public sealed class ConverseExtractionTests
             Assert.Single(message.Content).Text);
     }
 
+    // Comprovante: só as 2 primeiras páginas vão ao modelo (custo e minimização de dados pessoais)
+    [Fact]
+    public void Request_SendsOnlyTheFirstPagesWhenTheTypeHasALimit()
+    {
+        var ocr = new OcrDocument([.. Enumerable.Range(1, 5).Select(p => new OcrPage(p, [Line($"conteúdo da página {p}")]))]);
+
+        var text = ConverseExtraction.BuildRequest(ExtractionSchemas.ComprovanteResidencia, Settings, ocr).Messages[0].Content[0].Text;
+
+        Assert.Contains("=== PÁGINA 2 ===", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("=== PÁGINA 3 ===", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("conteúdo da página 5", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Request_SendsEveryPageWhenTheTypeHasNoLimit()
+    {
+        var ocr = new OcrDocument([.. Enumerable.Range(1, 5).Select(p => new OcrPage(p, [Line($"conteúdo da página {p}")]))]);
+
+        var text = ConverseExtraction.BuildRequest(Holerite, Settings, ocr).Messages[0].Content[0].Text;
+
+        Assert.Contains("=== PÁGINA 5 ===", text, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Response_BecomesFieldsListsAndAlerts()
     {

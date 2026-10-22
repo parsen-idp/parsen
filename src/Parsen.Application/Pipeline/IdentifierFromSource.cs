@@ -4,9 +4,9 @@ using Parsen.Domain.Identifiers;
 namespace Parsen.Application.Pipeline;
 
 /// <summary>
-/// CPF e CNPJ tirados do trecho do OCR, sem pontuação. O valor é o que está impresso (o OCR pode ter lido
+/// CPF, CNPJ e CEP tirados do trecho do OCR, sem pontuação. O valor é o que está impresso (o OCR pode ter lido
 /// um dígito errado): conferir o dígito verificador é uma verificação, não papel da extração.
-/// Vale para todo campo cujo nome começa com "cpf" ou "cnpj" (ex.: cpf, cnpj_empregador).
+/// Vale para todo campo cujo nome começa com "cpf", "cnpj" ou "cep" (ex.: cpf, cnpj_empregador, cep).
 /// </summary>
 public static partial class IdentifierFromSource
 {
@@ -23,6 +23,11 @@ public static partial class IdentifierFromSource
         if (fieldName.StartsWith("cpf", StringComparison.Ordinal))
         {
             return Match(CpfPattern(), sourceText, Cpf.Normalize, Cpf.Length);
+        }
+
+        if (fieldName.StartsWith("cep", StringComparison.Ordinal))
+        {
+            return Match(CepPattern(), sourceText, DigitsOnly, 8);
         }
 
         return null;
@@ -46,4 +51,10 @@ public static partial class IdentifierFromSource
 
     [GeneratedRegex(@"(?<![0-9])[0-9]{3}\.?[0-9]{3}\.?[0-9]{3}-?[0-9]{2}(?![0-9])")]
     private static partial Regex CpfPattern();
+
+    private static string DigitsOnly(string value) => new([.. value.Where(char.IsAsciiDigit)]);
+
+    // 01234-567, 01.234-567 ou 01234567
+    [GeneratedRegex(@"(?<![0-9])[0-9]{2}\.?[0-9]{3}-?[0-9]{3}(?![0-9])")]
+    private static partial Regex CepPattern();
 }

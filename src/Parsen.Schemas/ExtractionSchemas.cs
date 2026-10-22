@@ -10,6 +10,12 @@ public sealed record ExtractionDefinition(string DocumentType, string Version, s
 
     /// <summary>Ferramenta que o modelo é obrigado a chamar (tool use forçado); o schema é o inputSchema dela.</summary>
     public string ToolName => $"registrar_{DocumentType}";
+
+    /// <summary>
+    /// Só as primeiras páginas do documento vão ao modelo (null = todas). Regra do tipo: o comprovante tem os dados
+    /// no começo; mandar o resto custaria tokens e exporia dados pessoais desnecessários (minimização, LGPD).
+    /// </summary>
+    public int? MaxPages { get; init; }
 }
 
 /// <summary>Lê os schemas e prompts embutidos no assembly (pasta {tipo}/{tipo}.{versão}.schema.json e .prompt.md).</summary>
@@ -21,10 +27,14 @@ public static class ExtractionSchemas
     /// <summary>Split e classificação de um arquivo (não é um tipo de documento: decide os tipos).</summary>
     public static ExtractionDefinition Classificacao => Load("classificacao", "v2");
 
+    /// <summary>Contas de consumo (spec, seção 14): os dados ficam na primeira página; a segunda é margem de segurança.</summary>
+    public static ExtractionDefinition ComprovanteResidencia => Load("comprovante_residencia", "v1") with { MaxPages = 2 };
+
     /// <summary>Schema de extração em uso para o código do tipo (ex.: holerite); null se o tipo ainda não tem schema.</summary>
     public static ExtractionDefinition? ForDocumentType(string documentType) => documentType switch
     {
         "holerite" => Holerite,
+        "comprovante_residencia" => ComprovanteResidencia,
         _ => null,
     };
 

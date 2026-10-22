@@ -15,6 +15,8 @@ public sealed class ExtractionAssemblerTests
             Line("CNPJ: 21.6X5.92R/0001-24"),
             Line("508.531.078-07"),
             Line("ZETA ALIMENTOS LTDA"),
+            Line("CEP 01234-567 EXEMPLÓPOLIS - SP"),
+            Line("CPF: ***.531.078-**"),
         ]),
     ]);
 
@@ -40,6 +42,23 @@ public sealed class ExtractionAssemblerTests
         var result = Assemble(("cpf", FieldValue.Text("50853107870"), "508.531.078-07"));
 
         Assert.Equal(FieldValue.Text("50853107807"), Field(result, "cpf").Value);
+    }
+
+    [Fact]
+    public void Cep_ComesFromTheOcrSnippet()
+    {
+        var result = Assemble(("cep", FieldValue.Text("01234576"), "CEP 01234-567 EXEMPLÓPOLIS - SP"));
+
+        Assert.Equal(FieldValue.Text("01234567"), Field(result, "cep").Value);
+    }
+
+    // CPF mascarado não tem os 11 dígitos: fica o que o modelo devolveu (o prompt manda null nesse caso)
+    [Fact]
+    public void MaskedCpf_IsNotRebuiltFromTheSnippet()
+    {
+        var result = Assemble(("cpf_titular", FieldValue.Text("53107800000"), "CPF: ***.531.078-**"));
+
+        Assert.Equal(FieldValue.Text("53107800000"), Field(result, "cpf_titular").Value);
     }
 
     [Fact]

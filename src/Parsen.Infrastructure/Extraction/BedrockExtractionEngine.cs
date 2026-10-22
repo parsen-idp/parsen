@@ -33,8 +33,15 @@ public static class ConverseExtraction
     /// <summary>Lista de observações do modelo; todo outro array do schema é uma lista de itens (ex.: rubricas).</summary>
     private const string AlertsProperty = "alertas";
 
-    public static ConverseRequest BuildRequest(ExtractionDefinition definition, BedrockExtractionSettings settings, OcrDocument ocr) =>
-        BuildRequest(definition, settings, FormatOcr(ocr));
+    /// <summary>Requisição de extração: só as primeiras MaxPages páginas do documento, quando o tipo define o limite.</summary>
+    public static ConverseRequest BuildRequest(ExtractionDefinition definition, BedrockExtractionSettings settings, OcrDocument ocr)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        ArgumentNullException.ThrowIfNull(ocr);
+
+        var pages = definition.MaxPages is { } max ? new OcrDocument([.. ocr.Pages.Take(max)]) : ocr;
+        return BuildRequest(definition, settings, FormatOcr(pages));
+    }
 
     /// <summary>Requisição com o schema como ferramenta obrigatória e o texto do documento na mensagem.</summary>
     public static ConverseRequest BuildRequest(ExtractionDefinition definition, BedrockExtractionSettings settings, string text)
