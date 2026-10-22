@@ -1,0 +1,55 @@
+{
+  "document_type": "holerite",
+  "fields": {
+    "nome_funcionario": "CARLA GOMES SANTOS",
+    "cpf": null,
+    "empregador": "ZETA ALIMENTOS LTDA",
+    "cnpj_empregador": "05677679000171",
+    "competencia": "2026-10",
+    "cargo": "AUXILIAR DE LOGISTICA",
+    "data_admissao": "2018-11-08",
+    "salario_base": 9823.15,
+    "total_vencimentos": 11787.78,
+    "total_descontos": 2772.28,
+    "salario_liquido": 9015.50
+  },
+  "lists": {
+    "itens": [
+      {
+        "codigo": "001",
+        "descricao": "SALARIO",
+        "referencia": "30,00",
+        "tipo": "vencimento",
+        "valor": 9823.15
+      },
+      {
+        "codigo": "060",
+        "descricao": "ADICIONAL NOTURNO",
+        "referencia": "20,00%",
+        "tipo": "vencimento",
+        "valor": 1964.63
+      },
+      {
+        "codigo": "901",
+        "descricao": "INSS",
+        "referencia": "14,00%",
+        "tipo": "desconto",
+        "valor": 951.63
+      },
+      {
+        "codigo": "902",
+        "descricao": "IRRF",
+        "referencia": "15,00%",
+        "tipo": "desconto",
+        "valor": 1231.26
+      },
+      {
+        "codigo": "910",
+        "descricao": "VALE TRANSPORTE",
+        "referencia": "6,00%",
+        "tipo": "desconto",
+        "valor": 589.39
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "document_type": "holerite",
+  "fields": {
+    "nome_funcionario": "FABIO DIAS OLIVEIRA",
+    "cpf": null,
+    "empregador": "DELTA LOGISTICA EIRELI",
+    "cnpj_empregador": "WX8H0462000126",
+    "competencia": "2026-04",
+    "cargo": "ANALISTA ADMINISTRATIVO",
+    "data_admissao": "2023-04-28",
+    "salario_base": 3671.72,
+    "total_vencimentos": 3671.72,
+    "total_descontos": 964.88,
+    "salario_liquido": 2706.84
+  },
+  "lists": {
+    "itens": [
+      {
+        "codigo": "001",
+        "descricao": "SALARIO",
+        "referencia": "30,00",
+        "tipo": "vencimento",
+        "valor": 3671.72
+      },
+      {
+        "codigo": "901",
+        "descricao": "INSS",
+        "referencia": "12,00%",
+        "tipo": "desconto",
+        "valor": 440.61
+      },
+      {
+        "codigo": "902",
+        "descricao": "IRRF",
+        "referencia": "15,00%",
+        "tipo": "desconto",
+        "valor": 90.51
+      },
+      {
+        "codigo": "920",
+        "descricao": "PLANO DE SAUDE",
+        "referencia": null,
+        "tipo": "desconto",
+        "valor": 433.76
+      }
+    ]
+  }
+}

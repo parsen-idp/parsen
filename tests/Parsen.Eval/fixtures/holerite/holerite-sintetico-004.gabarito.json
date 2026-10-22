@@ -1,0 +1,41 @@
+{
+  "document_type": "holerite",
+  "fields": {
+    "nome_funcionario": "BRUNO LIMA PEREIRA",
+    "cpf": null,
+    "empregador": "BETA SERVICOS DE TI LTDA",
+    "cnpj_empregador": "18370408000110",
+    "competencia": "2026-11",
+    "cargo": "ANALISTA ADMINISTRATIVO",
+    "data_admissao": "2024-03-11",
+    "salario_base": 4267.4,
+    "total_vencimentos": 4267.4,
+    "total_descontos": 753.77,
+    "salario_liquido": 3513.63
+  },
+  "lists": {
+    "itens": [
+      {
+        "codigo": "001",
+        "descricao": "SALARIO",
+        "referencia": "30,00",
+        "tipo": "vencimento",
+        "valor": 4267.4
+      },
+      {
+        "codigo": "901",
+        "descricao": "INSS",
+        "referencia": "14,00%",
+        "tipo": "desconto",
+        "valor": 597.44
+      },
+      {
+        "codigo": "902",
+        "descricao": "IRRF",
+        "referencia": "15,00%",
+        "tipo": "desconto",
+        "valor": 156.33
+      }
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "document_type": "holerite",
+  "fields": {
+    "nome_funcionario": "ISABELA ALMEIDA PEREIRA",
+    "cpf": "50853107807",
+    "empregador": "ZETA ALIMENTOS LTDA",
+    "cnpj_empregador": "17225332000177",
+    "competencia": "2026-09",
+    "cargo": "ASSISTENTE FINANCEIRO",
+    "data_admissao": "2016-07-23",
+    "salario_base": 3237.25,
+    "total_vencimentos": 4127.49,
+    "total_descontos": 840.21,
+    "salario_liquido": 3287.28
+  },
+  "lists": {
+    "itens": [
+      {
+        "codigo": "001",
+        "descricao": "SALARIO",
+        "referencia": "30,00",
+        "tipo": "vencimento",
+        "valor": 3237.25
+      },
+      {
+        "codigo": "050",
+        "descricao": "HORAS EXTRAS 50%",
+        "referencia": "11,00",
+        "tipo": "vencimento",
+        "valor": 242.79
+      },
+      {
+        "codigo": "060",
+        "descricao": "ADICIONAL NOTURNO",
+        "referencia": "20,00%",
+        "tipo": "vencimento",
+        "valor": 647.45
+      },
+      {
+        "codigo": "901",
+        "descricao": "INSS",
+        "referencia": "12,00%",
+        "tipo": "desconto",
+        "valor": 495.30
+      },
+      {
+        "codigo": "902",
+        "descricao": "IRRF",
+        "referencia": "15,00%",
+        "tipo": "desconto",
+        "valor": 150.67
+      },
+      {
+        "codigo": "910",
+        "descricao": "VALE TRANSPORTE",
+        "referencia": "6,00%",
+        "tipo": "desconto",
+        "valor": 194.24
+      }
+    ]
+  }
+}

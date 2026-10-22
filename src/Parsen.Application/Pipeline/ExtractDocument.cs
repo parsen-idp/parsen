@@ -35,6 +35,22 @@ public sealed class ExtractDocumentHandler(
         var ocr = await files.ReadOcrAsync(document, cancellationToken);
         var output = await engine.ExtractAsync(DocumentType, ocr, cancellationToken);
 
+        var result = ExtractionAssembler.Assemble(DocumentType, output, ocr, clock.GetUtcNow());
+        await extractions.SaveAsync(document, result, cancellationToken);
+        return result;
+    }
+}
+
+/// <summary>
+/// Saída do modelo + OCR → resultado com evidência e confiança. Usado pelo pipeline e pelo Parsen.Eval,
+/// para que a avaliação meça exatamente o que o pipeline grava.
+/// </summary>
+public static class ExtractionAssembler
+{
+    public static ExtractionResult Assemble(string documentType, ModelExtraction output, OcrDocument ocr, DateTimeOffset extractedAt)
+    {
+        ArgumentNullException.ThrowIfNull(output);
+
         var fields = output.Fields
             .Select(f => f.Value is { } field ? Locate(f.Key, field, ocr) : new ExtractedField(f.Key, null, null, null))
             .ToList();
@@ -43,10 +59,7 @@ public sealed class ExtractDocumentHandler(
             l => l.Key,
             l => (IReadOnlyList<ExtractedItem>)l.Value.Select(item => Locate(item, ocr)).ToList());
 
-        var result = new ExtractionResult(
-            DocumentType, output.SchemaId, output.ModelId, fields, lists, output.Alerts, output.Usage, clock.GetUtcNow());
-        await extractions.SaveAsync(document, result, cancellationToken);
-        return result;
+        return new ExtractionResult(documentType, output.SchemaId, output.ModelId, fields, lists, output.Alerts, output.Usage, extractedAt);
     }
 
     private static ExtractedField Locate(string name, ModelField field, OcrDocument ocr)

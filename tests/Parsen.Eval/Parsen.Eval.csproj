@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Avaliação de precisão da extração contra gabarito (regra 8). Chama o modelo de verdade: roda só à mão,
+    com confirmação (custo real). fixtures/ só tem documentos sintéticos; documentos próprios ficam fora do repositório.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Credenciais do "aws login" (perfil da CLI) -->
+    <PackageReference Include="AWSSDK.Signin" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Parsen.Infrastructure\Parsen.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

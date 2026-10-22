@@ -1,0 +1,41 @@
+{
+  "document_type": "holerite",
+  "fields": {
+    "nome_funcionario": "JOAO NOGUEIRA ALMEIDA",
+    "cpf": "03091016706",
+    "empregador": "COMERCIAL ALFA LTDA",
+    "cnpj_empregador": "02513281000101",
+    "competencia": "2026-02",
+    "cargo": null,
+    "data_admissao": "2013-05-28",
+    "salario_base": 3419.56,
+    "total_vencimentos": 3419.56,
+    "total_descontos": 834.45,
+    "salario_liquido": 2585.11
+  },
+  "lists": {
+    "itens": [
+      {
+        "codigo": "001",
+        "descricao": "SALARIO",
+        "referencia": "30,00",
+        "tipo": "vencimento",
+        "valor": 3419.56
+      },
+      {
+        "codigo": "901",
+        "descricao": "INSS",
+        "referencia": "12,00%",
+        "tipo": "desconto",
+        "valor": 410.35
+      },
+      {
+        "codigo": "920",
+        "descricao": "PLANO DE SAUDE",
+        "referencia": null,
+        "tipo": "desconto",
+        "valor": 424.1
+      }
+    ]
+  }
+}

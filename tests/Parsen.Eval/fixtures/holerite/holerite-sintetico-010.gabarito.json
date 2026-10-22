@@ -1,0 +1,55 @@
+{
+  "document_type": "holerite",
+  "fields": {
+    "nome_funcionario": "HUGO LIMA SANTOS",
+    "cpf": null,
+    "empregador": "ZETA ALIMENTOS LTDA",
+    "cnpj_empregador": "9R6ABKYY000197",
+    "competencia": "2026-11",
+    "cargo": "ASSISTENTE FINANCEIRO",
+    "data_admissao": null,
+    "salario_base": 6774.02,
+    "total_vencimentos": 6912.58,
+    "total_descontos": 1858.05,
+    "salario_liquido": 5054.53
+  },
+  "lists": {
+    "itens": [
+      {
+        "codigo": "001",
+        "descricao": "SALARIO",
+        "referencia": "30,00",
+        "tipo": "vencimento",
+        "valor": 6774.02
+      },
+      {
+        "codigo": "050",
+        "descricao": "HORAS EXTRAS 50%",
+        "referencia": "3,00",
+        "tipo": "vencimento",
+        "valor": 138.56
+      },
+      {
+        "codigo": "901",
+        "descricao": "INSS",
+        "referencia": "14,00%",
+        "tipo": "desconto",
+        "valor": 951.63
+      },
+      {
+        "codigo": "902",
+        "descricao": "IRRF",
+        "referencia": "15,00%",
+        "tipo": "desconto",
+        "valor": 499.98
+      },
+      {
+        "codigo": "910",
+        "descricao": "VALE TRANSPORTE",
+        "referencia": "6,00%",
+        "tipo": "desconto",
+        "valor": 406.44
+      }
+    ]
+  }
+}

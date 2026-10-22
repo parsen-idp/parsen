@@ -21,6 +21,8 @@
     <Project Path="tests/Parsen.Api.Tests/Parsen.Api.Tests.csproj" />
     <Project Path="tests/Parsen.Auth.PreTokenGeneration.Tests/Parsen.Auth.PreTokenGeneration.Tests.csproj" />
     <Project Path="tests/Parsen.Domain.Tests/Parsen.Domain.Tests.csproj" />
+    <Project Path="tests/Parsen.Eval/Parsen.Eval.csproj" />
+    <Project Path="tests/Parsen.Eval.Tests/Parsen.Eval.Tests.csproj" />
     <Project Path="tests/Parsen.Infrastructure.Tests/Parsen.Infrastructure.Tests.csproj" />
     <Project Path="tests/Parsen.Schemas.Tests/Parsen.Schemas.Tests.csproj" />
     <Project Path="tests/Parsen.Workers.Tests/Parsen.Workers.Tests.csproj" />

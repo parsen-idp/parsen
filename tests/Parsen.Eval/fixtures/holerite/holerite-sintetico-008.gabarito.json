@@ -1,0 +1,55 @@
+{
+  "document_type": "holerite",
+  "fields": {
+    "nome_funcionario": "DIEGO DIAS MARTINS",
+    "cpf": "24634042800",
+    "empregador": "GAMA INDUSTRIA E COMERCIO S.A.",
+    "cnpj_empregador": "51736354000130",
+    "competencia": "2026-09",
+    "cargo": "VENDEDOR",
+    "data_admissao": "2016-07-22",
+    "salario_base": 5354.96,
+    "total_vencimentos": 6048.67,
+    "total_descontos": 1523.07,
+    "salario_liquido": 4525.60
+  },
+  "lists": {
+    "itens": [
+      {
+        "codigo": "001",
+        "descricao": "SALARIO",
+        "referencia": "30,00",
+        "tipo": "vencimento",
+        "valor": 5354.96
+      },
+      {
+        "codigo": "050",
+        "descricao": "HORAS EXTRAS 50%",
+        "referencia": "19,00",
+        "tipo": "vencimento",
+        "valor": 693.71
+      },
+      {
+        "codigo": "901",
+        "descricao": "INSS",
+        "referencia": "14,00%",
+        "tipo": "desconto",
+        "valor": 846.81
+      },
+      {
+        "codigo": "902",
+        "descricao": "IRRF",
+        "referencia": "15,00%",
+        "tipo": "desconto",
+        "valor": 386.12
+      },
+      {
+        "codigo": "920",
+        "descricao": "PLANO DE SAUDE",
+        "referencia": null,
+        "tipo": "desconto",
+        "valor": 290.14
+      }
+    ]
+  }
+}

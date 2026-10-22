@@ -1,0 +1,55 @@
+{
+  "document_type": "holerite",
+  "fields": {
+    "nome_funcionario": "NATALIA GOMES RIBEIRO",
+    "cpf": null,
+    "empregador": "COMERCIAL ALFA LTDA",
+    "cnpj_empregador": "216X592R000124",
+    "competencia": "2026-11",
+    "cargo": "ANALISTA ADMINISTRATIVO",
+    "data_admissao": "2013-05-03",
+    "salario_base": 6202.98,
+    "total_vencimentos": 6202.98,
+    "total_descontos": 1926.53,
+    "salario_liquido": 4276.45
+  },
+  "lists": {
+    "itens": [
+      {
+        "codigo": "001",
+        "descricao": "SALARIO",
+        "referencia": "30,00",
+        "tipo": "vencimento",
+        "valor": 6202.98
+      },
+      {
+        "codigo": "901",
+        "descricao": "INSS",
+        "referencia": "14,00%",
+        "tipo": "desconto",
+        "valor": 868.42
+      },
+      {
+        "codigo": "902",
+        "descricao": "IRRF",
+        "referencia": "15,00%",
+        "tipo": "desconto",
+        "valor": 406.02
+      },
+      {
+        "codigo": "910",
+        "descricao": "VALE TRANSPORTE",
+        "referencia": "6,00%",
+        "tipo": "desconto",
+        "valor": 372.18
+      },
+      {
+        "codigo": "920",
+        "descricao": "PLANO DE SAUDE",
+        "referencia": null,
+        "tipo": "desconto",
+        "valor": 279.91
+      }
+    ]
+  }
+}

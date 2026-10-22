@@ -1,0 +1,41 @@
+{
+  "document_type": "holerite",
+  "fields": {
+    "nome_funcionario": "NATALIA BARBOSA VIEIRA",
+    "cpf": "10274084430",
+    "empregador": "BETA SERVICOS DE TI LTDA",
+    "cnpj_empregador": "C98R641S000108",
+    "competencia": "2026-07",
+    "cargo": "ANALISTA ADMINISTRATIVO",
+    "data_admissao": null,
+    "salario_base": 8442.12,
+    "total_vencimentos": 8442.12,
+    "total_descontos": 1681.04,
+    "salario_liquido": 6761.08
+  },
+  "lists": {
+    "itens": [
+      {
+        "codigo": "001",
+        "descricao": "SALARIO",
+        "referencia": "30,00",
+        "tipo": "vencimento",
+        "valor": 8442.12
+      },
+      {
+        "codigo": "901",
+        "descricao": "INSS",
+        "referencia": "14,00%",
+        "tipo": "desconto",
+        "valor": 951.63
+      },
+      {
+        "codigo": "902",
+        "descricao": "IRRF",
+        "referencia": "15,00%",
+        "tipo": "desconto",
+        "valor": 729.41
+      }
+    ]
+  }
+}
