@@ -1,0 +1,89 @@
+{
+  "document_type": "matricula_imovel",
+  "fields": {
+    "numero_matricula": "37.861",
+    "cartorio": "REGISTRO DE IMÓVEIS DA 4ª CIRCUNSCRIÇÃO DE EXEMPLÓPOLIS",
+    "comarca": "EXEMPLÓPOLIS",
+    "data_certidao": "2026-02-18",
+    "inscricao_municipal": "452.547.5288",
+    "tipo_imovel": "APARTAMENTO",
+    "logradouro": "AVENIDA BRASIL",
+    "numero": "1436",
+    "complemento": "APTO 57",
+    "bairro": "CENTRO",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "area_privativa": 41.12,
+    "area_total": 52.61
+  },
+  "lists": {
+    "atos": [
+      {
+        "numero": "R.1",
+        "tipo": "compra_venda",
+        "data": "2008-07-26",
+        "cancela": null,
+        "valor": 230062
+      },
+      {
+        "numero": "R.2",
+        "tipo": "alienacao_fiduciaria",
+        "data": "2008-08-22",
+        "cancela": null,
+        "valor": 520385
+      },
+      {
+        "numero": "Av.3",
+        "tipo": "cancelamento",
+        "data": "2010-09-16",
+        "cancela": "R.2",
+        "valor": null
+      },
+      {
+        "numero": "R.4",
+        "tipo": "compra_venda",
+        "data": "2012-09-12",
+        "cancela": null,
+        "valor": 780717
+      }
+    ],
+    "partes": [
+      {
+        "ato": "R.1",
+        "papel": "transmitente",
+        "nome": "DIEGO RIBEIRO ALMEIDA",
+        "cpf_cnpj": "04712993758"
+      },
+      {
+        "ato": "R.1",
+        "papel": "adquirente",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "27095933278"
+      },
+      {
+        "ato": "R.2",
+        "papel": "devedor",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "27095933278"
+      },
+      {
+        "ato": "R.2",
+        "papel": "credor",
+        "nome": "BANCO FICTICIO DO BRASIL S.A.",
+        "cpf_cnpj": "59201611000140"
+      },
+      {
+        "ato": "R.4",
+        "papel": "transmitente",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "27095933278"
+      },
+      {
+        "ato": "R.4",
+        "papel": "adquirente",
+        "nome": "ANA LIMA SANTOS",
+        "cpf_cnpj": "58211902664"
+      }
+    ]
+  }
+}

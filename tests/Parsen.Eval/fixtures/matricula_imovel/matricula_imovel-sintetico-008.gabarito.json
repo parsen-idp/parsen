@@ -1,0 +1,96 @@
+{
+  "document_type": "matricula_imovel",
+  "fields": {
+    "numero_matricula": "39.504",
+    "cartorio": "REGISTRO DE IMÓVEIS DA 1ª CIRCUNSCRIÇÃO DE EXEMPLÓPOLIS",
+    "comarca": "EXEMPLÓPOLIS",
+    "data_certidao": "2026-06-08",
+    "inscricao_municipal": "796.407.6094",
+    "tipo_imovel": "TERRENO",
+    "logradouro": "ALAMEDA DOS ANJOS",
+    "numero": "1406",
+    "complemento": null,
+    "bairro": "JARDIM EXEMPLO",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "area_privativa": null,
+    "area_total": 322.74
+  },
+  "lists": {
+    "atos": [
+      {
+        "numero": "R.1",
+        "tipo": "compra_venda",
+        "data": "2016-02-15",
+        "cancela": null,
+        "valor": 878477
+      },
+      {
+        "numero": "R.2",
+        "tipo": "alienacao_fiduciaria",
+        "data": "2016-04-08",
+        "cancela": null,
+        "valor": 445072
+      },
+      {
+        "numero": "Av.3",
+        "tipo": "cancelamento",
+        "data": "2019-07-06",
+        "cancela": "R.2",
+        "valor": null
+      },
+      {
+        "numero": "Av.4",
+        "tipo": "construcao",
+        "data": "2020-07-22",
+        "cancela": null,
+        "valor": null
+      },
+      {
+        "numero": "R.5",
+        "tipo": "penhora",
+        "data": "2021-06-10",
+        "cancela": null,
+        "valor": 17618
+      }
+    ],
+    "partes": [
+      {
+        "ato": "R.1",
+        "papel": "transmitente",
+        "nome": "CARLA MARTINS VIEIRA",
+        "cpf_cnpj": "05560661546"
+      },
+      {
+        "ato": "R.1",
+        "papel": "adquirente",
+        "nome": "FABIO TEIXEIRA LIMA",
+        "cpf_cnpj": "22124696084"
+      },
+      {
+        "ato": "R.2",
+        "papel": "devedor",
+        "nome": "FABIO TEIXEIRA LIMA",
+        "cpf_cnpj": "22124696084"
+      },
+      {
+        "ato": "R.2",
+        "papel": "credor",
+        "nome": "BANCO EXEMPLO S.A.",
+        "cpf_cnpj": "06216008000176"
+      },
+      {
+        "ato": "R.5",
+        "papel": "credor",
+        "nome": "CONDOMÍNIO EDIFÍCIO MODELO",
+        "cpf_cnpj": null
+      },
+      {
+        "ato": "R.5",
+        "papel": "devedor",
+        "nome": "FABIO TEIXEIRA LIMA",
+        "cpf_cnpj": "22124696084"
+      }
+    ]
+  }
+}

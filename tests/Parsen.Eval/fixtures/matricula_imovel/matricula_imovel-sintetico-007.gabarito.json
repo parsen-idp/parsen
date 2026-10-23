@@ -1,0 +1,89 @@
+{
+  "document_type": "matricula_imovel",
+  "fields": {
+    "numero_matricula": "133.898",
+    "cartorio": "REGISTRO DE IMÓVEIS DA 2ª CIRCUNSCRIÇÃO DE EXEMPLÓPOLIS",
+    "comarca": "EXEMPLÓPOLIS",
+    "data_certidao": "2026-03-25",
+    "inscricao_municipal": "731.174.9269",
+    "tipo_imovel": "APARTAMENTO",
+    "logradouro": "RUA DAS FLORES",
+    "numero": "863",
+    "complemento": "APTO 83",
+    "bairro": "JARDIM EXEMPLO",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "area_privativa": 41.76,
+    "area_total": 62.63
+  },
+  "lists": {
+    "atos": [
+      {
+        "numero": "R.1",
+        "tipo": "compra_venda",
+        "data": "2009-08-13",
+        "cancela": null,
+        "valor": 467250
+      },
+      {
+        "numero": "R.2",
+        "tipo": "alienacao_fiduciaria",
+        "data": "2009-08-20",
+        "cancela": null,
+        "valor": 134667
+      },
+      {
+        "numero": "Av.3",
+        "tipo": "cancelamento",
+        "data": "2012-08-22",
+        "cancela": "R.2",
+        "valor": null
+      },
+      {
+        "numero": "R.4",
+        "tipo": "compra_venda",
+        "data": "2014-08-11",
+        "cancela": null,
+        "valor": 236418
+      }
+    ],
+    "partes": [
+      {
+        "ato": "R.1",
+        "papel": "transmitente",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "41616666757"
+      },
+      {
+        "ato": "R.1",
+        "papel": "adquirente",
+        "nome": "GABRIELA FERREIRA DIAS",
+        "cpf_cnpj": "66843810900"
+      },
+      {
+        "ato": "R.2",
+        "papel": "devedor",
+        "nome": "GABRIELA FERREIRA DIAS",
+        "cpf_cnpj": "66843810900"
+      },
+      {
+        "ato": "R.2",
+        "papel": "credor",
+        "nome": "BANCO EXEMPLO S.A.",
+        "cpf_cnpj": "43025390000167"
+      },
+      {
+        "ato": "R.4",
+        "papel": "transmitente",
+        "nome": "GABRIELA FERREIRA DIAS",
+        "cpf_cnpj": "66843810900"
+      },
+      {
+        "ato": "R.4",
+        "papel": "adquirente",
+        "nome": "ANA LIMA SANTOS",
+        "cpf_cnpj": "95595755032"
+      }
+    ]
+  }
+}

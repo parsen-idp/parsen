@@ -1,0 +1,82 @@
+{
+  "document_type": "matricula_imovel",
+  "fields": {
+    "numero_matricula": "194.380",
+    "cartorio": "REGISTRO DE IMÓVEIS DA 3ª CIRCUNSCRIÇÃO DE EXEMPLÓPOLIS",
+    "comarca": "EXEMPLÓPOLIS",
+    "data_certidao": "2026-04-01",
+    "inscricao_municipal": "594.152.6455",
+    "tipo_imovel": "APARTAMENTO",
+    "logradouro": "ALAMEDA DOS ANJOS",
+    "numero": "1393",
+    "complemento": "APTO 172",
+    "bairro": "VILA NOVA",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "area_privativa": 73.47,
+    "area_total": 110.87
+  },
+  "lists": {
+    "atos": [
+      {
+        "numero": "R.1",
+        "tipo": "compra_venda",
+        "data": "2013-02-25",
+        "cancela": null,
+        "valor": 666393
+      },
+      {
+        "numero": "R.2",
+        "tipo": "alienacao_fiduciaria",
+        "data": "2013-04-14",
+        "cancela": null,
+        "valor": 225561
+      },
+      {
+        "numero": "R.3",
+        "tipo": "penhora",
+        "data": "2013-10-03",
+        "cancela": null,
+        "valor": 19057
+      }
+    ],
+    "partes": [
+      {
+        "ato": "R.1",
+        "papel": "transmitente",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "14236320282"
+      },
+      {
+        "ato": "R.1",
+        "papel": "adquirente",
+        "nome": "GABRIELA FERREIRA DIAS",
+        "cpf_cnpj": "01681026171"
+      },
+      {
+        "ato": "R.2",
+        "papel": "devedor",
+        "nome": "GABRIELA FERREIRA DIAS",
+        "cpf_cnpj": "01681026171"
+      },
+      {
+        "ato": "R.2",
+        "papel": "credor",
+        "nome": "BANCO FICTICIO DO BRASIL S.A.",
+        "cpf_cnpj": "13603699000126"
+      },
+      {
+        "ato": "R.3",
+        "papel": "credor",
+        "nome": "CONDOMÍNIO EDIFÍCIO MODELO",
+        "cpf_cnpj": null
+      },
+      {
+        "ato": "R.3",
+        "papel": "devedor",
+        "nome": "GABRIELA FERREIRA DIAS",
+        "cpf_cnpj": "01681026171"
+      }
+    ]
+  }
+}

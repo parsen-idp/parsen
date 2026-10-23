@@ -1,0 +1,70 @@
+{
+  "document_type": "matricula_imovel",
+  "fields": {
+    "numero_matricula": "19.594",
+    "cartorio": "REGISTRO DE IMÓVEIS DA 2ª CIRCUNSCRIÇÃO DE EXEMPLÓPOLIS",
+    "comarca": "EXEMPLÓPOLIS",
+    "data_certidao": "2026-03-15",
+    "inscricao_municipal": "834.648.1763",
+    "tipo_imovel": "TERRENO",
+    "logradouro": "RUA DAS FLORES",
+    "numero": "666",
+    "complemento": null,
+    "bairro": "JARDIM EXEMPLO",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "area_privativa": null,
+    "area_total": 532.81
+  },
+  "lists": {
+    "atos": [
+      {
+        "numero": "R.1",
+        "tipo": "compra_venda",
+        "data": "2015-04-16",
+        "cancela": null,
+        "valor": 456549
+      },
+      {
+        "numero": "Av.2",
+        "tipo": "construcao",
+        "data": "2015-10-17",
+        "cancela": null,
+        "valor": null
+      },
+      {
+        "numero": "R.3",
+        "tipo": "compra_venda",
+        "data": "2017-11-03",
+        "cancela": null,
+        "valor": 846140
+      }
+    ],
+    "partes": [
+      {
+        "ato": "R.1",
+        "papel": "transmitente",
+        "nome": "FABIO TEIXEIRA LIMA",
+        "cpf_cnpj": "18967697562"
+      },
+      {
+        "ato": "R.1",
+        "papel": "adquirente",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "24209318663"
+      },
+      {
+        "ato": "R.3",
+        "papel": "transmitente",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "24209318663"
+      },
+      {
+        "ato": "R.3",
+        "papel": "adquirente",
+        "nome": "ANA LIMA SANTOS",
+        "cpf_cnpj": "55417156108"
+      }
+    ]
+  }
+}

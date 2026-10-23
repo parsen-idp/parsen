@@ -1,0 +1,89 @@
+{
+  "document_type": "matricula_imovel",
+  "fields": {
+    "numero_matricula": "171.244",
+    "cartorio": "REGISTRO DE IMÓVEIS DA 7ª CIRCUNSCRIÇÃO DE EXEMPLÓPOLIS",
+    "comarca": "EXEMPLÓPOLIS",
+    "data_certidao": "2026-07-16",
+    "inscricao_municipal": "468.829.5080",
+    "tipo_imovel": "TERRENO",
+    "logradouro": "RUA SETE DE SETEMBRO",
+    "numero": "1633",
+    "complemento": null,
+    "bairro": "VILA NOVA",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "area_privativa": null,
+    "area_total": 594.98
+  },
+  "lists": {
+    "atos": [
+      {
+        "numero": "R.1",
+        "tipo": "compra_venda",
+        "data": "2008-06-30",
+        "cancela": null,
+        "valor": 757305
+      },
+      {
+        "numero": "R.2",
+        "tipo": "alienacao_fiduciaria",
+        "data": "2008-07-11",
+        "cancela": null,
+        "valor": 108014
+      },
+      {
+        "numero": "Av.3",
+        "tipo": "construcao",
+        "data": "2008-11-08",
+        "cancela": null,
+        "valor": null
+      },
+      {
+        "numero": "R.4",
+        "tipo": "compra_venda",
+        "data": "2011-01-13",
+        "cancela": null,
+        "valor": 646284
+      }
+    ],
+    "partes": [
+      {
+        "ato": "R.1",
+        "papel": "transmitente",
+        "nome": "DIEGO RIBEIRO ALMEIDA",
+        "cpf_cnpj": "87346351495"
+      },
+      {
+        "ato": "R.1",
+        "papel": "adquirente",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "18184901372"
+      },
+      {
+        "ato": "R.2",
+        "papel": "devedor",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "18184901372"
+      },
+      {
+        "ato": "R.2",
+        "papel": "credor",
+        "nome": "BANCO EXEMPLO S.A.",
+        "cpf_cnpj": "61610913000114"
+      },
+      {
+        "ato": "R.4",
+        "papel": "transmitente",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "18184901372"
+      },
+      {
+        "ato": "R.4",
+        "papel": "adquirente",
+        "nome": "ANA LIMA SANTOS",
+        "cpf_cnpj": "61147293155"
+      }
+    ]
+  }
+}

@@ -73,10 +73,17 @@ public static class ClassificationComparer
 public static class Comparer
 {
     /// <summary>
-    /// Atributos que identificam uma linha de lista, quando o gabarito os tem: tipo (rubrica do holerite), data (crédito
-    /// do extrato) e valor. A descrição fica de fora: varia muito entre layouts.
+    /// Atributos que identificam uma linha de cada lista. Descrições ficam de fora: variam muito entre layouts.
     /// </summary>
-    private static readonly string[] ItemKey = ["tipo", "data", "valor"];
+    private static readonly Dictionary<string, string[]> ItemKeys = new(StringComparer.Ordinal)
+    {
+        ["itens"] = ["tipo", "valor"],
+        ["creditos"] = ["data", "valor"],
+        ["atos"] = ["numero", "tipo", "cancela"],
+        ["partes"] = ["ato", "papel", "nome", "cpf_cnpj"],
+    };
+
+    private static readonly string[] DefaultItemKey = ["tipo", "data", "valor"];
 
     public static CaseScore Compare(Gabarito expected, ExtractionResult actual)
     {
@@ -123,7 +130,8 @@ public static class Comparer
         var matched = 0;
         foreach (var item in expected)
         {
-            var match = available.FirstOrDefault(a => ItemKey.Where(item.ContainsKey).All(key => SameAttribute(item.GetValueOrDefault(key), a.Attributes.GetValueOrDefault(key))));
+            var keys = ItemKeys.GetValueOrDefault(name, DefaultItemKey).Where(item.ContainsKey).ToList();
+            var match = available.FirstOrDefault(a => keys.All(key => SameAttribute(item.GetValueOrDefault(key), a.Attributes.GetValueOrDefault(key))));
             if (match is not null)
             {
                 available.Remove(match);

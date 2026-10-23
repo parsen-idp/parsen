@@ -1,0 +1,82 @@
+{
+  "document_type": "matricula_imovel",
+  "fields": {
+    "numero_matricula": "167.684",
+    "cartorio": "REGISTRO DE IMÓVEIS DA 2ª CIRCUNSCRIÇÃO DE EXEMPLÓPOLIS",
+    "comarca": "EXEMPLÓPOLIS",
+    "data_certidao": "2026-09-21",
+    "inscricao_municipal": "930.199.5425",
+    "tipo_imovel": "TERRENO",
+    "logradouro": "AVENIDA BRASIL",
+    "numero": "941",
+    "complemento": null,
+    "bairro": "VILA NOVA",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "area_privativa": null,
+    "area_total": 341.93
+  },
+  "lists": {
+    "atos": [
+      {
+        "numero": "R.1",
+        "tipo": "compra_venda",
+        "data": "2005-06-07",
+        "cancela": null,
+        "valor": 420365
+      },
+      {
+        "numero": "R.2",
+        "tipo": "alienacao_fiduciaria",
+        "data": "2005-07-12",
+        "cancela": null,
+        "valor": 482556
+      },
+      {
+        "numero": "Av.3",
+        "tipo": "construcao",
+        "data": "2006-01-18",
+        "cancela": null,
+        "valor": null
+      }
+    ],
+    "partes": [
+      {
+        "ato": "R.1",
+        "papel": "transmitente",
+        "nome": "BRUNO DIAS GOMES",
+        "cpf_cnpj": "68736835749"
+      },
+      {
+        "ato": "R.1",
+        "papel": "adquirente",
+        "nome": "DIEGO RIBEIRO ALMEIDA",
+        "cpf_cnpj": "79321387790"
+      },
+      {
+        "ato": "R.1",
+        "papel": "adquirente",
+        "nome": "FABIO TEIXEIRA LIMA",
+        "cpf_cnpj": "88734497943"
+      },
+      {
+        "ato": "R.2",
+        "papel": "devedor",
+        "nome": "DIEGO RIBEIRO ALMEIDA",
+        "cpf_cnpj": "79321387790"
+      },
+      {
+        "ato": "R.2",
+        "papel": "devedor",
+        "nome": "FABIO TEIXEIRA LIMA",
+        "cpf_cnpj": "88734497943"
+      },
+      {
+        "ato": "R.2",
+        "papel": "credor",
+        "nome": "BANCO FICTICIO DO BRASIL S.A.",
+        "cpf_cnpj": "36691719000163"
+      }
+    ]
+  }
+}

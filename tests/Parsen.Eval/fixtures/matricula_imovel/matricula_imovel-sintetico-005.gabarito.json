@@ -1,0 +1,70 @@
+{
+  "document_type": "matricula_imovel",
+  "fields": {
+    "numero_matricula": "199.474",
+    "cartorio": "REGISTRO DE IMÓVEIS DA 7ª CIRCUNSCRIÇÃO DE EXEMPLÓPOLIS",
+    "comarca": "EXEMPLÓPOLIS",
+    "data_certidao": "2026-08-16",
+    "inscricao_municipal": "566.928.9698",
+    "tipo_imovel": "APARTAMENTO",
+    "logradouro": "ALAMEDA DOS ANJOS",
+    "numero": "1211",
+    "complemento": "APTO 46",
+    "bairro": "JARDIM EXEMPLO",
+    "cidade": "EXEMPLÓPOLIS",
+    "uf": "SP",
+    "area_privativa": 84.36,
+    "area_total": 95.70
+  },
+  "lists": {
+    "atos": [
+      {
+        "numero": "R.1",
+        "tipo": "compra_venda",
+        "data": "2009-08-07",
+        "cancela": null,
+        "valor": 385923
+      },
+      {
+        "numero": "R.2",
+        "tipo": "alienacao_fiduciaria",
+        "data": "2009-09-07",
+        "cancela": null,
+        "valor": 103606
+      },
+      {
+        "numero": "Av.3",
+        "tipo": "cancelamento",
+        "data": "2012-10-25",
+        "cancela": "R.2",
+        "valor": null
+      }
+    ],
+    "partes": [
+      {
+        "ato": "R.1",
+        "papel": "transmitente",
+        "nome": "ANA LIMA SANTOS",
+        "cpf_cnpj": "64470593141"
+      },
+      {
+        "ato": "R.1",
+        "papel": "adquirente",
+        "nome": "FABIO TEIXEIRA LIMA",
+        "cpf_cnpj": "12263560874"
+      },
+      {
+        "ato": "R.2",
+        "papel": "devedor",
+        "nome": "FABIO TEIXEIRA LIMA",
+        "cpf_cnpj": "12263560874"
+      },
+      {
+        "ato": "R.2",
+        "papel": "credor",
+        "nome": "BANCO EXEMPLO S.A.",
+        "cpf_cnpj": "67409114000160"
+      }
+    ]
+  }
+}
