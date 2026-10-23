@@ -1,0 +1,69 @@
+{
+  "document_type": "extrato_bancario",
+  "fields": {
+    "instituicao": "BANCO EXEMPLO S.A.",
+    "cnpj_instituicao": "59774249000105",
+    "titular": "ELISA NOGUEIRA PEREIRA",
+    "cpf_titular": null,
+    "agencia": "6536",
+    "conta": "34613-0",
+    "periodo_inicio": "2026-11-01",
+    "periodo_fim": "2026-11-30",
+    "saldo_inicial": 1.18,
+    "saldo_final": 12174.37
+  },
+  "lists": {
+    "creditos": [
+      {
+        "data": "2026-11-03",
+        "descricao": "RESGATE CDB",
+        "valor": 48.48
+      },
+      {
+        "data": "2026-11-06",
+        "descricao": "RESGATE CDB",
+        "valor": 1885.37
+      },
+      {
+        "data": "2026-11-13",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 1572.59
+      },
+      {
+        "data": "2026-11-13",
+        "descricao": "TED RECEBIDA COMERCIAL ALFA LTDA",
+        "valor": 1823.07
+      },
+      {
+        "data": "2026-11-13",
+        "descricao": "SALARIO COMERCIAL ALFA LTDA",
+        "valor": 1085.9
+      },
+      {
+        "data": "2026-11-13",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 3370.22
+      },
+      {
+        "data": "2026-11-13",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 3015.26
+      },
+      {
+        "data": "2026-11-15",
+        "descricao": "RESGATE CDB",
+        "valor": 1318.49
+      },
+      {
+        "data": "2026-11-15",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 1943.18
+      },
+      {
+        "data": "2026-11-20",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 3016.67
+      }
+    ]
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "document_type": "extrato_bancario",
+  "fields": {
+    "instituicao": "BANCO EXEMPLO S.A.",
+    "cnpj_instituicao": "39715743000183",
+    "titular": "CARLA MARTINS VIEIRA",
+    "cpf_titular": null,
+    "agencia": "0748",
+    "conta": "95244-2",
+    "periodo_inicio": "2026-10-01",
+    "periodo_fim": "2026-10-31",
+    "saldo_inicial": 620.44,
+    "saldo_final": 20187.26
+  },
+  "lists": {
+    "creditos": [
+      {
+        "data": "2026-10-04",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 157.75
+      },
+      {
+        "data": "2026-10-05",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 2503.69
+      },
+      {
+        "data": "2026-10-05",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 2503.69
+      },
+      {
+        "data": "2026-10-05",
+        "descricao": "RESGATE CDB",
+        "valor": 1327.83
+      },
+      {
+        "data": "2026-10-14",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 1184.04
+      },
+      {
+        "data": "2026-10-14",
+        "descricao": "SALARIO GAMA CONSULTORIA",
+        "valor": 2584.17
+      },
+      {
+        "data": "2026-10-17",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 803.74
+      },
+      {
+        "data": "2026-10-20",
+        "descricao": "TED RECEBIDA GAMA CONSULTORIA",
+        "valor": 566.2
+      },
+      {
+        "data": "2026-10-20",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 1300.36
+      },
+      {
+        "data": "2026-10-20",
+        "descricao": "RESGATE CDB",
+        "valor": 2420.67
+      },
+      {
+        "data": "2026-10-21",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 1976.19
+      },
+      {
+        "data": "2026-10-29",
+        "descricao": "TED RECEBIDA COMERCIAL ALFA LTDA",
+        "valor": 3162.65
+      },
+      {
+        "data": "2026-10-31",
+        "descricao": "RESGATE CDB",
+        "valor": 2457.32
+      },
+      {
+        "data": "2026-10-31",
+        "descricao": "SALARIO COMERCIAL ALFA LTDA",
+        "valor": 3299.27
+      },
+      {
+        "data": "2026-10-31",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 2496.21
+      },
+      {
+        "data": "2026-10-31",
+        "descricao": "PIX RECEBIDO BRUNO DIAS GOMES",
+        "valor": 470.99
+      }
+    ]
+  }
+}

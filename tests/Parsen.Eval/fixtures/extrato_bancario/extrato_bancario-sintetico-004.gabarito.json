@@ -1,0 +1,94 @@
+{
+  "document_type": "extrato_bancario",
+  "fields": {
+    "instituicao": "BANCO FICTICIO DO BRASIL S.A.",
+    "cnpj_instituicao": "46098269000153",
+    "titular": "ANA LIMA SANTOS",
+    "cpf_titular": null,
+    "agencia": "3316",
+    "conta": "69901-4",
+    "periodo_inicio": "2026-04-01",
+    "periodo_fim": "2026-04-30",
+    "saldo_inicial": 1419.52,
+    "saldo_final": 21413.83
+  },
+  "lists": {
+    "creditos": [
+      {
+        "data": "2026-04-01",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 758.21
+      },
+      {
+        "data": "2026-04-04",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 34.63
+      },
+      {
+        "data": "2026-04-08",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 1570.15
+      },
+      {
+        "data": "2026-04-08",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 939.99
+      },
+      {
+        "data": "2026-04-10",
+        "descricao": "RESGATE CDB",
+        "valor": 2755.6
+      },
+      {
+        "data": "2026-04-10",
+        "descricao": "RESGATE CDB",
+        "valor": 1159.56
+      },
+      {
+        "data": "2026-04-10",
+        "descricao": "PIX RECEBIDO CARLA MARTINS VIEIRA",
+        "valor": 3373.29
+      },
+      {
+        "data": "2026-04-11",
+        "descricao": "PIX RECEBIDO DIEGO RIBEIRO ALMEIDA",
+        "valor": 1916.44
+      },
+      {
+        "data": "2026-04-11",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 1065.34
+      },
+      {
+        "data": "2026-04-12",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 2619.04
+      },
+      {
+        "data": "2026-04-15",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 3154.53
+      },
+      {
+        "data": "2026-04-17",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 3023.88
+      },
+      {
+        "data": "2026-04-21",
+        "descricao": "SALARIO GAMA CONSULTORIA",
+        "valor": 710.19
+      },
+      {
+        "data": "2026-04-21",
+        "descricao": "TED RECEBIDA COMERCIAL ALFA LTDA",
+        "valor": 2088.04
+      },
+      {
+        "data": "2026-04-24",
+        "descricao": "RESGATE CDB",
+        "valor": 849.7
+      }
+    ]
+  }
+}

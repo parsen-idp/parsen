@@ -1,0 +1,29 @@
+{
+  "document_type": "extrato_bancario",
+  "fields": {
+    "instituicao": "BANCO FICTICIO DO BRASIL S.A.",
+    "cnpj_instituicao": "99253205000146",
+    "titular": "ANA LIMA SANTOS",
+    "cpf_titular": null,
+    "agencia": "6812",
+    "conta": "28482-6",
+    "periodo_inicio": "2026-07-01",
+    "periodo_fim": "2026-07-31",
+    "saldo_inicial": -177.04,
+    "saldo_final": -1580.89
+  },
+  "lists": {
+    "creditos": [
+      {
+        "data": "2026-07-02",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 2120.32
+      },
+      {
+        "data": "2026-07-07",
+        "descricao": "PIX RECEBIDO BRUNO DIAS GOMES",
+        "valor": 1154.78
+      }
+    ]
+  }
+}

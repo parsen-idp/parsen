@@ -1,0 +1,99 @@
+{
+  "document_type": "extrato_bancario",
+  "fields": {
+    "instituicao": "BANCO FICTICIO DO BRASIL S.A.",
+    "cnpj_instituicao": "11127023000188",
+    "titular": "BRUNO DIAS GOMES",
+    "cpf_titular": null,
+    "agencia": "5628",
+    "conta": "64034-7",
+    "periodo_inicio": "2026-03-01",
+    "periodo_fim": "2026-03-31",
+    "saldo_inicial": 2304.32,
+    "saldo_final": 29269.29
+  },
+  "lists": {
+    "creditos": [
+      {
+        "data": "2026-03-01",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 988.4
+      },
+      {
+        "data": "2026-03-01",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 988.4
+      },
+      {
+        "data": "2026-03-01",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 1116.52
+      },
+      {
+        "data": "2026-03-07",
+        "descricao": "PIX RECEBIDO ANA LIMA SANTOS",
+        "valor": 2345.91
+      },
+      {
+        "data": "2026-03-07",
+        "descricao": "SALARIO BETA SERVICOS LTDA",
+        "valor": 3288.69
+      },
+      {
+        "data": "2026-03-07",
+        "descricao": "RESGATE CDB",
+        "valor": 906.67
+      },
+      {
+        "data": "2026-03-09",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 2768.7
+      },
+      {
+        "data": "2026-03-12",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 1537.31
+      },
+      {
+        "data": "2026-03-15",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 2748.03
+      },
+      {
+        "data": "2026-03-16",
+        "descricao": "RESGATE CDB",
+        "valor": 1447.36
+      },
+      {
+        "data": "2026-03-16",
+        "descricao": "TED RECEBIDA GAMA CONSULTORIA",
+        "valor": 3176.11
+      },
+      {
+        "data": "2026-03-16",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 1216.36
+      },
+      {
+        "data": "2026-03-17",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 1938.74
+      },
+      {
+        "data": "2026-03-17",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 183.06
+      },
+      {
+        "data": "2026-03-17",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 2500.95
+      },
+      {
+        "data": "2026-03-17",
+        "descricao": "TED RECEBIDA COMERCIAL ALFA LTDA",
+        "valor": 1474.91
+      }
+    ]
+  }
+}

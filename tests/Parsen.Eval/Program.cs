@@ -8,7 +8,7 @@ using Parsen.Infrastructure.Ocr;
 using Parsen.Schemas;
 
 // Uso:
-//   dotnet run --project tests/Parsen.Eval -- generate [--kind holerite|comprovante_residencia|classificacao] [--count 10] [--seed 42] [--out <pasta>]
+//   dotnet run --project tests/Parsen.Eval -- generate [--kind holerite|comprovante_residencia|extrato_bancario|classificacao] [--count 10] [--seed 42] [--out <pasta>]
 //   dotnet run --project tests/Parsen.Eval -- run [--dataset <pasta>]... [--only <prefixo>] [--repeat N] [--classificacao vN] [--model <id>] [--report <arquivo.md>] [--yes]
 //
 // "run" sem --yes só lista os casos e o custo estimado: chamar o modelo tem custo real (CLAUDE.md).
@@ -43,8 +43,9 @@ static int Generate(Options options)
     {
         "holerite" => new HoleriteGenerator(seed).Generate,
         "comprovante_residencia" => new ComprovanteGenerator(seed).Generate,
+        "extrato_bancario" => new ExtratoGenerator(seed).Generate,
         "classificacao" => new BundleGenerator(seed).Generate,
-        _ => throw new ArgumentException($"Tipo de fixture desconhecido: {kind} (use holerite, comprovante_residencia ou classificacao)."),
+        _ => throw new ArgumentException($"Tipo de fixture desconhecido: {kind} (use holerite, comprovante_residencia, extrato_bancario ou classificacao)."),
     };
 
     for (var i = 1; i <= count; i++)

@@ -1,0 +1,44 @@
+{
+  "document_type": "extrato_bancario",
+  "fields": {
+    "instituicao": "INSTITUICAO DE PAGAMENTO TESTE S.A.",
+    "cnpj_instituicao": "94126798000166",
+    "titular": "DIEGO RIBEIRO ALMEIDA",
+    "cpf_titular": null,
+    "agencia": "1695",
+    "conta": "63825-3",
+    "periodo_inicio": "2026-12-01",
+    "periodo_fim": "2026-12-31",
+    "saldo_inicial": 4270.44,
+    "saldo_final": 3483.58
+  },
+  "lists": {
+    "creditos": [
+      {
+        "data": "2026-12-02",
+        "descricao": "PIX RECEBIDO DIEGO RIBEIRO ALMEIDA",
+        "valor": 1118.38
+      },
+      {
+        "data": "2026-12-02",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 460.01
+      },
+      {
+        "data": "2026-12-07",
+        "descricao": "SALARIO BETA SERVICOS LTDA",
+        "valor": 3202.28
+      },
+      {
+        "data": "2026-12-15",
+        "descricao": "SALARIO COMERCIAL ALFA LTDA",
+        "valor": 531.48
+      },
+      {
+        "data": "2026-12-15",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 541.76
+      }
+    ]
+  }
+}

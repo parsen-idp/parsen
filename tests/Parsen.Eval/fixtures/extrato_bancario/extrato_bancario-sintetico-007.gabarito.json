@@ -1,0 +1,119 @@
+{
+  "document_type": "extrato_bancario",
+  "fields": {
+    "instituicao": "INSTITUICAO DE PAGAMENTO TESTE S.A.",
+    "cnpj_instituicao": "11653354000151",
+    "titular": "ELISA NOGUEIRA PEREIRA",
+    "cpf_titular": null,
+    "agencia": "6839",
+    "conta": "02741-4",
+    "periodo_inicio": "2026-12-01",
+    "periodo_fim": "2026-12-31",
+    "saldo_inicial": 1436.18,
+    "saldo_final": 29277.31
+  },
+  "lists": {
+    "creditos": [
+      {
+        "data": "2026-12-01",
+        "descricao": "RESGATE CDB",
+        "valor": 688.79
+      },
+      {
+        "data": "2026-12-03",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 740.08
+      },
+      {
+        "data": "2026-12-03",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 3073.84
+      },
+      {
+        "data": "2026-12-03",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 1682.51
+      },
+      {
+        "data": "2026-12-03",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 1810.37
+      },
+      {
+        "data": "2026-12-03",
+        "descricao": "SALARIO BETA SERVICOS LTDA",
+        "valor": 2053.18
+      },
+      {
+        "data": "2026-12-03",
+        "descricao": "SALARIO BETA SERVICOS LTDA",
+        "valor": 2053.18
+      },
+      {
+        "data": "2026-12-03",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 1139.26
+      },
+      {
+        "data": "2026-12-03",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 124.61
+      },
+      {
+        "data": "2026-12-03",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 1789.45
+      },
+      {
+        "data": "2026-12-06",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 1109.48
+      },
+      {
+        "data": "2026-12-06",
+        "descricao": "SALARIO BETA SERVICOS LTDA",
+        "valor": 2153.62
+      },
+      {
+        "data": "2026-12-07",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 2859.12
+      },
+      {
+        "data": "2026-12-07",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 2338.42
+      },
+      {
+        "data": "2026-12-10",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 2053.62
+      },
+      {
+        "data": "2026-12-10",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 2053.62
+      },
+      {
+        "data": "2026-12-10",
+        "descricao": "SALARIO COMERCIAL ALFA LTDA",
+        "valor": 2725.28
+      },
+      {
+        "data": "2026-12-13",
+        "descricao": "SALARIO BETA SERVICOS LTDA",
+        "valor": 880.25
+      },
+      {
+        "data": "2026-12-13",
+        "descricao": "SALARIO BETA SERVICOS LTDA",
+        "valor": 880.25
+      },
+      {
+        "data": "2026-12-13",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 92.96
+      }
+    ]
+  }
+}

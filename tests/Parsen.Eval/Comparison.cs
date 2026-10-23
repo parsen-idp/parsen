@@ -72,8 +72,11 @@ public static class ClassificationComparer
 /// <summary>Compara uma extração com o gabarito: números como decimal exato; textos sem diferenciar maiúsculas e espaços.</summary>
 public static class Comparer
 {
-    /// <summary>Atributos que identificam uma linha de lista: o tipo e o valor (a descrição varia muito entre layouts).</summary>
-    private static readonly string[] ItemKey = ["tipo", "valor"];
+    /// <summary>
+    /// Atributos que identificam uma linha de lista, quando o gabarito os tem: tipo (rubrica do holerite), data (crédito
+    /// do extrato) e valor. A descrição fica de fora: varia muito entre layouts.
+    /// </summary>
+    private static readonly string[] ItemKey = ["tipo", "data", "valor"];
 
     public static CaseScore Compare(Gabarito expected, ExtractionResult actual)
     {
@@ -120,7 +123,7 @@ public static class Comparer
         var matched = 0;
         foreach (var item in expected)
         {
-            var match = available.FirstOrDefault(a => ItemKey.All(key => SameAttribute(item.GetValueOrDefault(key), a.Attributes.GetValueOrDefault(key))));
+            var match = available.FirstOrDefault(a => ItemKey.Where(item.ContainsKey).All(key => SameAttribute(item.GetValueOrDefault(key), a.Attributes.GetValueOrDefault(key))));
             if (match is not null)
             {
                 available.Remove(match);

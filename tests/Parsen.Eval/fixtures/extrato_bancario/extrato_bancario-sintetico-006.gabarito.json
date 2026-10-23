@@ -1,0 +1,119 @@
+{
+  "document_type": "extrato_bancario",
+  "fields": {
+    "instituicao": "INSTITUICAO DE PAGAMENTO TESTE S.A.",
+    "cnpj_instituicao": "97716849000106",
+    "titular": "BRUNO DIAS GOMES",
+    "cpf_titular": null,
+    "agencia": "3696",
+    "conta": "33527-0",
+    "periodo_inicio": "2026-07-01",
+    "periodo_fim": "2026-07-31",
+    "saldo_inicial": 4645.55,
+    "saldo_final": 34591.59
+  },
+  "lists": {
+    "creditos": [
+      {
+        "data": "2026-07-01",
+        "descricao": "RESGATE CDB",
+        "valor": 374.12
+      },
+      {
+        "data": "2026-07-05",
+        "descricao": "RESGATE CDB",
+        "valor": 858.65
+      },
+      {
+        "data": "2026-07-05",
+        "descricao": "RESGATE CDB",
+        "valor": 3269.96
+      },
+      {
+        "data": "2026-07-05",
+        "descricao": "RESGATE CDB",
+        "valor": 3269.96
+      },
+      {
+        "data": "2026-07-08",
+        "descricao": "PIX RECEBIDO CARLA MARTINS VIEIRA",
+        "valor": 2283.81
+      },
+      {
+        "data": "2026-07-08",
+        "descricao": "PIX RECEBIDO CARLA MARTINS VIEIRA",
+        "valor": 2283.81
+      },
+      {
+        "data": "2026-07-09",
+        "descricao": "RESGATE CDB",
+        "valor": 81.17
+      },
+      {
+        "data": "2026-07-11",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 2972.12
+      },
+      {
+        "data": "2026-07-11",
+        "descricao": "TED RECEBIDA BETA SERVICOS LTDA",
+        "valor": 2082.91
+      },
+      {
+        "data": "2026-07-12",
+        "descricao": "RENDIMENTO POUPANCA",
+        "valor": 3159.94
+      },
+      {
+        "data": "2026-07-18",
+        "descricao": "TED RECEBIDA COMERCIAL ALFA LTDA",
+        "valor": 3200.22
+      },
+      {
+        "data": "2026-07-18",
+        "descricao": "RESGATE CDB",
+        "valor": 1832.96
+      },
+      {
+        "data": "2026-07-20",
+        "descricao": "PIX RECEBIDO BRUNO DIAS GOMES",
+        "valor": 2044.04
+      },
+      {
+        "data": "2026-07-22",
+        "descricao": "TED RECEBIDA GAMA CONSULTORIA",
+        "valor": 2255.51
+      },
+      {
+        "data": "2026-07-25",
+        "descricao": "TED RECEBIDA GAMA CONSULTORIA",
+        "valor": 556.91
+      },
+      {
+        "data": "2026-07-25",
+        "descricao": "SALARIO BETA SERVICOS LTDA",
+        "valor": 2549.41
+      },
+      {
+        "data": "2026-07-27",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 1331.97
+      },
+      {
+        "data": "2026-07-31",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 928.53
+      },
+      {
+        "data": "2026-07-31",
+        "descricao": "DEPOSITO EM DINHEIRO",
+        "valor": 928.53
+      },
+      {
+        "data": "2026-07-31",
+        "descricao": "ESTORNO COMPRA",
+        "valor": 2333.76
+      }
+    ]
+  }
+}
