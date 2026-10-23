@@ -11,7 +11,7 @@ public class MatriculaImovelSchemaTests
     [Fact]
     public void Loads_current_version_reads_every_page_and_allows_long_answers()
     {
-        Assert.Equal("matricula_imovel.v2", Matricula.Id);
+        Assert.Equal("matricula_imovel.v3", Matricula.Id);
         Assert.Equal(Matricula.Id, (string?)Schema["title"]);
         Assert.Contains("`registrar_matricula_imovel`", Matricula.SystemPrompt, StringComparison.Ordinal);
         Assert.Null(Matricula.MaxPages);
@@ -66,5 +66,17 @@ public class MatriculaImovelSchemaTests
         Assert.Matches(pattern, "Av.12");
         Assert.DoesNotMatch(pattern, "R.1/45.678");
         Assert.DoesNotMatch(pattern, "AV-3");
+        Assert.DoesNotMatch(pattern, "R-1");
+    }
+
+    // v3 (regra provisória, a validar no piloto): só os registros têm partes; averbações, nem as de cancelamento
+    [Fact]
+    public void Party_belongs_only_to_a_register()
+    {
+        var pattern = (string)Schema["$defs"]!["parte"]!["properties"]!["ato"]!["pattern"]!;
+
+        Assert.Matches(pattern, "R.10");
+        Assert.DoesNotMatch(pattern, "Av.3");
+        Assert.Contains("Averbações (Av.n) não têm partes", Matricula.SystemPrompt, StringComparison.Ordinal);
     }
 }

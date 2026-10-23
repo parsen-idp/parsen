@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parsen.com.br/schemas/matricula_imovel.v3.schema.json",
+  "title": "matricula_imovel.v3",
+  "description": "Cabeçalho e histórico (atos e partes) de uma certidão de matrícula de imóvel. Conclusões (proprietário atual, ônus ativos) são regras da Parsen, não do modelo.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "numero_matricula",
+    "cartorio",
+    "comarca",
+    "data_certidao",
+    "inscricao_municipal",
+    "tipo_imovel",
+    "logradouro",
+    "numero",
+    "complemento",
+    "bairro",
+    "cidade",
+    "uf",
+    "area_privativa",
+    "area_total",
+    "atos",
+    "partes",
+    "alertas"
+  ],
+  "properties": {
+    "numero_matricula": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Número da matrícula como impresso (ex.: 45.678)."
+    },
+    "cartorio": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Cartório (registro de imóveis) que emitiu a certidão."
+    },
+    "comarca": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Comarca do cartório."
+    },
+    "data_certidao": {
+      "$ref": "#/$defs/campo_data",
+      "description": "Data de emissão da certidão, AAAA-MM-DD."
+    },
+    "inscricao_municipal": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Inscrição imobiliária ou cadastro municipal do imóvel, como impresso."
+    },
+    "tipo_imovel": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Tipo do imóvel como descrito (apartamento, casa, terreno, sala, vaga...)."
+    },
+    "logradouro": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Rua, avenida etc. do imóvel, sem o número."
+    },
+    "numero": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Número do imóvel no logradouro."
+    },
+    "complemento": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Só a unidade e o bloco, como impressos (ex.: APTO 57, BLOCO B APTO 12). Sem andar nem nome do edifício."
+    },
+    "bairro": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Bairro do imóvel."
+    },
+    "cidade": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Cidade do imóvel."
+    },
+    "uf": {
+      "$ref": "#/$defs/campo_uf",
+      "description": "Sigla do estado do imóvel."
+    },
+    "area_privativa": {
+      "$ref": "#/$defs/campo_area",
+      "description": "Área privativa ou útil, em m²."
+    },
+    "area_total": {
+      "$ref": "#/$defs/campo_area",
+      "description": "Área total (ou do terreno, para casa e terreno), em m²."
+    },
+    "atos": {
+      "type": "array",
+      "description": "Todos os registros (R.n) e averbações (Av.n), na ordem da matrícula.",
+      "items": {
+        "$ref": "#/$defs/ato"
+      }
+    },
+    "partes": {
+      "type": "array",
+      "description": "Pessoas e empresas de cada ato: uma entrada por parte e por ato, na ordem da matrícula.",
+      "items": {
+        "$ref": "#/$defs/parte"
+      }
+    },
+    "alertas": {
+      "type": "array",
+      "description": "Observações curtas sobre problemas percebidos (ex.: página ilegível, ato cortado, numeração fora de ordem). Nunca uma conclusão sobre propriedade ou ônus.",
+      "items": {
+        "type": "string",
+        "maxLength": 200
+      }
+    }
+  },
+  "$defs": {
+    "pagina": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Página do documento (1 = primeira)."
+    },
+    "trecho_fonte": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Só o texto do valor, copiado exatamente de uma única linha do OCR, sem rótulo e sem correções."
+    },
+    "campo_texto": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_data": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_uf": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_area": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Área em metros quadrados, com ponto decimal (ex.: 65.40)."
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "ato": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "numero",
+        "tipo",
+        "data",
+        "cancela",
+        "valor",
+        "trecho_valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "numero": {
+          "type": "string",
+          "pattern": "^(R|Av)\\.[0-9]+$",
+          "description": "Número do ato sem a matrícula: R.1, Av.5."
+        },
+        "tipo": {
+          "type": "string",
+          "enum": [
+            "compra_venda",
+            "doacao",
+            "heranca",
+            "permuta",
+            "integralizacao",
+            "alienacao_fiduciaria",
+            "hipoteca",
+            "penhora",
+            "usufruto",
+            "indisponibilidade",
+            "cancelamento",
+            "construcao",
+            "casamento",
+            "outro"
+          ],
+          "description": "Natureza do ato. cancelamento: averbação que cancela um ato anterior (indicado em cancela)."
+        },
+        "data": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "Data do ato (registro ou averbação), AAAA-MM-DD; null se não impressa."
+        },
+        "cancela": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(R|Av)\\.[0-9]+$",
+          "description": "Ato que este cancela ou baixa (ex.: R.3); null se não cancela nenhum."
+        },
+        "valor": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "description": "Valor da transação ou da dívida em reais, com ponto decimal; null se não houver."
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        },
+        "trecho_valor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Texto do valor copiado exatamente de uma única linha do OCR (ex.: 115.000,00); null quando o ato não tem valor. Usado para medir a confiança da leitura do valor."
+        }
+      }
+    },
+    "parte": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ato",
+        "papel",
+        "nome",
+        "cpf_cnpj",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "ato": {
+          "type": "string",
+          "pattern": "^R\\.[0-9]+$",
+          "description": "Registro (R.n) em que a parte aparece (ex.: R.1). Averbações (Av.n) não têm partes."
+        },
+        "papel": {
+          "type": "string",
+          "enum": [
+            "adquirente",
+            "transmitente",
+            "devedor",
+            "credor",
+            "outro"
+          ],
+          "description": "adquirente/transmitente: quem recebe/passa o direito (compra, doação, herança). devedor/credor: nos ônus (alienação fiduciária, hipoteca, penhora)."
+        },
+        "nome": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Nome da pessoa ou empresa como impresso."
+        },
+        "cpf_cnpj": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^([0-9]{11}|[0-9A-Z]{12}[0-9]{2})$",
+          "description": "CPF (11 dígitos) ou CNPJ (14 caracteres) sem pontuação; null se não impresso ou mascarado."
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    }
+  }
+}
