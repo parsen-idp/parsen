@@ -39,12 +39,19 @@ public static class ExtractionSchemas
     /// <summary>Extrato inteiro (os créditos estão em todas as páginas), com teto de saída maior (spec, seção 14).</summary>
     public static ExtractionDefinition ExtratoBancario => Load("extrato_bancario", "v1") with { MaxTokens = 16_000 };
 
+    /// <summary>
+    /// Certidão inteira (o histórico de atos continua por várias fichas). Saída média: atos e partes de uma matrícula
+    /// comum cabem em ~4.000 tokens; 8.000 dão folga para históricos longos.
+    /// </summary>
+    public static ExtractionDefinition MatriculaImovel => Load("matricula_imovel", "v1") with { MaxTokens = 8_000 };
+
     /// <summary>Schema de extração em uso para o código do tipo (ex.: holerite); null se o tipo ainda não tem schema.</summary>
     public static ExtractionDefinition? ForDocumentType(string documentType) => documentType switch
     {
         "holerite" => Holerite,
         "comprovante_residencia" => ComprovanteResidencia,
         "extrato_bancario" => ExtratoBancario,
+        "matricula_imovel" => MatriculaImovel,
         _ => null,
     };
 
