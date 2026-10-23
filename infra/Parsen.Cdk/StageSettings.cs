@@ -14,6 +14,12 @@ internal sealed record StageSettings(string Name)
     /// </summary>
     public string ExtractionModelId { get; init; } = "global.anthropic.claude-haiku-4-5-20251001-v1:0";
 
+    /// <summary>
+    /// Temperatura da extração e da classificação: 0 deixa a resposta estável. Null no Haiku 5.5, que recusa valor
+    /// diferente do padrão (trocar junto com o ExtractionModelId).
+    /// </summary>
+    public double? ExtractionTemperature { get; init; } = 0;
+
     /// <summary>Modelo base por trás do profile (sem o prefixo de roteamento "global." ou "us."): é ele que o IAM autoriza.</summary>
     public string ExtractionFoundationModelId => ExtractionModelId[(ExtractionModelId.IndexOf('.', StringComparison.Ordinal) + 1)..];
 }

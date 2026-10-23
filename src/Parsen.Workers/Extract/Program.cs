@@ -19,7 +19,7 @@ var bedrock = new AmazonBedrockRuntimeClient(new AmazonBedrockRuntimeConfig { Ma
 var handler = new ExtractDocumentHandler(
     new DynamoDbDocumentRepository(new AmazonDynamoDBClient(), tableSettings),
     new S3DocumentFiles(new AmazonS3Client(), WorkerHost.RequiredEnvironment("BUCKET_NAME")),
-    new BedrockExtractionEngine(bedrock, new BedrockExtractionSettings(WorkerHost.RequiredEnvironment("MODEL_ID"))),
+    new BedrockExtractionEngine(bedrock, new BedrockExtractionSettings(WorkerHost.RequiredEnvironment("MODEL_ID"), Temperature: WorkerHost.ModelTemperature())),
     new DynamoDbExtractionRepository(new AmazonDynamoDBClient(), tableSettings),
     TimeProvider.System);
 

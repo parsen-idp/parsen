@@ -85,6 +85,16 @@ public sealed class ConverseExtractionTests
         Assert.Equal(Settings.MaxTokens, ConverseExtraction.BuildRequest(Holerite, Settings, ocr).InferenceConfig.MaxTokens);
     }
 
+    // Haiku 4.5: temperatura 0 para respostas estáveis; Haiku 5.5: sem o parâmetro (ele recusa valor diferente do padrão)
+    [Fact]
+    public void Request_SendsTheTemperatureOnlyWhenConfigured()
+    {
+        var ocr = new OcrDocument([new OcrPage(1, [Line("holerite")])]);
+
+        Assert.Equal(0f, ConverseExtraction.BuildRequest(Holerite, Settings with { Temperature = 0f }, ocr).InferenceConfig.Temperature);
+        Assert.Null(ConverseExtraction.BuildRequest(Holerite, Settings, ocr).InferenceConfig.Temperature);
+    }
+
     [Fact]
     public void Request_SendsEveryPageWhenTheTypeHasNoLimit()
     {

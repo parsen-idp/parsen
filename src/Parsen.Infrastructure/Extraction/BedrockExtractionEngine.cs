@@ -10,7 +10,11 @@ namespace Parsen.Infrastructure.Extraction;
 
 /// <param name="ModelId">Inference profile do Bedrock (ex.: global.anthropic.claude-haiku-4-5-20251001-v1:0); vem da configuração, nunca fixo.</param>
 /// <param name="MaxTokens">Teto da resposta; um holerite usa ~1.000 tokens de saída.</param>
-public sealed record BedrockExtractionSettings(string ModelId, int MaxTokens = 4096);
+/// <param name="Temperature">
+/// 0 deixa a resposta estável (a mesma matrícula, com a temperatura padrão, deu 18 e 26 partes certas de 32 em duas
+/// chamadas). Null não envia o parâmetro: o Haiku 5.5 recusa valor diferente do padrão.
+/// </param>
+public sealed record BedrockExtractionSettings(string ModelId, int MaxTokens = 4096, float? Temperature = null);
 
 /// <summary>Extração com o Claude via Bedrock Converse: o schema é uma ferramenta que o modelo é obrigado a chamar.</summary>
 public sealed class BedrockExtractionEngine(IAmazonBedrockRuntime bedrock, BedrockExtractionSettings settings) : IExtractionEngine
@@ -67,7 +71,7 @@ public static class ConverseExtraction
                     Content = [new ContentBlock { Text = text }],
                 },
             ],
-            InferenceConfig = new InferenceConfiguration { MaxTokens = definition.MaxTokens ?? settings.MaxTokens },
+            InferenceConfig = new InferenceConfiguration { MaxTokens = definition.MaxTokens ?? settings.MaxTokens, Temperature = settings.Temperature },
             ToolConfig = new ToolConfiguration
             {
                 Tools =

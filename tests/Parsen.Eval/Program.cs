@@ -9,7 +9,7 @@ using Parsen.Schemas;
 
 // Uso:
 //   dotnet run --project tests/Parsen.Eval -- generate [--kind holerite|comprovante_residencia|extrato_bancario|matricula_imovel|classificacao] [--count 10] [--seed 42] [--out <pasta>]
-//   dotnet run --project tests/Parsen.Eval -- run [--dataset <pasta>]... [--only <prefixo>] [--repeat N] [--classificacao vN] [--model <id>] [--report <arquivo.md>] [--yes]
+//   dotnet run --project tests/Parsen.Eval -- run [--dataset <pasta>]... [--only <prefixo>] [--repeat N] [--classificacao vN] [--temperature 0|padrao] [--model <id>] [--report <arquivo.md>] [--yes]
 //
 // "run" sem --yes só lista os casos e o custo estimado: chamar o modelo tem custo real (CLAUDE.md).
 // --dataset aponta para documentos próprios, fora do repositório; o relatório deles não mostra valores.
@@ -113,10 +113,15 @@ static async Task<int> RunAsync(Options options)
         RegionEndpoint = RegionEndpoint.GetBySystemName(options.Get("region") ?? "sa-east-1"),
         MaxErrorRetry = 2,
     });
-    var engine = new BedrockExtractionEngine(bedrock, new BedrockExtractionSettings(model));
+    // Mesma temperatura da produção (StageSettings): 0 no Haiku 4.5; o Haiku 5.5 não aceita o parâmetro. --temperature compara
+    float? temperature = options.Get("temperature") is { } t
+        ? (t == "padrao" ? null : float.Parse(t, System.Globalization.CultureInfo.InvariantCulture))
+        : model.Contains("haiku-4-5", StringComparison.Ordinal) ? 0f : null;
+    Console.WriteLine($"Temperatura: {(temperature?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "padrão do modelo")}.");
+    var engine = new BedrockExtractionEngine(bedrock, new BedrockExtractionSettings(model, Temperature: temperature));
     // --classificacao vN: avalia outra versão do prompt de classificação (comparar antes do merge, regra 8)
     var classificationDefinition = options.Get("classificacao") is { } version ? ExtractionSchemas.Load("classificacao", version) : null;
-    var classifier = new BedrockDocumentClassifier(bedrock, new BedrockExtractionSettings(model, MaxTokens: 1024), classificationDefinition);
+    var classifier = new BedrockDocumentClassifier(bedrock, new BedrockExtractionSettings(model, MaxTokens: 1024, Temperature: temperature), classificationDefinition);
 
     // Um relatório por tipo de documento: misturar holerite e comprovante juntaria campos diferentes na mesma tabela
     var resultsByType = new SortedDictionary<string, (string SchemaId, List<CaseResult> Results)>(StringComparer.Ordinal);

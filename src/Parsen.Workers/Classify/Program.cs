@@ -15,7 +15,7 @@ var bedrock = new AmazonBedrockRuntimeClient(new AmazonBedrockRuntimeConfig { Ma
 var handler = new ClassifyDocumentHandler(
     new DynamoDbDocumentRepository(new AmazonDynamoDBClient(), new DynamoDbSettings(WorkerHost.RequiredEnvironment("TABLE_NAME"))),
     new S3DocumentFiles(new AmazonS3Client(), WorkerHost.RequiredEnvironment("BUCKET_NAME")),
-    new BedrockDocumentClassifier(bedrock, new BedrockExtractionSettings(WorkerHost.RequiredEnvironment("MODEL_ID"), MaxTokens: 1024)),
+    new BedrockDocumentClassifier(bedrock, new BedrockExtractionSettings(WorkerHost.RequiredEnvironment("MODEL_ID"), MaxTokens: 1024, Temperature: WorkerHost.ModelTemperature())),
     TimeProvider.System);
 
 await WorkerHost.RunAsync<DocumentTask, ClassifyResult>(async (task, context) =>

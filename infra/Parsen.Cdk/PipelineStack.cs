@@ -106,6 +106,7 @@ internal sealed class PipelineStack : Stack
                 ["TABLE_NAME"] = table.TableName,
                 ["BUCKET_NAME"] = bucket.BucketName,
                 ["MODEL_ID"] = settings.ExtractionModelId,
+                ["EXTRACTION_TEMPERATURE"] = settings.ExtractionTemperature?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
             });
 
         // Lê o documento; grava campos e detalhe, e consulta/apaga campos antigos ao substituir a extração
@@ -132,6 +133,7 @@ internal sealed class PipelineStack : Stack
                 ["TABLE_NAME"] = table.TableName,
                 ["BUCKET_NAME"] = bucket.BucketName,
                 ["MODEL_ID"] = settings.ExtractionModelId,
+                ["EXTRACTION_TEMPERATURE"] = settings.ExtractionTemperature?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "",
             });
 
         // Lê o arquivo e, num retry, os filhos já gravados (Query); grava classificação e filhos numa transação,

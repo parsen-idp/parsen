@@ -21,6 +21,12 @@ public static class WorkerHost
     public static SourceGeneratorLambdaJsonSerializer<WorkersJsonContext> CreateSerializer() =>
         new(options => options.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower);
 
+    /// <summary>Temperatura do modelo (EXTRACTION_TEMPERATURE); ausente = não enviar o parâmetro (Haiku 5.5).</summary>
+    public static float? ModelTemperature() =>
+        Environment.GetEnvironmentVariable("EXTRACTION_TEMPERATURE") is { Length: > 0 } value
+            ? float.Parse(value, System.Globalization.CultureInfo.InvariantCulture)
+            : null;
+
     public static string RequiredEnvironment(string name) =>
         Environment.GetEnvironmentVariable(name) ?? throw new InvalidOperationException($"Variável {name} não definida.");
 }
