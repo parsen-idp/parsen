@@ -16,6 +16,12 @@ public sealed record ExtractionDefinition(string DocumentType, string Version, s
     /// no começo; mandar o resto custaria tokens e exporia dados pessoais desnecessários (minimização, LGPD).
     /// </summary>
     public int? MaxPages { get; init; }
+
+    /// <summary>
+    /// Teto de tokens da resposta para o tipo (null = o padrão da configuração). O extrato precisa de mais: cada
+    /// crédito custa ~40 tokens de saída, e uma resposta cortada é recusada, nunca entregue pela metade.
+    /// </summary>
+    public int? MaxTokens { get; init; }
 }
 
 /// <summary>Lê os schemas e prompts embutidos no assembly (pasta {tipo}/{tipo}.{versão}.schema.json e .prompt.md).</summary>
@@ -30,11 +36,15 @@ public static class ExtractionSchemas
     /// <summary>Contas de consumo (spec, seção 14): os dados ficam na primeira página; a segunda é margem de segurança.</summary>
     public static ExtractionDefinition ComprovanteResidencia => Load("comprovante_residencia", "v2") with { MaxPages = 2 };
 
+    /// <summary>Extrato inteiro (os créditos estão em todas as páginas), com teto de saída maior (spec, seção 14).</summary>
+    public static ExtractionDefinition ExtratoBancario => Load("extrato_bancario", "v1") with { MaxTokens = 16_000 };
+
     /// <summary>Schema de extração em uso para o código do tipo (ex.: holerite); null se o tipo ainda não tem schema.</summary>
     public static ExtractionDefinition? ForDocumentType(string documentType) => documentType switch
     {
         "holerite" => Holerite,
         "comprovante_residencia" => ComprovanteResidencia,
+        "extrato_bancario" => ExtratoBancario,
         _ => null,
     };
 

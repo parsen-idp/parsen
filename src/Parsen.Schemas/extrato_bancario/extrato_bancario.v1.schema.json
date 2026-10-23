@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parsen.com.br/schemas/extrato_bancario.v1.schema.json",
+  "title": "extrato_bancario.v1",
+  "description": "Cabeçalho, saldos impressos e créditos de um extrato de conta. Cada campo traz o valor normalizado, a página e o trecho exato do OCR; null quando o campo não aparece no documento.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "instituicao",
+    "cnpj_instituicao",
+    "titular",
+    "cpf_titular",
+    "agencia",
+    "conta",
+    "periodo_inicio",
+    "periodo_fim",
+    "saldo_inicial",
+    "saldo_final",
+    "creditos",
+    "alertas"
+  ],
+  "properties": {
+    "instituicao": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Banco ou instituição de pagamento que emitiu o extrato."
+    },
+    "cnpj_instituicao": {
+      "$ref": "#/$defs/campo_cnpj",
+      "description": "CNPJ da instituição, sem pontuação."
+    },
+    "titular": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Titular da conta, como impresso."
+    },
+    "cpf_titular": {
+      "$ref": "#/$defs/campo_cpf",
+      "description": "CPF do titular, só os 11 dígitos; null se não impresso ou mascarado."
+    },
+    "agencia": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Número da agência, como impresso."
+    },
+    "conta": {
+      "$ref": "#/$defs/campo_texto",
+      "description": "Número da conta com o dígito, como impresso."
+    },
+    "periodo_inicio": {
+      "$ref": "#/$defs/campo_data",
+      "description": "Primeiro dia do período do extrato, AAAA-MM-DD."
+    },
+    "periodo_fim": {
+      "$ref": "#/$defs/campo_data",
+      "description": "Último dia do período do extrato, AAAA-MM-DD."
+    },
+    "saldo_inicial": {
+      "$ref": "#/$defs/campo_saldo",
+      "description": "Saldo anterior ou inicial impresso."
+    },
+    "saldo_final": {
+      "$ref": "#/$defs/campo_saldo",
+      "description": "Saldo final impresso."
+    },
+    "creditos": {
+      "type": "array",
+      "description": "Todos os lançamentos de crédito (entradas) do extrato, na ordem do documento. Débitos, saldos e linhas de total não entram.",
+      "items": {
+        "$ref": "#/$defs/credito"
+      }
+    },
+    "alertas": {
+      "type": "array",
+      "description": "Observações curtas sobre problemas percebidos (ex.: página ilegível, lançamento cortado). Nunca uma decisão de aprovação.",
+      "items": {
+        "type": "string",
+        "maxLength": 200
+      }
+    }
+  },
+  "$defs": {
+    "pagina": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Página do documento (1 = primeira)."
+    },
+    "trecho_fonte": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Só o texto do valor, copiado exatamente de uma única linha do OCR, sem rótulo e sem correções."
+    },
+    "campo_texto": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_cpf": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[0-9]{11}$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_cnpj": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[0-9A-Z]{12}[0-9]{2}$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_data": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_valor": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Valor em reais com ponto decimal (ex.: 1234.56)."
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "credito": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data",
+        "descricao",
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "data": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "Data do lançamento, AAAA-MM-DD (o ano vem do período do extrato quando a linha só mostra dia e mês)."
+        },
+        "descricao": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Histórico do lançamento como impresso (ex.: PIX RECEBIDO FULANO), sem corrigir nem resumir."
+        },
+        "valor": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Valor do crédito em reais, com ponto decimal e sempre positivo."
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    },
+    "campo_saldo": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "valor",
+        "pagina",
+        "trecho_fonte"
+      ],
+      "properties": {
+        "valor": {
+          "type": "number",
+          "description": "Saldo em reais com ponto decimal; negativo com sinal (ex.: -150.25)."
+        },
+        "pagina": {
+          "$ref": "#/$defs/pagina"
+        },
+        "trecho_fonte": {
+          "$ref": "#/$defs/trecho_fonte"
+        }
+      }
+    }
+  }
+}

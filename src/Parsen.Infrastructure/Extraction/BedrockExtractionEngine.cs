@@ -67,7 +67,7 @@ public static class ConverseExtraction
                     Content = [new ContentBlock { Text = text }],
                 },
             ],
-            InferenceConfig = new InferenceConfiguration { MaxTokens = settings.MaxTokens },
+            InferenceConfig = new InferenceConfiguration { MaxTokens = definition.MaxTokens ?? settings.MaxTokens },
             ToolConfig = new ToolConfiguration
             {
                 Tools =

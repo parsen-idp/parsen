@@ -75,6 +75,16 @@ public sealed class ConverseExtractionTests
         Assert.DoesNotContain("conteúdo da página 5", text, StringComparison.Ordinal);
     }
 
+    // Extrato: teto de saída do tipo (16.000) no lugar do padrão da configuração
+    [Fact]
+    public void Request_UsesTheTypeMaxTokensWhenDefined()
+    {
+        var ocr = new OcrDocument([new OcrPage(1, [Line("extrato")])]);
+
+        Assert.Equal(16_000, ConverseExtraction.BuildRequest(ExtractionSchemas.ExtratoBancario, Settings, ocr).InferenceConfig.MaxTokens);
+        Assert.Equal(Settings.MaxTokens, ConverseExtraction.BuildRequest(Holerite, Settings, ocr).InferenceConfig.MaxTokens);
+    }
+
     [Fact]
     public void Request_SendsEveryPageWhenTheTypeHasNoLimit()
     {

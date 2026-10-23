@@ -13,7 +13,8 @@ var tableSettings = new DynamoDbSettings(WorkerHost.RequiredEnvironment("TABLE_N
 
 // Custo do Claude é real (CLAUDE.md): o SDK tenta de novo no máximo 2 vezes (throttling, rede);
 // o Step Functions faz até 3 novas tentativas da etapa inteira
-var bedrock = new AmazonBedrockRuntimeClient(new AmazonBedrockRuntimeConfig { MaxErrorRetry = 2 });
+// Extrato longo: até 16.000 tokens de saída levam ~2 min; o cliente espera até 4 min (a Lambda tem 5)
+var bedrock = new AmazonBedrockRuntimeClient(new AmazonBedrockRuntimeConfig { MaxErrorRetry = 2, Timeout = TimeSpan.FromMinutes(4) });
 
 var handler = new ExtractDocumentHandler(
     new DynamoDbDocumentRepository(new AmazonDynamoDBClient(), tableSettings),

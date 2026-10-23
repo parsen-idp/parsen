@@ -97,9 +97,10 @@ internal sealed class PipelineStack : Stack
             Resources = ["*"],
         }));
 
-        // Extração: uma chamada ao Claude por documento (~6 s para um holerite); 2 minutos cobrem documentos longos.
+        // Extração: uma chamada ao Claude por documento (~6 s para um holerite; um extrato longo, com até 16.000
+        // tokens de saída, leva ~2 min: 5 minutos de folga).
         // 256 MB: usa ~50 MB e passa o tempo esperando o Bedrock, então mais memória (mais CPU) não acelera e custa mais
-        var extract = CreateWorker(settings, "Extract", "extract", memorySize: 256, timeout: Duration.Minutes(2),
+        var extract = CreateWorker(settings, "Extract", "extract", memorySize: 256, timeout: Duration.Minutes(5),
             new Dictionary<string, string>
             {
                 ["TABLE_NAME"] = table.TableName,
