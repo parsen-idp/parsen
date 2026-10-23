@@ -11,11 +11,11 @@ public class MatriculaImovelSchemaTests
     [Fact]
     public void Loads_current_version_reads_every_page_and_allows_long_answers()
     {
-        Assert.Equal("matricula_imovel.v1", Matricula.Id);
+        Assert.Equal("matricula_imovel.v2", Matricula.Id);
         Assert.Equal(Matricula.Id, (string?)Schema["title"]);
         Assert.Contains("`registrar_matricula_imovel`", Matricula.SystemPrompt, StringComparison.Ordinal);
         Assert.Null(Matricula.MaxPages);
-        Assert.Equal(8_000, Matricula.MaxTokens);
+        Assert.Equal(16_000, Matricula.MaxTokens);
         Assert.Equal(Matricula.Id, ExtractionSchemas.ForDocumentType("matricula_imovel")?.Id);
     }
 
@@ -46,6 +46,15 @@ public class MatriculaImovelSchemaTests
         var party = Schema["$defs"]!["parte"]!["properties"]!.AsObject().Select(p => p.Key).Order(StringComparer.Ordinal);
 
         Assert.Equal(["ato", "cpf_cnpj", "nome", "pagina", "papel", "trecho_fonte"], party);
+    }
+
+    // v2: o valor do ato tem o próprio trecho, para a confiança refletir a leitura do valor (matrícula real: 115.000 lido como 5.000)
+    [Fact]
+    public void Act_has_its_own_value_snippet()
+    {
+        var required = Schema["$defs"]!["ato"]!["required"]!.AsArray().Select(r => (string)r!);
+
+        Assert.Contains("trecho_valor", required);
     }
 
     [Fact]

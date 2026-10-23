@@ -79,7 +79,7 @@ public static class Comparer
     {
         ["itens"] = ["tipo", "valor"],
         ["creditos"] = ["data", "valor"],
-        ["atos"] = ["numero", "tipo", "cancela"],
+        ["atos"] = ["numero", "tipo", "data", "cancela", "valor"],
         ["partes"] = ["ato", "papel", "nome", "cpf_cnpj"],
     };
 

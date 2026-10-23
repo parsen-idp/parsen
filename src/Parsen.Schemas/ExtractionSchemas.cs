@@ -41,9 +41,9 @@ public static class ExtractionSchemas
 
     /// <summary>
     /// Certidão inteira (o histórico de atos continua por várias fichas). Saída média: atos e partes de uma matrícula
-    /// comum cabem em ~4.000 tokens; 8.000 dão folga para históricos longos.
+    /// real com 17 atos e 32 partes usou ~5.800 tokens; 16.000 dão folga para históricos longos (o teto só limita).
     /// </summary>
-    public static ExtractionDefinition MatriculaImovel => Load("matricula_imovel", "v1") with { MaxTokens = 8_000 };
+    public static ExtractionDefinition MatriculaImovel => Load("matricula_imovel", "v2") with { MaxTokens = 16_000 };
 
     /// <summary>Schema de extração em uso para o código do tipo (ex.: holerite); null se o tipo ainda não tem schema.</summary>
     public static ExtractionDefinition? ForDocumentType(string documentType) => documentType switch
