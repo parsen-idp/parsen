@@ -74,14 +74,28 @@ public sealed class ExtractionAssemblerTests
         Assert.Null(Field(result, "cpf_titular").Value);
     }
 
+    // Visto no Eval com a conta da Enel: o modelo inventou também o trecho (o CNPJ completo, que não está no OCR).
+    // Identificador sem evidência não é entregue
     [Fact]
-    public void SnippetNotInTheOcr_KeepsTheModelValue()
+    public void IdentifierWithSnippetNotInTheOcr_BecomesNullWithAlert()
     {
         var result = Assemble(("cnpj_empregador", FieldValue.Text("11222333000181"), "11.222.333/0001-81"));
 
         var cnpj = Field(result, "cnpj_empregador");
-        Assert.Equal(FieldValue.Text("11222333000181"), cnpj.Value);
+        Assert.Null(cnpj.Value);
         Assert.Equal(0, cnpj.Confidence);
+        Assert.Contains(result.Alerts, a => a.Contains("cnpj_empregador", StringComparison.Ordinal));
+    }
+
+    // Campo comum sem trecho achado continua com o valor do modelo e confiança 0 (vai para revisão)
+    [Fact]
+    public void OtherFieldWithSnippetNotInTheOcr_KeepsTheModelValueWithZeroConfidence()
+    {
+        var result = Assemble(("empregador", FieldValue.Text("EMPRESA INEXISTENTE"), "EMPRESA INEXISTENTE"));
+
+        var field = Field(result, "empregador");
+        Assert.Equal(FieldValue.Text("EMPRESA INEXISTENTE"), field.Value);
+        Assert.Equal(0, field.Confidence);
     }
 
     // O trecho apontado não mostra o número: o valor não tem evidência no documento

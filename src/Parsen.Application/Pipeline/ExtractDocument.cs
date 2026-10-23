@@ -98,15 +98,15 @@ public static class ExtractionAssembler
     private static ExtractedField Locate(string name, ModelField field, OcrDocument ocr, List<string> alerts)
     {
         var located = EvidenceLocator.Locate(ocr, field.Page, field.SourceText);
-        if (!IdentifierFromSource.Applies(name) || located.Confidence == 0)
+        if (!IdentifierFromSource.Applies(name))
         {
             return new ExtractedField(name, field.Value, located.Evidence, located.Confidence);
         }
 
         // Identificadores (CPF, CNPJ, CEP) saem só do texto achado no OCR: o modelo localiza bem, mas reescreve mal
-        // letras e dígitos (CNPJ alfanumérico) e chegou a "completar" um CNPJ mascarado com o da memória (conta da Enel).
-        // Sem o número inteiro no trecho, o valor não está no documento: null, com a evidência apontando o que está impresso
-        if (IdentifierFromSource.For(name, field.SourceText) is { } fromSource)
+        // letras e dígitos (CNPJ alfanumérico) e chegou a "completar" um CNPJ mascarado com o da memória, inventando até
+        // o trecho (conta da Enel). Sem o número inteiro num trecho achado, o valor não está no documento: null, com alerta
+        if (located.Confidence > 0 && IdentifierFromSource.For(name, field.SourceText) is { } fromSource)
         {
             return new ExtractedField(name, fromSource, located.Evidence, located.Confidence);
         }
