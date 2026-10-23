@@ -123,6 +123,54 @@ public sealed class ExtractionAssemblerTests
         Assert.Equal(FieldValue.Text("Zeta Alimentos"), Field(result, "empregador").Value);
     }
 
+    // Matrícula real: o número do ato "R.10/…" foi lido com 99%, mas o valor "5.000,00" (era 115.000,00) com 80%.
+    // A confiança do item é a menor entre o trecho principal e os trechos extras (trecho_valor)
+    [Fact]
+    public void ListItem_ConfidenceIsTheLowestAmongItsSnippets()
+    {
+        var ocr = new OcrDocument(
+        [
+            new OcrPage(3,
+            [
+                new OcrLine("R.10/130.275 - COMPRA E VENDA", 99, [0, 0, 1, 0.02], [new OcrWord("R.10/130.275", 99.0, [0, 0, 0.2, 0.02])]),
+                new OcrLine("pelo preço de R$ 5.000,00.", 93, [0, 0.1, 1, 0.02], [new OcrWord("5.000,00.", 80.19, [0.5, 0.1, 0.1, 0.02])]),
+            ]),
+        ]);
+        var item = new ModelItem(
+            new Dictionary<string, FieldValue?> { ["numero"] = FieldValue.Text("R.10"), ["valor"] = FieldValue.Number("5000"), ["trecho_valor"] = FieldValue.Text("5.000,00.") },
+            3,
+            "R.10/130.275");
+
+        var result = ExtractionAssembler.Assemble(
+            "matricula_imovel",
+            new ModelExtraction("matricula_imovel.v2", "modelo-de-teste", new Dictionary<string, ModelField?>(), new Dictionary<string, IReadOnlyList<ModelItem>> { ["atos"] = [item] }, [], ModelUsage.None),
+            ocr,
+            DateTimeOffset.UnixEpoch);
+
+        var ato = Assert.Single(result.Lists["atos"]);
+        Assert.Equal(0.8, ato.Confidence);
+        Assert.Equal("R.10/130.275", ato.Evidence.Text);
+        Assert.False(ato.Attributes.ContainsKey("trecho_valor"));
+    }
+
+    // Trecho extra que não está no OCR derruba a confiança para 0: o valor não tem evidência
+    [Fact]
+    public void ListItem_ExtraSnippetNotInTheOcr_HasZeroConfidence()
+    {
+        var item = new ModelItem(
+            new Dictionary<string, FieldValue?> { ["valor"] = FieldValue.Number("115000"), ["trecho_valor"] = FieldValue.Text("115.000,00") },
+            1,
+            "508.531.078-07");
+
+        var result = ExtractionAssembler.Assemble(
+            "matricula_imovel",
+            new ModelExtraction("matricula_imovel.v2", "modelo-de-teste", new Dictionary<string, ModelField?>(), new Dictionary<string, IReadOnlyList<ModelItem>> { ["atos"] = [item] }, [], ModelUsage.None),
+            Ocr,
+            DateTimeOffset.UnixEpoch);
+
+        Assert.Equal(0, Assert.Single(result.Lists["atos"]).Confidence);
+    }
+
     private static ExtractionResult Assemble(params (string Name, FieldValue Value, string Source)[] fields) =>
         ExtractionAssembler.Assemble(
             "holerite",

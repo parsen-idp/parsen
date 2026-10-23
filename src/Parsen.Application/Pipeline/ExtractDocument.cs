@@ -115,9 +115,23 @@ public static class ExtractionAssembler
         return new ExtractedField(name, null, located.Evidence, located.Confidence);
     }
 
+    /// <summary>Prefixo dos atributos que só servem de evidência extra (ex.: trecho_valor de um ato da matrícula).</summary>
+    private const string ExtraSnippetPrefix = "trecho_";
+
     private static ExtractedItem Locate(ModelItem item, OcrDocument ocr)
     {
         var located = EvidenceLocator.Locate(ocr, item.Page, item.SourceText);
-        return new ExtractedItem(item.Attributes, located.Evidence, located.Confidence);
+
+        // O trecho principal pode ser o número do ato, lido com folga, enquanto o valor foi lido mal (matrícula real:
+        // "115.000,00" virou "5.000,00" com 80%). Cada trecho extra também é localizado e a confiança é a menor de todas
+        var extras = item.Attributes.Where(a => a.Key.StartsWith(ExtraSnippetPrefix, StringComparison.Ordinal)).ToList();
+        var confidence = extras
+            .Where(a => a.Value is not null)
+            .Select(a => EvidenceLocator.Locate(ocr, item.Page, a.Value!.Raw).Confidence)
+            .Append(located.Confidence)
+            .Min();
+
+        var attributes = item.Attributes.Where(a => !a.Key.StartsWith(ExtraSnippetPrefix, StringComparison.Ordinal)).ToDictionary();
+        return new ExtractedItem(attributes, located.Evidence, confidence);
     }
 }
